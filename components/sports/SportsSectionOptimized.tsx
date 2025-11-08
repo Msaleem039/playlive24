@@ -1,0 +1,191 @@
+"use client"
+
+import React, { memo, useCallback, useMemo } from "react"
+import { motion } from "framer-motion"
+import MatchCardOptimized from "./MatchCardOptimized"
+import { CricketMatch } from "@/lib/types/cricket"
+
+interface SportsSectionProps {
+  sport: string
+  matches: CricketMatch[]
+  showViewMore?: boolean
+  onPinMatch?: (matchId: string) => void
+  onBookmarkMatch?: (matchId: string) => void
+  onFantasyMatch?: (matchId: string) => void
+}
+
+// Memoized header component
+const SportsHeader = memo(({ sport }: { sport: string }) => (
+  <div className="bg-[#00A66E] text-white px-4 py-3 rounded-t-lg">
+    <div className="flex items-center justify-between">
+      <h3 className="text-lg font-bold">{sport}</h3>
+      <div className="flex items-center gap-2">
+        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
+          BM
+        </button>
+        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
+          F
+        </button>
+        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
+          F
+        </button>
+      </div>
+    </div>
+  </div>
+))
+
+SportsHeader.displayName = 'SportsHeader'
+
+// Memoized matches list component
+const MatchesList = memo(({ 
+  matches, 
+  onPinMatch, 
+  onBookmarkMatch, 
+  onFantasyMatch 
+}: { 
+  matches: CricketMatch[]
+  onPinMatch?: (matchId: string) => void
+  onBookmarkMatch?: (matchId: string) => void
+  onFantasyMatch?: (matchId: string) => void
+}) => {
+  if (matches.length === 0) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        No matches available
+      </div>
+    )
+  }
+
+  return (
+    <div className="divide-y divide-gray-200">
+      {matches.map((match, index) => {
+        const matchId = match?.match_id ? String(match.match_id) : `match-${index}`
+        return (
+          <MatchCardOptimized
+            key={matchId}
+            match={match}
+            sport=""
+            onPin={onPinMatch}
+            onBookmark={onBookmarkMatch}
+            onFantasy={onFantasyMatch}
+          />
+        )
+      })}
+    </div>
+  )
+})
+
+MatchesList.displayName = 'MatchesList'
+
+// Memoized view more button
+const ViewMoreButton = memo(({ 
+  showAll, 
+  onToggle, 
+  hasMore 
+}: { 
+  showAll: boolean
+  onToggle: () => void
+  hasMore: boolean
+}) => {
+  if (!hasMore) return null
+
+  return (
+    <div className="p-4 text-right">
+      <button
+        onClick={onToggle}
+        className="text-[#00A66E] hover:text-[#008a5a] font-medium text-sm transition-colors"
+      >
+        {showAll ? "Show Less" : "View More..."}
+      </button>
+    </div>
+  )
+})
+
+ViewMoreButton.displayName = 'ViewMoreButton'
+
+const SportsSectionOptimized = memo(({ 
+  sport, 
+  matches, 
+  showViewMore = true,
+  onPinMatch,
+  onBookmarkMatch,
+  onFantasyMatch
+}: SportsSectionProps) => {
+  const [showAll, setShowAll] = React.useState(false)
+  
+  // Memoized display matches to prevent unnecessary recalculations
+  const displayMatches = useMemo(() => {
+    return showAll ? matches : matches.slice(0, 5)
+  }, [matches, showAll])
+  
+  // Memoized hasMore calculation
+  const hasMore = useMemo(() => {
+    return matches.length > 5
+  }, [matches.length])
+  
+  // Memoized toggle handler
+  const handleToggle = useCallback(() => {
+    setShowAll(prev => !prev)
+  }, [])
+  
+  // Memoized action handlers
+  const handlePinMatch = useCallback((matchId: string) => {
+    onPinMatch?.(matchId)
+  }, [onPinMatch])
+  
+  const handleBookmarkMatch = useCallback((matchId: string) => {
+    onBookmarkMatch?.(matchId)
+  }, [onBookmarkMatch])
+  
+  const handleFantasyMatch = useCallback((matchId: string) => {
+    onFantasyMatch?.(matchId)
+  }, [onFantasyMatch])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6"
+    >
+      <SportsHeader sport={sport} />
+      
+      <MatchesList 
+        matches={displayMatches}
+        onPinMatch={handlePinMatch}
+        onBookmarkMatch={handleBookmarkMatch}
+        onFantasyMatch={handleFantasyMatch}
+      />
+      
+      {showViewMore && (
+        <ViewMoreButton 
+          showAll={showAll}
+          onToggle={handleToggle}
+          hasMore={hasMore}
+        />
+      )}
+    </motion.div>
+  )
+})
+
+SportsSectionOptimized.displayName = 'SportsSectionOptimized'
+
+export default SportsSectionOptimized
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
