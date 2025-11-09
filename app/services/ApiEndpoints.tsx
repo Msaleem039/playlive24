@@ -1,16 +1,16 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+export const BASE_URL = 'https://api.playlive24.com'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 
 
 export const API_END_POINTS = {
     /////////////////////////////<===MUTATIONS===>//////////////////////////////
-    register: "/auth/create-user",
+    register: `${BASE_URL}/auth/create-user`,
     // createRvLead: BASE_URL + "api/rv-leads",
-    login: "/auth/login",
-    topupBalance: "/transfer/top-up/:targetUserId",
-    topDownBalance: "/transfer/top-down/:targetUserId",
-    getUser: "/auth/subordinates",
+    login: `${BASE_URL}/auth/login`,
+    topupBalance: `${BASE_URL}/transfer/top-up/:targetUserId`,
+    topDownBalance: `${BASE_URL}/transfer/top-down/:targetUserId`,
+    getUser: `${BASE_URL}/auth/subordinates`,
     // register: BASE_URL + "api/auth/register",
     // changePassword: BASE_URL + "api/auth/reset-password",
     // truckApplication: BASE_URL + "api/rv-leads/status",

@@ -1,9 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import Cookies from 'js-cookie';
-import { API_END_POINTS } from './ApiEndpoints';
+import { BASE_URL } from './ApiEndpoints';
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || '',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || BASE_URL || '',
     prepareHeaders: async (headers, { getState }) => {
         try {
             let token = (getState() as any).auth?.token;
