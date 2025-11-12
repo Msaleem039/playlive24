@@ -3,10 +3,9 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Mail, Lock, Eye, EyeOff, X, AlertCircle } from "lucide-react"
+import { User, Lock, Eye, EyeOff, X, AlertCircle } from "lucide-react"
 import { Input } from "@/components/input"
 import { Button } from "@/components/utils/button"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLoginMutation } from "@/app/services/Api"
 import { setCredentials } from "@/app/store/slices/authSlice"
@@ -29,7 +28,7 @@ enum UserRole {
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProps) {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,8 +78,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
     setError(null)
     
     try {
-      console.log("Attempting login with:", { email, password })
-      const result = await login({ email, password }).unwrap()
+      console.log("Attempting login with:", { username, passwordProvided: Boolean(password) })
+      const result = await login({ username, password }).unwrap()
       console.log("Login API response:", result)
       
       // Check if we have the required data (accessToken and user)
@@ -103,8 +102,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
           if (typeof window !== "undefined") {
             window.localStorage.setItem("auth_user", JSON.stringify(result.user))
             // Store email in sessionStorage for periodic refresh (cleared on browser close)
-            if (result.user?.email) {
-              sessionStorage.setItem("user_email", result.user.email)
+            if (result.user?.username) {
+              sessionStorage.setItem("user_name", result.user.username)
             }
             console.log("Stored user in localStorage:", JSON.parse(window.localStorage.getItem("auth_user") || "{}"))
           }
@@ -232,24 +231,17 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
 
           {/* Logo Header */}
           <div className="text-center mb-8">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-16 h-16 bg-[#30967c] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,102,0.5)]"
+            <motion.h1
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-4xl font-black uppercase tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#41D2FF] via-[#7FEAFF] to-[#FFD836] drop-shadow-[0_0_25px_rgba(126,234,255,0.35)]"
             >
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="text-2xl font-extrabold text-white tracking-wide"
-              >
-                PL7
-              </motion.div>
-            </motion.div>
-
-            <h1 className="text-3xl font-extrabold text-[#30967c] mb-2">
-              Welcome Back 
-            </h1>
-            <p className="text-white/60">Sign in to your PlayLive7 account</p>
+              PlayLive7
+            </motion.h1>
+            <p className="mt-4 text-white/70 text-sm tracking-[0.35em] uppercase">
+              Login Portal
+            </p>
           </div>
 
           {/* Error Display */}
@@ -269,12 +261,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
               <Input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="pl-12 h-14 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:bg-white/15 focus:border-[#30967c]/50 transition-all duration-300"
                 required
               />
@@ -321,7 +313,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
           </form>
 
           {/* Sign Up Link */}
-          <div className="text-center mt-8">
+          {/* <div className="text-center mt-8">
             <p className="text-white/60">
               Don't have an account?{" "}
               <button
@@ -331,7 +323,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
                 Sign up
               </button>
             </p>
-          </div>
+          </div> */}
         </motion.div>
       </motion.div>
     </motion.div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Tv, Clock, Pin, Star, TrophyIcon } from "lucide-react"
+import { Trophy, Globe, Sparkles, Crown, Dog } from "lucide-react"
 import CricketTab from "@/components/dashboard-tabs/CricketTab"
 import SoccerTab from "@/components/dashboard-tabs/SoccerTab"
 import TennisTab from "@/components/dashboard-tabs/TennisTab"
@@ -20,35 +20,55 @@ const sportTabs: SportTab[] = [
   {
     id: "cricket",
     name: "Cricket",
-    icon: <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold"><TrophyIcon/></div>,
+    icon: (
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white shadow-md">
+        <Trophy className="h-4 w-4" />
+      </div>
+    ),
     count: 0,
     component: CricketTab
   },
   {
     id: "soccer",
     name: "Soccer",
-    icon: <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">S</div>,
+    icon: (
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white shadow-md">
+        <Globe className="h-4 w-4" />
+      </div>
+    ),
     count: 0,
     component: SoccerTab
   },
   {
     id: "tennis",
     name: "Tennis",
-    icon: <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">T</div>,
+    icon: (
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-white shadow-md">
+        <Sparkles className="h-4 w-4" />
+      </div>
+    ),
     count: 0,
     component: TennisTab
   },
   {
     id: "horse",
     name: "Horse",
-    icon: <div className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold">H</div>,
+    icon: (
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-white shadow-md">
+        <Crown className="h-4 w-4" />
+      </div>
+    ),
     count: 0,
     component: HorseTab
   },
   {
     id: "greyhound",
     name: "Greyhound",
-    icon: <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>,
+    icon: (
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-md">
+        <Dog className="h-4 w-4" />
+      </div>
+    ),
     count: 0,
     component: GreyhoundTab
   }
@@ -63,28 +83,28 @@ export default function MatchesView() {
   return (
     <div className="bg-gray-100 mt-6">
       {/* Sport Navigation Header */}
-      <div className="bg-gray-800 text-white">
-        <div className="px-4 sm:px-6 py-3">
-          <div className="flex items-center space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto no-scrollbar">
+      <div className="bg-gray-900 text-white shadow-sm">
+        <div className="px-4 sm:px-6 py-2">
+          <div className="flex items-center justify-start gap-3 sm:gap-5 overflow-x-auto no-scrollbar">
             {sportTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveSport(tab.id)}
-                className={`flex flex-col items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                className={`group flex items-center gap-2 rounded-full px-3 py-2 transition-colors ${
                   activeSport === tab.id 
-                    ? 'bg-gray-700 text-white' 
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ? 'bg-gray-800 text-white shadow-inner'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  {tab.icon}
-                  {tab.count > 0 && (
-                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {tab.count}
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium">{tab.name}</span>
+                {tab.icon}
+                <span className="text-sm font-semibold tracking-wide">
+                  {tab.name}
+                </span>
+                {tab.count > 0 && (
+                  <span className="flex h-5 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                    {tab.count}
+                  </span>
+                )}
               </button>
             ))}
           </div>

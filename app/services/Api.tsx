@@ -21,6 +21,14 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
+    changePassword: builder.mutation({
+      query: (data) => ({
+        url: API_END_POINTS.changePassword,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
     // topupBalance: builder.mutation({
     //   query: ({ userId, ...data }) => ({
     //     url: API_END_POINTS.topupBalance.replace(":targetUserId", userId),
@@ -80,6 +88,12 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['User'],
     }),
+    getDashboardData: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getDashboardData,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -88,10 +102,12 @@ export const {
     /////////////////////////////<===AUTH MUTATIONS===>//////////////////////////////
     useLoginMutation,
     useRegisterMutation,
+    useChangePasswordMutation,
     useTopupBalanceMutation,
     useTopDownBalanceMutation,
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     useGetUserQuery,
+    useGetDashboardDataQuery,
     
 } = api;

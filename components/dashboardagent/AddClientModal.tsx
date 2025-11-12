@@ -15,7 +15,7 @@ interface AddClientModalProps {
 
 interface ClientData {
   name: string
-  email: string
+  username: string
   password: string
   role: string
   balance: string
@@ -28,7 +28,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
   
   const [formData, setFormData] = useState<ClientData>({
     name: '',
-    email: '',
+    username: '',
     password: '',
     role: 'CLIENT',
     balance: '0'
@@ -43,8 +43,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
       setError("Name is required")
       return
     }
-    if (!formData.email.trim()) {
-      setError("Email is required")
+    if (!formData.username.trim()) {
+      setError("Username is required")
       return
     }
     if (!formData.password.trim()) {
@@ -66,7 +66,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
       // Prepare payload according to API structure
       const payload = {
         name: formData.name.trim(),
-        email: formData.email.trim(),
+        username: formData.username.trim(),
         password: formData.password,
         role: formData.role,
         balance: balanceNum
@@ -83,7 +83,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
       // Show success toast
       toast.success("User Created Successfully", {
-        description: `${formData.role} "${formData.name}" has been created successfully`
+        description: `${formData.role} "${formData.username}" has been created successfully`
       })
 
       // Call the optional onSubmit callback if provided
@@ -94,7 +94,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
       // Reset form
       setFormData({
         name: '',
-        email: '',
+        username: '',
         password: '',
         role: 'CLIENT',
         balance: '0'
@@ -132,7 +132,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
     // Reset form on close
     setFormData({
       name: '',
-      email: '',
+      username: '',
       password: '',
       role: 'CLIENT',
       balance: '0'
@@ -186,18 +186,18 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
             </div>
           </div>
 
-          {/* Email Field */}
+          {/* Username Field */}
           <div className="mb-4">
             <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
               <label className="text-sm font-medium text-gray-700 w-32">
-                Email
+                Username
               </label>
               <div className="flex-1 ml-4">
                 <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Email"
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  placeholder="Username"
                   className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
                   required
                 />

@@ -1,4 +1,5 @@
 export const BASE_URL = 'https://api.playlive24.com'
+// export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 
@@ -8,9 +9,10 @@ export const API_END_POINTS = {
     register: `${BASE_URL}/auth/create-user`,
     // createRvLead: BASE_URL + "api/rv-leads",
     login: `${BASE_URL}/auth/login`,
+    changePassword: `${BASE_URL}/auth/change-password`,
     topupBalance: `${BASE_URL}/transfer/top-up/:targetUserId`,
     topDownBalance: `${BASE_URL}/transfer/top-down/:targetUserId`,
-    getUser: `${BASE_URL}/auth/subordinates`,
+
     // register: BASE_URL + "api/auth/register",
     // changePassword: BASE_URL + "api/auth/reset-password",
     // truckApplication: BASE_URL + "api/rv-leads/status",
@@ -30,7 +32,9 @@ export const API_END_POINTS = {
     // getUser: BASE_URL + "api/users/me",
     
     /////////////////////////////<===SPORTS API===>//////////////////////////////
-    cricketMatches: BASE_URL + "/entitysport/matches"
+    cricketMatches: BASE_URL + "/entitysport/matches",
     // loginUser: BASE_URL + "api/auth/login",
-    
+    getUser: `${BASE_URL}/auth/subordinates`,
+    getSingleUser: `${BASE_URL}/users/:userId`,
+    getDashboardData: `${BASE_URL}/transfer/dashboard-summary`,
 }

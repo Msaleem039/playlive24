@@ -9,7 +9,7 @@ interface ChangePasswordModalProps {
   isOpen: boolean
   onClose: () => void
   username: string
-  onSubmit: (data: { newPassword: string; confirmPassword: string }) => void
+  onSubmit: (data: { currentPassword: string; newPassword: string }) => Promise<void> | void
 }
 
 export default function ChangePasswordModal({
@@ -18,6 +18,7 @@ export default function ChangePasswordModal({
   username,
   onSubmit,
 }: ChangePasswordModalProps) {
+  const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -26,6 +27,11 @@ export default function ChangePasswordModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!currentPassword.trim()) {
+      setError("Please enter your current password")
+      return
+    }
 
     if (!newPassword.trim()) {
       setError("Please enter a new password")
@@ -44,8 +50,9 @@ export default function ChangePasswordModal({
 
     setIsLoading(true)
     try {
-      await onSubmit({ newPassword, confirmPassword })
+      await onSubmit({ currentPassword, newPassword })
       // Reset form
+      setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
       setError(null)
@@ -59,6 +66,7 @@ export default function ChangePasswordModal({
   }
 
   const handleClose = () => {
+    setCurrentPassword("")
     setNewPassword("")
     setConfirmPassword("")
     setError(null)
@@ -113,9 +121,26 @@ export default function ChangePasswordModal({
                 </div>
               )}
 
-              {/* New Password Field */}
+              {/* Current Password Field */}
               <div className="px-6 py-4 border-b border-dashed border-gray-300">
                 <div className="flex items-center gap-4">
+                  <label className="text-sm font-bold text-gray-900 whitespace-nowrap min-w-[120px]">
+                    Current Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter Current Password"
+                    className="flex-1 border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+              </div>
+
+            {/* New Password Field */}
+            <div className="px-6 py-4 border-b border-dashed border-gray-300">
+              <div className="flex items-center gap-4">
                   <label className="text-sm font-bold text-gray-900 whitespace-nowrap min-w-[120px]">
                     New Password
                   </label>
@@ -152,7 +177,12 @@ export default function ChangePasswordModal({
                 <button
                   type="submit"
                   className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                  disabled={isLoading || !newPassword.trim() || !confirmPassword.trim()}
+                  disabled={
+                    isLoading ||
+                    !currentPassword.trim() ||
+                    !newPassword.trim() ||
+                    !confirmPassword.trim()
+                  }
                 >
                   {isLoading ? "Processing..." : "Submit"}
                 </button>

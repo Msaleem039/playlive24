@@ -9,7 +9,8 @@ import DepositCashModal from "@/components/modal/DepositCashModal"
 import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
 import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
-import { useGetUserQuery } from "@/app/services/Api"
+import { useChangePasswordMutation, useGetUserQuery } from "@/app/services/Api"
+import { toast } from "sonner"
 
 interface UserProps {
   userTab: string
@@ -73,6 +74,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     isOpen: false,
     username: "",
   })
+  const [changePassword] = useChangePasswordMutation()
 
   // Format balance helper
   const formatBalance = (balance: number | string | undefined | null) => {
@@ -186,16 +188,27 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   }
 
   const handleChangePasswordSubmit = async (data: {
+    currentPassword: string
     newPassword: string
-    confirmPassword: string
   }) => {
-    console.log("Change Password for", changePasswordModal.username)
-    // TODO: Implement API call here
-    // Example:
-    // await changePasswordAPI({
-    //   username: changePasswordModal.username,
-    //   newPassword: data.newPassword,
-    // })
+    try {
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }).unwrap()
+      toast.success("Password updated successfully")
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to change password. Please try again."
+      toast.error("Change password failed", {
+        description: errorMessage,
+      })
+      throw error
+    }
   }
 
   // Use API users or fallback to prop users
