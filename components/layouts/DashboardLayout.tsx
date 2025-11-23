@@ -8,6 +8,9 @@ import {
   AddClientModal,
   AllUsersModal,
   UserManagementView,
+  AccountStatementView,
+  BetHistoryView,
+  BalanceSheetView,
 } from "@/components/dashboardagent"
 import { MyReportView } from "@/components/MyReportView"
 import MatchesView from "@/components/MatchesView"
@@ -130,6 +133,9 @@ export default function DashboardLayout({ role }: { role: string }) {
         {activeTab === "Game Controls" && <GameControlsView />}
         {activeTab === "Chip Summary" && <ChipSummaryView />}
         {activeTab === "Game List" && <GameListView />}
+        {activeTab === "Account Statement" && <AccountStatementView />}
+        {activeTab === "Bet History" && <BetHistoryView />}
+        {activeTab === "Balance Sheet" && <BalanceSheetView />}
         {activeTab === "Detail Report" && <DetailReportView />}
         {activeTab === "System Settings" && <SystemSettingsView />}
         {activeTab === "Reports" && <ReportsView />}

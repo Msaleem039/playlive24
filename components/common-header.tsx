@@ -18,6 +18,7 @@ import {
   Mail,
   CalendarDays,
   RefreshCw,
+  Radio,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -25,8 +26,12 @@ import { Sidebar } from "@/components/sidebar"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser, setCredentials } from "@/app/store/slices/authSlice"
-import { useLoginMutation } from "@/app/services/Api"
+import { useLoginMutation, useChangePasswordMutation } from "@/app/services/Api"
 import Cookies from "js-cookie"
+import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
+import { toast } from "sonner"
+import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
+import { useCricketMatches } from "@/app/hooks/useCricketMatches"
 
 // Define navigation items for each role
 const roleNavigationItems = {
@@ -61,6 +66,9 @@ const roleNavigationItems = {
     'Game Controls',
     'Chip Summary',
     'Game List',
+    'Account Statement',
+    'Bet History',
+    'Balance Sheet',
     'Detail Report'
   ],
   CLIENT: [
@@ -83,11 +91,58 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   const dispatch = useDispatch<any>()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const authUser = useSelector(selectCurrentUser)
   const [login] = useLoginMutation()
+  const [changePassword] = useChangePasswordMutation()
+
+  // WebSocket for live cricket updates
+  const {
+    isConnected,
+    liveMatches: liveCricketMatches,
+  } = useCricketLiveUpdates({
+    url: process.env.NEXT_PUBLIC_SOCKET_URL
+      ? `${process.env.NEXT_PUBLIC_SOCKET_URL}/entitysport`
+      : 'http://localhost:3000/entitysport',
+    autoConnect: true,
+    realtimeEvent: 'entitySportRealtimeData',
+    listEvent: 'entitySportLiveData',
+  })
+  
+  // Fetch cricket matches from API as fallback
+  const { matches: cricketMatches } = useCricketMatches({
+    page: 1,
+    per_page: 20,
+  })
+
+  // Use live matches if available and connected, otherwise use API data
+  const currentCricketMatches = (isConnected && liveCricketMatches.length > 0) 
+    ? liveCricketMatches 
+    : cricketMatches
+
+  // Calculate live cricket matches count using iplay field
+  const liveCricketCount = useMemo(() => {
+    const liveMatches = currentCricketMatches.filter((match: any) => {
+      // Use iplay field directly from API response
+      if (typeof match?.iplay === 'boolean') {
+        return match.iplay === true
+      }
+      // Fallback to legacy logic if iplay not available
+      const statusText = (match?.status_str || match?.state || match?.match_status || '')
+        .toString()
+        .toLowerCase()
+      return (
+        statusText.includes('live') ||
+        match?.status === 3 ||
+        match?.game_state === 3 ||
+        match?.match_status === 'live'
+      )
+    })
+    return liveMatches.length
+  }, [currentCricketMatches])
 
   const normalizeNumber = (value: any) => {
     const parsed = typeof value === "number" ? value : parseFloat(value ?? "")
@@ -186,30 +241,31 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
 
     if (role === "CLIENT") {
       return [
-        { label: "Change Password", href: "/client/change-password", icon: Lock },
-        { label: "Account Statement", href: "/client/account-statement", icon: FileText },
-        { label: "Profit Loss", href: "/client/profit-loss", icon: BarChart2 },
-        { label: "Bet History", href: "/client/bet-history", icon: History },
-        { label: "Rules", href: "/client/rules", icon: BookOpen },
-        { label: "Set Button Value", href: "/client/set-button-value", icon: SlidersHorizontal },
+        { label: "Change Password", href: null, icon: Lock, action: "modal" },
+        { label: "Account Statement", href: "/client/account-statement", icon: FileText, action: "navigate" },
+        { label: "Profit Loss", href: "/client/profit-loss", icon: BarChart2, action: "navigate" },
+        { label: "Bet History", href: "/client/bet-history", icon: History, action: "navigate" },
+        { label: "Rules", href: "/client/rules", icon: BookOpen, action: "navigate" },
+        { label: "Set Button Value", href: "/client/set-button-value", icon: SlidersHorizontal, action: "navigate" },
       ]
     }
 
     if (role === "AGENT") {
       return [
-        { label: "Change Password", href: "/agent/change-password", icon: Lock },
-        { label: "Account Statement", href: "/agent/account-statement", icon: FileText },
-        { label: "Clients", href: "/agent/clients", icon: History },
-        { label: "Rules", href: "/rules", icon: BookOpen },
+        { label: "Change Password", href: null, icon: Lock, action: "modal" },
+        { label: "Account Statement", href: "/agent/account-statement", icon: FileText, action: "navigate" },
+        { label: "Bet History", href: "/agent/bet-history", icon: History, action: "navigate" },
+        { label: "Balance Sheet", href: "/agent/balance-sheet", icon: BarChart2, action: "navigate" },
+        { label: "Rules", href: "/rules", icon: BookOpen, action: "navigate" },
       ]
     }
 
     return [
-      { label: "Change Password", href: "/account/change-password", icon: Lock },
-      { label: "Account Statement", href: "/account/statement", icon: FileText },
-      { label: "Profit Loss", href: "/account/profit-loss", icon: BarChart2 },
-      { label: "Bet History", href: "/account/bet-history", icon: History },
-      { label: "Rules", href: "/rules", icon: BookOpen },
+      { label: "Change Password", href: null, icon: Lock, action: "modal" },
+      { label: "Account Statement", href: "/agent/account-statement", icon: FileText, action: "navigate" },
+      { label: "Bet History", href: "/agent/bet-history", icon: History, action: "navigate" },
+      { label: "Balance Sheet", href: "/agent/balance-sheet", icon: BarChart2, action: "navigate" },
+      { label: "Rules", href: "/rules", icon: BookOpen, action: "navigate" },
     ]
   }, [userInfo.role])
 
@@ -254,6 +310,31 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isUserMenuOpen])
+
+  const handleChangePassword = async (data: {
+    currentPassword: string
+    newPassword: string
+  }) => {
+    try {
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }).unwrap()
+      toast.success("Password updated successfully")
+      setIsChangePasswordModalOpen(false)
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to change password. Please try again."
+      toast.error("Change password failed", {
+        description: errorMessage,
+      })
+      throw error
+    }
+  }
 
   const handleLogout = () => {
     try {
@@ -369,17 +450,55 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                     )}
 
                     <div className="py-1 text-sm text-gray-700">
-                      {dropdownItems.map(({ label, href, icon: Icon }) => (
-                        <Link
-                          key={label}
-                          href={href}
-                          className="flex items-center gap-3 px-4 py-2 hover:bg-[#f4f7f6] transition"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <Icon className="w-4 h-4 text-[#00A66E]" />
-                          <span>{label}</span>
-                        </Link>
-                      ))}
+                      {dropdownItems.map((item) => {
+                        const { label, href, icon: Icon, action } = item
+                        const tabName = 'tab' in item ? item.tab : undefined
+                        if (action === "modal") {
+                          return (
+                            <button
+                              key={label}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setIsChangePasswordModalOpen(true)
+                                setIsUserMenuOpen(false)
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                            >
+                              <Icon className="w-4 h-4 text-[#00A66E]" />
+                              <span>{label}</span>
+                            </button>
+                          )
+                        }
+                        if (action === "tab" && onTabChange && tabName && typeof tabName === "string") {
+                          return (
+                            <button
+                              key={label}
+                              type="button"
+                              onClick={() => {
+                                onTabChange(tabName)
+                                setIsUserMenuOpen(false)
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                            >
+                              <Icon className="w-4 h-4 text-[#00A66E]" />
+                              <span>{label}</span>
+                            </button>
+                          )
+                        }
+                        return (
+                          <Link
+                            key={label}
+                            href={href || "#"}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-[#f4f7f6] transition"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Icon className="w-4 h-4 text-[#00A66E]" />
+                            <span>{label}</span>
+                          </Link>
+                        )
+                      })}
                       <button
                         onClick={() => {
                           refreshUserBalance()
@@ -424,7 +543,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                   <button
                     key={item}
                     onClick={() => onTabChange?.(item)}
-                    className={`font-semibold flex items-center whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[25px] sm:min-h-[25px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
+                    className={`font-semibold flex items-center gap-1.5 whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[25px] sm:min-h-[25px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
                       item === 'Game Controls' ? 'hover:text-gray-200' : ''
                     } ${
                       item === activeTab 
@@ -432,7 +551,14 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                         : 'hover:text-gray-200 hover:bg-black/10 rounded'
                     }`}
                   >
-                    {item}
+                    <span>{item}</span>
+                    {/* Show live count for Matches tab (Cricket) */}
+                    {item === 'Matches' && liveCricketCount > 0 && (
+                      <span className="flex items-center gap-1 bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[0.6rem] xs:text-[0.65rem] font-bold">
+                        <Radio className="w-2.5 h-2.5 animate-pulse" />
+                        {liveCricketCount}
+                      </span>
+                    )}
                     {item === 'Game Controls' && (
                       <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5 sm:ml-1 flex-shrink-0" />
                     )}
@@ -458,6 +584,14 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
           // Sidebar navigation - can be customized based on needs
           console.log('Sidebar tab selected:', tab)
         }}
+      />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        username={userInfo.name || "User"}
+        onSubmit={handleChangePassword}
       />
     </div>
   )

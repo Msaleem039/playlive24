@@ -20,7 +20,6 @@ export default function ChangePasswordModal({
 }: ChangePasswordModalProps) {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,11 +37,6 @@ export default function ChangePasswordModal({
       return
     }
 
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
     if (newPassword.length < 6) {
       setError("Password must be at least 6 characters")
       return
@@ -54,7 +48,6 @@ export default function ChangePasswordModal({
       // Reset form
       setCurrentPassword("")
       setNewPassword("")
-      setConfirmPassword("")
       setError(null)
       onClose()
     } catch (error) {
@@ -68,7 +61,6 @@ export default function ChangePasswordModal({
   const handleClose = () => {
     setCurrentPassword("")
     setNewPassword("")
-    setConfirmPassword("")
     setError(null)
     onClose()
   }
@@ -82,7 +74,7 @@ export default function ChangePasswordModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
           {/* Overlay */}
           <div
@@ -141,52 +133,34 @@ export default function ChangePasswordModal({
             {/* New Password Field */}
             <div className="px-6 py-4 border-b border-dashed border-gray-300">
               <div className="flex items-center gap-4">
-                  <label className="text-sm font-bold text-gray-900 whitespace-nowrap min-w-[120px]">
-                    New Password
-                  </label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter New Password"
-                    className="flex-1 border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
+                <label className="text-sm font-bold text-gray-900 whitespace-nowrap min-w-[120px]">
+                  New Password
+                </label>
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter New Password"
+                  className="flex-1 border-gray-300 rounded-md"
+                  required
+                />
               </div>
+            </div>
 
-              {/* Confirm Password Field */}
-              <div className="px-6 py-4 border-b border-dashed border-gray-300">
-                <div className="flex items-center gap-4">
-                  <label className="text-sm font-bold text-gray-900 whitespace-nowrap min-w-[120px]">
-                    Confirm Password
-                  </label>
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm Password"
-                    className="flex-1 border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <div className="px-6 py-4 flex justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                  disabled={
-                    isLoading ||
-                    !currentPassword.trim() ||
-                    !newPassword.trim() ||
-                    !confirmPassword.trim()
-                  }
-                >
-                  {isLoading ? "Processing..." : "Submit"}
-                </button>
-              </div>
+            {/* Action Button */}
+            <div className="px-6 py-4 flex justify-end">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                disabled={
+                  isLoading ||
+                  !currentPassword.trim() ||
+                  !newPassword.trim()
+                }
+              >
+                {isLoading ? "Processing..." : "Submit"}
+              </button>
+            </div>
             </form>
           </motion.div>
         </motion.div>

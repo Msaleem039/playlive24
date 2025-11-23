@@ -86,6 +86,7 @@ export interface CricketMatch {
   day: string;
   session: string;
   toss: Toss;
+  iplay?: boolean; // Live/upcoming flag from matches API
 }
 
 export interface CricketMatchesResponse {

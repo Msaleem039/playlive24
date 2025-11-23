@@ -172,3 +172,9 @@ body {
 .animate-marquee {
   animation: marquee 15s linear infinite;
 }
+
+/* Yellow blink animation for odds changes */
+@keyframes blink {
+  0%, 100% { background-color: rgb(250 204 21); /* yellow-400 */ }
+  50% { background-color: rgb(253 224 71); /* yellow-300 - lighter yellow */ }
+}

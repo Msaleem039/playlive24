@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-// export const BASE_URL = 'http://localhost:3000'
+// export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 
@@ -32,7 +32,9 @@ export const API_END_POINTS = {
     // getUser: BASE_URL + "api/users/me",
     
     /////////////////////////////<===SPORTS API===>//////////////////////////////
-    cricketMatches: BASE_URL + "/entitysport/matches",
+    cricketMatches: BASE_URL + "/cricketid/matches/details/4",
+    cricketMatchDetail: BASE_URL + "/cricketid/match/detail",
+    cricketMatchPrivate: BASE_URL + "/cricketid/match/private",
     // loginUser: BASE_URL + "api/auth/login",
     getUser: `${BASE_URL}/auth/subordinates`,
     getSingleUser: `${BASE_URL}/users/:userId`,

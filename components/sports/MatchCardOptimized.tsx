@@ -65,7 +65,7 @@ const MatchCardOptimized = memo(({
               {match?.status_str}
             </span>
 
-            {match?.status === 1 && (
+            {(typeof match?.iplay === 'boolean' ? match.iplay === true : match?.status === 1 || match?.status === 3 || match?.status === 5) && (
               <div className="flex items-center gap-1 text-green-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-xs font-medium">Live Now</span>
@@ -184,7 +184,7 @@ const MatchCardOptimized = memo(({
           <div className="text-xs text-gray-500">ID: {match?.match_id}</div>
           <div className="text-xs text-gray-500">{match?.format_str}</div>
 
-          {match?.status === 1 && (
+          {(typeof match?.iplay === 'boolean' ? match.iplay === true : match?.status === 1 || match?.status === 3 || match?.status === 5) && (
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-xs text-green-600 font-medium">Live</span>

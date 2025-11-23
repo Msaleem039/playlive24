@@ -57,6 +57,21 @@ export const useCricketLiveUpdates = ({
     // ✅ Handles initial list of live matches
     socket.on(listEvent, (payload) => {
       console.log("🟢 [EVENT]", listEvent, "received:", payload)
+      
+      // New API format: { success: true, data: { t1: [...], t2: [...] } }
+      if (payload?.success === true && payload?.data) {
+        const t1 = Array.isArray(payload.data.t1) ? payload.data.t1 : []
+        const t2 = Array.isArray(payload.data.t2) ? payload.data.t2 : []
+        // Combine live and upcoming matches
+        const allMatches = [...t1, ...t2]
+        if (allMatches.length > 0) {
+          setLiveMatches(allMatches)
+          setLastUpdate(new Date())
+        }
+        return
+      }
+      
+      // Legacy formats
       const items = payload?.data?.matches || payload?.data?.response?.items
       if (Array.isArray(items)) {
         setLiveMatches(items)
@@ -176,4 +191,61 @@ export const useCricketLiveUpdates = ({
     liveMatches,
     lastUpdate,
   }
+}
+
+// Hook for subscribing to live odds updates for a specific match
+export function useLiveOdds(sid: number | null, gmid: number | null) {
+  const [odds, setOdds] = useState<any>(null)
+  const socketRef = useRef<Socket | null>(null)
+
+  useEffect(() => {
+    if (!sid || !gmid) {
+      setOdds(null)
+      return
+    }
+
+    // Create socket connection for live odds (base URL, no namespace)
+    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000"
+    const socket = io(baseUrl, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
+      timeout: 20000,
+    })
+
+    socketRef.current = socket
+
+    socket.on("connect", () => {
+      console.log("📊 [LIVE ODDS] Connected, subscribing to match:", { sid, gmid })
+      socket.emit("subscribe_match", { sid, gmid })
+    })
+
+    socket.on("disconnect", () => {
+      console.log("📊 [LIVE ODDS] Disconnected")
+    })
+
+    socket.on("connect_error", (err) => {
+      console.error("❌ [LIVE ODDS] Connection error:", err)
+    })
+
+    const handleOddsUpdate = (data: any) => {
+      console.log("📊 [LIVE ODDS] Received update:", data)
+      setOdds(data)
+    }
+
+    socket.on("odds_update", handleOddsUpdate)
+
+    return () => {
+      console.log("📊 [LIVE ODDS] Unsubscribing from match:", { sid, gmid })
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("unsubscribe_match", { sid, gmid })
+        socketRef.current.off("odds_update", handleOddsUpdate)
+      }
+      socketRef.current?.disconnect()
+      socketRef.current = null
+    }
+  }, [sid, gmid])
+
+  return odds
 }

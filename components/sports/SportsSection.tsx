@@ -12,7 +12,17 @@ interface SportsSectionProps {
 
 export default function SportsSection({ sport, matches, showViewMore = true }: SportsSectionProps) {
   const [showAll, setShowAll] = useState(false)
-  const displayMatches = showAll ? matches : matches.slice(0, 5)
+  
+  // Sort matches: live matches (iplay === true) first, then upcoming (iplay === false)
+  const sortedMatches = [...matches].sort((a, b) => {
+    const aIsLive = typeof (a as any)?.iplay === 'boolean' ? (a as any).iplay === true : false
+    const bIsLive = typeof (b as any)?.iplay === 'boolean' ? (b as any).iplay === true : false
+    if (aIsLive && !bIsLive) return -1 // a is live, b is not - a comes first
+    if (!aIsLive && bIsLive) return 1  // b is live, a is not - b comes first
+    return 0 // Both same status, maintain order
+  })
+  
+  const displayMatches = showAll ? sortedMatches : sortedMatches.slice(0, 5)
 
   return (
     <motion.div

@@ -2,7 +2,9 @@
 
 import { AccountStatementView } from "@/components/dashboardagent"
 
-export default function ClientAccountStatementPage() {
+export default function AgentAccountStatementPage() {
   return <AccountStatementView />
 }
+
+
 

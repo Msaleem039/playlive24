@@ -114,8 +114,16 @@ const SportsSectionOptimized = memo(({
   const [showAll, setShowAll] = React.useState(false)
   
   // Memoized display matches to prevent unnecessary recalculations
+  // Sort: live matches (iplay === true) first, then upcoming (iplay === false)
   const displayMatches = useMemo(() => {
-    return showAll ? matches : matches.slice(0, 5)
+    const sorted = [...matches].sort((a, b) => {
+      const aIsLive = typeof (a as any)?.iplay === 'boolean' ? (a as any).iplay === true : false
+      const bIsLive = typeof (b as any)?.iplay === 'boolean' ? (b as any).iplay === true : false
+      if (aIsLive && !bIsLive) return -1 // a is live, b is not - a comes first
+      if (!aIsLive && bIsLive) return 1  // b is live, a is not - b comes first
+      return 0 // Both same status, maintain order
+    })
+    return showAll ? sorted : sorted.slice(0, 5)
   }, [matches, showAll])
   
   // Memoized hasMore calculation

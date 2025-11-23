@@ -154,12 +154,31 @@ SportCategoryButton.displayName = 'SportCategoryButton'
 
 // Memoized match row component
 const MatchRow = memo(({ match }: { match: any }) => {
+  const router = useRouter()
   const formattedDateTime = useFormattedDateTime(match.date_start)
-  const isLive = (match.status === 3 || match.status === 5) && match.oddstype === "betfair"
-  const isUpcoming = match.status === 1
+  // Use iplay field to determine live status
+  const isLive = typeof match?.iplay === 'boolean' 
+    ? match.iplay === true 
+    : ((match.status === 3 || match.status === 5) && match.oddstype === "betfair")
+  const isUpcoming = typeof match?.iplay === 'boolean' 
+    ? match.iplay === false 
+    : match.status === 1
+  
+  const handleMatchClick = useCallback(() => {
+    if (isLive) {
+      // Use gmid first (from new API), then match_id, then id
+      const matchId = match.gmid ?? match.match_id ?? match.id
+      if (matchId) {
+        router.push(`/live/${matchId}`)
+      }
+    }
+  }, [isLive, match, router])
   
   return (
-    <div className="p-4 hover:bg-gray-50">
+    <div 
+      className={`p-4 hover:bg-gray-50 ${isLive ? 'cursor-pointer' : ''}`}
+      onClick={handleMatchClick}
+    >
       <div className="flex items-center justify-between">
         {/* Match Details */}
         <div className="flex-1">
@@ -226,16 +245,22 @@ const MatchRow = memo(({ match }: { match: any }) => {
         </div>
 
         {/* Action Icons */}
-        <div className="flex items-center gap-2 mr-4">
+        <div className="flex items-center gap-2 mr-4" onClick={(e) => e.stopPropagation()}>
           {match.commentary === 1 && (
             <Tv className="w-4 h-4 text-blue-500" />
           )}
           {match.session_odds_available && (
-            <button className="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold hover:bg-green-300 transition-colors">
+            <button 
+              onClick={(e) => e.stopPropagation()}
+              className="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold hover:bg-green-300 transition-colors"
+            >
               BM
             </button>
           )}
-          <button className="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold hover:bg-green-300 transition-colors">
+          <button 
+            onClick={(e) => e.stopPropagation()}
+            className="w-8 h-8 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold hover:bg-green-300 transition-colors"
+          >
             F
           </button>
         </div>
@@ -246,12 +271,15 @@ const MatchRow = memo(({ match }: { match: any }) => {
             {match.format_str}
           </div>
           <div className="text-xs text-gray-500">
-            ID: {match.match_id}
+            ID: {match.gmid ?? match.match_id}
           </div>
         </div>
 
         {/* Pin Icon */}
-        <button className="ml-2">
+        <button 
+          onClick={(e) => e.stopPropagation()}
+          className="ml-2"
+        >
           <Pin className="w-4 h-4 text-gray-400 hover:text-gray-600" />
         </button>
       </div>
@@ -374,11 +402,13 @@ const InPlayTab = memo(() => {
   // Use live matches if available and connected, otherwise use API data
   const currentMatches = (isConnected && liveCricketMatches.length > 0) ? liveCricketMatches : cricketMatches
   
-  // Calculate live counts for each sport
+  // Calculate live counts for each sport using iplay field
   const liveCounts = useMemo(() => {
-    // Filter for live matches: status === 3 or 5 AND oddstype === "betfair"
+    // Filter for live matches using iplay field (iplay === true means live)
     const cricketLive = currentMatches.filter(match => 
-      (match.status === 3 || match.status === 5) && match.oddstype === "betfair"
+      typeof match?.iplay === 'boolean' 
+        ? match.iplay === true
+        : ((match.status === 3 || match.status === 5) && match.oddstype === "betfair")
     ).length
     
     const soccerLive = 0 // Would come from soccer WebSocket
@@ -411,7 +441,7 @@ const InPlayTab = memo(() => {
     }
   }, [router])
 
-  // Memoized matches for current category
+  // Memoized matches for current category - sorted with live matches first
   const matches = useMemo(() => {
     let filteredMatches: CricketMatch[] = []
     
@@ -423,14 +453,27 @@ const InPlayTab = memo(() => {
       filteredMatches = [] // Would come from tennis WebSocket
     }
     
-    // Filter out completed matches (status === 2) and cancelled matches (status === 4)
-    // Show only live matches (status === 3 or 5 && oddstype === "betfair") and upcoming matches (status === 1)
-    return filteredMatches.filter(match => {
+    // Filter and sort: use iplay field to determine live status
+    const filtered = filteredMatches.filter(match => {
+      // Use iplay field if available
+      if (typeof match?.iplay === 'boolean') {
+        return match.iplay === true || match.iplay === false // Include live and upcoming
+      }
+      // Fallback to legacy logic
       if (match.status === 2) return false // Exclude completed matches
       if (match.status === 4) return false // Exclude cancelled/abandoned matches
       if (match.status === 3 || match.status === 5) return match.oddstype === "betfair" // Only live matches with betfair odds
       if (match.status === 1) return true // Include upcoming matches (not started)
       return false
+    })
+    
+    // Sort: live matches (iplay === true) first, then upcoming (iplay === false)
+    return filtered.sort((a, b) => {
+      const aIsLive = typeof a?.iplay === 'boolean' ? a.iplay === true : (a.status === 3 || a.status === 5)
+      const bIsLive = typeof b?.iplay === 'boolean' ? b.iplay === true : (b.status === 3 || b.status === 5)
+      if (aIsLive && !bIsLive) return -1 // a is live, b is not - a comes first
+      if (!aIsLive && bIsLive) return 1  // b is live, a is not - b comes first
+      return 0 // Both same status, maintain order
     })
   }, [selectedCategory, currentMatches])
 

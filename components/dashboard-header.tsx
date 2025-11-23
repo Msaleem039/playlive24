@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import Logo from "./utils/Logo"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
+import { useCricketMatches } from "@/app/hooks/useCricketMatches"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser } from "@/app/store/slices/authSlice"
 import Cookies from "js-cookie"
@@ -180,17 +181,52 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
   }
   
   // WebSocket for live cricket updates
-  const { isConnected, liveMatches } = useCricketLiveUpdates({
-    url: 'ws://localhost:3000/entitysport',
-    autoConnect: true
+  const {
+    isConnected,
+    liveMatches: liveCricketMatches,
+  } = useCricketLiveUpdates({
+    url: process.env.NEXT_PUBLIC_SOCKET_URL
+      ? `${process.env.NEXT_PUBLIC_SOCKET_URL}/entitysport`
+      : 'http://localhost:3000/entitysport',
+    autoConnect: true,
+    realtimeEvent: 'entitySportRealtimeData',
+    listEvent: 'entitySportLiveData',
   })
+  
+  // Fetch cricket matches from API as fallback
+  const { matches: cricketMatches } = useCricketMatches({
+    page: 1,
+    per_page: 20,
+  })
+
+  // Use live matches if available and connected, otherwise use API data
+  const currentCricketMatches = (isConnected && liveCricketMatches.length > 0) 
+    ? liveCricketMatches 
+    : cricketMatches
+
+  // Calculate live cricket matches count using iplay field
+  const cricketLiveCount = useMemo(() => {
+    const liveMatches = currentCricketMatches.filter((match: any) => {
+      // Use iplay field directly from API response
+      if (typeof match?.iplay === 'boolean') {
+        return match.iplay === true
+      }
+      // Fallback to legacy logic if iplay not available
+      const statusText = (match?.status_str || match?.state || match?.match_status || '')
+        .toString()
+        .toLowerCase()
+      return (
+        statusText.includes('live') ||
+        match?.status === 3 ||
+        match?.game_state === 3 ||
+        match?.match_status === 'live'
+      )
+    })
+    return liveMatches.length
+  }, [currentCricketMatches])
   
   // Calculate live counts for each sport based on actual WebSocket data
   const tabsWithLiveCounts = useMemo(() => {
-    const cricketLiveCount = liveMatches.filter(match => 
-      (match.status === 3 || match.status === 5) && match.oddstype === "betfair"
-    ).length
-    
     return TABS.map(tab => {
       if (tab.name === "Cricket") {
         return { ...tab, liveCount: cricketLiveCount }
@@ -199,7 +235,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       // Other sports will show 0 until their WebSocket connections are implemented
       return { ...tab, liveCount: 0 }
     })
-  }, [liveMatches])
+  }, [cricketLiveCount])
   return (
     <div className="sticky top-0 z-50">
       {/* Top bar */}

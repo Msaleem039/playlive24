@@ -2,7 +2,9 @@
 
 import { BetHistoryView } from "@/components/dashboardagent"
 
-export default function ClientBetHistoryPage() {
+export default function AgentBetHistoryPage() {
   return <BetHistoryView />
 }
+
+
 

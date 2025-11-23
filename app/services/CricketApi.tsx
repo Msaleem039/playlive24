@@ -47,6 +47,36 @@ export const cricketApi = createApi({
       },
       providesTags: ['CricketMatches'],
     }),
+    
+    // Get cricket match details by gmid
+    getCricketMatchDetail: builder.query<any, { sid: number; gmid: number }>({
+      query: ({ sid, gmid }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('sid', sid.toString());
+        searchParams.append('gmid', gmid.toString());
+        
+        return {
+          url: `${API_END_POINTS.cricketMatchDetail}?${searchParams.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['CricketMatches'],
+    }),
+    
+    // Get cricket match private data (fancy, odds, all markets)
+    getCricketMatchPrivate: builder.query<any, { sid: number; gmid: number }>({
+      query: ({ sid, gmid }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('sid', sid.toString());
+        searchParams.append('gmid', gmid.toString());
+        
+        return {
+          url: `${API_END_POINTS.cricketMatchPrivate}?${searchParams.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['CricketMatches'],
+    }),
   }),
 });
 
@@ -54,4 +84,6 @@ export const cricketApi = createApi({
 export const {
   useGetCricketCompetitionsQuery,
   useGetCricketMatchesQuery,
+  useGetCricketMatchDetailQuery,
+  useGetCricketMatchPrivateQuery,
 } = cricketApi;
