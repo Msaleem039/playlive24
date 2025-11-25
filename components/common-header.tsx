@@ -26,9 +26,10 @@ import { Sidebar } from "@/components/sidebar"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser, setCredentials } from "@/app/store/slices/authSlice"
-import { useLoginMutation, useChangePasswordMutation } from "@/app/services/Api"
+import { useLoginMutation, useChangePasswordMutation, useSuperAdminSelfTopupMutation } from "@/app/services/Api"
 import Cookies from "js-cookie"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
+import SelfTopupModal from "@/components/modal/SelfTopupModal"
 import { toast } from "sonner"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
@@ -63,10 +64,10 @@ const roleNavigationItems = {
     'Matches',
     'My Market',
     'Casino Analysis',
-    'Game Controls',
+    // 'Game Controls',
     'Chip Summary',
-    'Game List',
-    'Account Statement',
+    // 'Game List',
+    // 'Account Statement',
     'Bet History',
     'Balance Sheet',
     'Detail Report'
@@ -92,12 +93,14 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
+  const [isSelfTopupModalOpen, setIsSelfTopupModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const authUser = useSelector(selectCurrentUser)
   const [login] = useLoginMutation()
   const [changePassword] = useChangePasswordMutation()
+  const [superAdminSelfTopup, { isLoading: isSelfTopupLoading }] = useSuperAdminSelfTopupMutation()
 
   // WebSocket for live cricket updates
   const {
@@ -274,6 +277,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     const role = userInfo.role as keyof typeof roleNavigationItems
     return roleNavigationItems[role] || roleNavigationItems.CLIENT
   }, [userInfo.role])
+  const isSuperAdmin = userInfo.role === "SUPER_ADMIN"
 
   // Function to manually refresh user balance
   const refreshUserBalance = async () => {
@@ -295,6 +299,74 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
       // For now, we rely on deposit/withdraw responses to update the balance
     } catch (error) {
       console.error("Failed to refresh user balance:", error)
+    }
+  }
+
+  const persistUpdatedUser = (updatedUser: any) => {
+    dispatch(setCredentials({
+      user: updatedUser,
+      token: Cookies.get("token") || "",
+    }))
+
+    try {
+      Cookies.set("auth_user", JSON.stringify(updatedUser), { path: '/', sameSite: 'lax' })
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("auth_user", JSON.stringify(updatedUser))
+      }
+    } catch (storageError) {
+      console.warn("Failed to update stored auth", storageError)
+    }
+  }
+
+  const handleSelfTopupSubmit = async ({ amount, remarks }: { amount: number; remarks: string }) => {
+    try {
+      const response = await superAdminSelfTopup({
+        balance: amount,
+        remarks,
+      }).unwrap()
+
+      const updatedUserFromApi =
+        response?.user ||
+        response?.data?.user ||
+        response?.superAdmin ||
+        response?.updatedUser
+
+      if (updatedUserFromApi) {
+        persistUpdatedUser(updatedUserFromApi)
+      } else if (authUser) {
+        const currentBalance = normalizeNumber(
+          authUser.balance ??
+          authUser.walletBalance ??
+          authUser.availableBalance ??
+          authUser.available_balance ??
+          authUser.chips
+        )
+        const newBalance = currentBalance + amount
+        const optimisticUser = {
+          ...authUser,
+          balance: newBalance,
+          walletBalance: newBalance,
+          availableBalance: newBalance,
+          available_balance: newBalance,
+        }
+        persistUpdatedUser(optimisticUser)
+      }
+
+      toast.success(`Successfully added ${amount.toFixed(2)} to your balance`, {
+        description: remarks || undefined,
+      })
+      setIsSelfTopupModalOpen(false)
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to top up balance. Please try again."
+      toast.error("Top-up failed", {
+        description: errorMessage,
+      })
+      throw error
     }
   }
 
@@ -355,40 +427,50 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     <div className="bg-gray-100">
       {/* Top bar */}
       <div className="bg-[#334443]">
-        <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-1 xs:gap-2">
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               aria-label="Open sidebar"
               onClick={() => setIsSidebarOpen(true)}
-              className="text-emerald-400 rounded p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
+              className="text-emerald-400 rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
             >
-              <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Menu className="w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5" />
             </button>
+            {/* Logo - Hidden on small screens, shown from sm breakpoint */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }} 
               animate={{ opacity: 1, x: 0 }} 
-              className="hidden sm:block text-lg sm:text-2xl lg:text-3xl font-extrabold text-white tracking-wide flex-shrink-0"
+              className="hidden sm:block text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-wide flex-shrink-0"
             >
               <Logo/>
             </motion.div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-[#00A66E] text-black px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-full shadow-sm min-w-[90px] sm:min-w-[120px] justify-center">
-              <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
+          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#00A66E] text-black px-1.5 xs:px-2 sm:px-2.5 md:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-full shadow-sm min-w-[75px] xs:min-w-[85px] sm:min-w-[100px] md:min-w-[120px] justify-center">
+              <Coins className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
               <div className="leading-tight text-left min-w-0">
-                <div className="text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>
+                <div className="text-[10px] xs:text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>
               </div>
             </div>
+            {isSuperAdmin && (
+              <button
+                onClick={() => setIsSelfTopupModalOpen(true)}
+                className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors"
+                title="Top up super admin balance"
+              >
+                Top Up
+              </button>
+            )}
 
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 sm:gap-2 bg-[#00A66E] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition text-xs sm:text-sm min-w-0"
+                className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#00A66E] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition text-[10px] xs:text-xs sm:text-sm min-w-0"
               >
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate max-w-[80px] sm:max-w-none">{userInfo.name || <span className="text-xs sm:text-sm">User</span>}</span>
+                <User className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate max-w-[60px] xs:max-w-[70px] sm:max-w-[90px] md:max-w-none">{userInfo.name || <span className="text-[10px] xs:text-xs sm:text-sm">User</span>}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
+                  className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
                 />
               </button>
 
@@ -399,49 +481,49 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
+                    className="absolute right-0 mt-2 w-52 xs:w-56 sm:w-64 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
                   >
-                    <div className="px-4 py-3 bg-gray-100 text-xs font-semibold text-gray-700 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <ClockIcon className="w-3.5 h-3.5" />
-                        <span>{userInfo.timezone}</span>
+                    <div className="px-3 xs:px-4 py-2 xs:py-3 bg-gray-100 text-[10px] xs:text-xs font-semibold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
+                      <div className="flex items-center gap-1.5 xs:gap-2">
+                        <ClockIcon className="w-3 h-3 xs:w-3.5 xs:h-3.5 flex-shrink-0" />
+                        <span className="truncate">{userInfo.timezone}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-600">
-                        <Shield className="w-3.5 h-3.5 text-[#00A66E]" />
+                      <div className="flex items-center gap-1 text-[9px] xs:text-[10px] sm:text-[11px] text-gray-600">
+                        <Shield className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E] flex-shrink-0" />
                         <span>{userInfo.roleLabel}</span>
                       </div>
                     </div>
 
                     {(userInfo.userId || userInfo.email || userInfo.balance || userInfo.exposure || userInfo.creditLimit) && (
-                      <div className="px-4 py-3 bg-white border-b border-gray-200 text-xs text-gray-600 space-y-1">
+                      <div className="px-3 xs:px-4 py-2 xs:py-3 bg-white border-b border-gray-200 text-[10px] xs:text-xs text-gray-600 space-y-1">
                         {userInfo.email && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-500 flex items-center gap-1">
-                              <Mail className="w-3.5 h-3.5 text-[#00A66E]" /> Email
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
+                              <Mail className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E]" /> Email
                             </span>
-                            <span className="font-medium  text-gray-800 truncate max-w-[160px]">
+                            <span className="font-medium text-gray-800 truncate max-w-[120px] xs:max-w-[140px] sm:max-w-[160px] text-right">
                               {userInfo.email}
                             </span>
                           </div>
                         )}
                         {userInfo.exposure && (
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500">Exposure</span>
-                            <span className="font-semibold text-gray-800">{userInfo.exposure}</span>
+                            <span className="font-semibold text-gray-800 truncate">{userInfo.exposure}</span>
                           </div>
                         )}
                         {userInfo.creditLimit && (
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500">Credit Limit</span>
-                            <span className="font-semibold text-gray-800">{userInfo.creditLimit}</span>
+                            <span className="font-semibold text-gray-800 truncate">{userInfo.creditLimit}</span>
                           </div>
                         )}
                         {userInfo.createdAtLabel && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-500 flex items-center gap-1">
-                              <CalendarDays className="w-3.5 h-3.5 text-[#00A66E]" /> Joined
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
+                              <CalendarDays className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E]" /> Joined
                             </span>
-                            <span className="font-medium text-gray-800 text-right max-w-[180px]">
+                            <span className="font-medium text-gray-800 text-right max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] text-[9px] xs:text-[10px] sm:text-xs">
                               {userInfo.createdAtLabel}
                             </span>
                           </div>
@@ -449,7 +531,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                       </div>
                     )}
 
-                    <div className="py-1 text-sm text-gray-700">
+                    <div className="py-1 text-xs xs:text-sm text-gray-700">
                       {dropdownItems.map((item) => {
                         const { label, href, icon: Icon, action } = item
                         const tabName = 'tab' in item ? item.tab : undefined
@@ -464,10 +546,10 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                                 setIsChangePasswordModalOpen(true)
                                 setIsUserMenuOpen(false)
                               }}
-                              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                              className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                             >
-                              <Icon className="w-4 h-4 text-[#00A66E]" />
-                              <span>{label}</span>
+                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                              <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                             </button>
                           )
                         }
@@ -480,10 +562,10 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                                 onTabChange(tabName)
                                 setIsUserMenuOpen(false)
                               }}
-                              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                              className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                             >
-                              <Icon className="w-4 h-4 text-[#00A66E]" />
-                              <span>{label}</span>
+                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                              <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                             </button>
                           )
                         }
@@ -491,11 +573,11 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                           <Link
                             key={label}
                             href={href || "#"}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-[#f4f7f6] transition"
+                            className="flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 hover:bg-[#f4f7f6] transition"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <Icon className="w-4 h-4 text-[#00A66E]" />
-                            <span>{label}</span>
+                            <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                            <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                           </Link>
                         )
                       })}
@@ -504,18 +586,18 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                           refreshUserBalance()
                           setIsUserMenuOpen(false)
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                        className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                         title="Refresh balance (balance updates automatically after deposit/withdraw)"
                       >
-                        <RefreshCw className="w-4 h-4 text-[#00A66E]" />
-                        <span>Refresh Balance</span>
+                        <RefreshCw className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                        <span className="text-[11px] xs:text-xs sm:text-sm">Refresh Balance</span>
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-left text-[#8B1A3A] hover:bg-[#fce8ee] transition"
+                        className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-[#8B1A3A] hover:bg-[#fce8ee] transition"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        <LogOut className="w-3.5 h-3.5 xs:w-4 xs:h-4 flex-shrink-0" />
+                        <span className="text-[11px] xs:text-xs sm:text-sm">Logout</span>
                       </button>
                     </div>
                   </motion.div>
@@ -526,8 +608,8 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         </div>
       </div>
       {/* Marquee */}
-      <div className="bg-black text-emerald-400 py-1 overflow-hidden">
-        <div className="animate-marquee text-[0.65rem] xs:text-[0.70rem] sm:text-[0.75rem] text-white font-medium whitespace-nowrap">
+      <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
+        <div className="animate-marquee text-[0.6rem] xs:text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-white font-medium whitespace-nowrap">
           Welcome to Playlive7! If you have any queries, contact us +923216258560
         </div>
       </div>
@@ -537,13 +619,13 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         <div className="relative z-[20]">
           {/* Main Navigation Header */}
           <div className="bg-[#00A66E] text-black">
-            <div className="px-2 sm:px-3 lg:px-4 py-2 sm:py-3">
-              <div className="flex justify-start sm:justify-center items-center space-x-2 sm:space-x-3 md:space-x-4 lg:space-x-6 xl:space-x-8 overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="px-1.5 xs:px-2 sm:px-3 md:px-4 lg:px-4 py-1.5 xs:py-2 sm:py-2.5 md:py-3">
+              <div className="flex justify-start sm:justify-center items-center space-x-1 xs:space-x-1.5 sm:space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-6 overflow-x-auto no-scrollbar scroll-smooth">
                 {navigationItems.map((item) => (
                   <button
                     key={item}
                     onClick={() => onTabChange?.(item)}
-                    className={`font-semibold flex items-center gap-1.5 whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[25px] sm:min-h-[25px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
+                    className={`font-semibold flex items-center gap-1 xs:gap-1.5 whitespace-nowrap text-[0.6rem] xs:text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] lg:text-[0.8rem] transition-colors min-h-[22px] xs:min-h-[24px] sm:min-h-[28px] px-1.5 xs:px-2 sm:px-2.5 md:px-3 py-1 xs:py-1.5 sm:py-2 ${
                       item === 'Game Controls' ? 'hover:text-gray-200' : ''
                     } ${
                       item === activeTab 
@@ -551,16 +633,16 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                         : 'hover:text-gray-200 hover:bg-black/10 rounded'
                     }`}
                   >
-                    <span>{item}</span>
+                    <span className="truncate">{item}</span>
                     {/* Show live count for Matches tab (Cricket) */}
                     {item === 'Matches' && liveCricketCount > 0 && (
-                      <span className="flex items-center gap-1 bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[0.6rem] xs:text-[0.65rem] font-bold">
-                        <Radio className="w-2.5 h-2.5 animate-pulse" />
+                      <span className="flex items-center gap-0.5 xs:gap-1 bg-red-500 text-white px-1 xs:px-1.5 py-0.5 rounded-full text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] font-bold flex-shrink-0">
+                        <Radio className="w-2 h-2 xs:w-2.5 xs:h-2.5 animate-pulse flex-shrink-0" />
                         {liveCricketCount}
                       </span>
                     )}
                     {item === 'Game Controls' && (
-                      <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5 sm:ml-1 flex-shrink-0" />
+                      <ChevronDown className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 ml-0.5 xs:ml-1 flex-shrink-0" />
                     )}
                   </button>
                 ))}
@@ -593,6 +675,15 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         username={userInfo.name || "User"}
         onSubmit={handleChangePassword}
       />
+
+      {isSuperAdmin && (
+        <SelfTopupModal
+          isOpen={isSelfTopupModalOpen}
+          onClose={() => setIsSelfTopupModalOpen(false)}
+          onSubmit={handleSelfTopupSubmit}
+          isSubmitting={isSelfTopupLoading}
+        />
+      )}
     </div>
   )
 }

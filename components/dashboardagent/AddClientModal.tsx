@@ -145,7 +145,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 top-20">
-      <div className="bg-white/95 backdrop-blur-md rounded-lg w-full max-w-md mx-4 shadow-2xl border border-white/20">
+      <div className="bg-white/95 backdrop-blur-md rounded-lg w-full max-w-2xl mx-4 shadow-2xl border border-white/20">
         {/* Header */}
         <div className="bg-[#00A66E] text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
           <h2 className="text-lg font-bold">Add Client</h2>
@@ -167,103 +167,63 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
             </div>
           )}
 
-          {/* Name Field */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
-              <label className="text-sm font-medium text-gray-700 w-32">
-                Name
-              </label>
-              <div className="flex-1 ml-4">
+          <div className="space-y-4 mb-6">
+            {[
+              { label: 'Name', type: 'text', field: 'name', placeholder: 'Name' },
+              { label: 'Username', type: 'text', field: 'username', placeholder: 'Username' },
+              { label: 'Password', type: 'password', field: 'password', placeholder: 'Password' },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-4 py-3 flex flex-col md:flex-row md:items-center gap-3"
+              >
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+                  {item.label}
+                </label>
                 <Input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Name"
-                  className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                  type={item.type}
+                  value={formData[item.field as keyof ClientData]}
+                  onChange={(e) => handleInputChange(item.field as keyof ClientData, e.target.value)}
+                  placeholder={item.placeholder}
+                  className="flex-1 border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
                   required
                 />
               </div>
-            </div>
-          </div>
+            ))}
 
-          {/* Username Field */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
-              <label className="text-sm font-medium text-gray-700 w-32">
-                Username
-              </label>
-              <div className="flex-1 ml-4">
-                <Input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
-                  placeholder="Username"
-                  className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Password Field */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
-              <label className="text-sm font-medium text-gray-700 w-32">
-                Password
-              </label>
-              <div className="flex-1 ml-4">
-                <Input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Password"
-                  className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Role Field */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
-              <label className="text-sm font-medium text-gray-700 w-32">
+            {/* Role Field */}
+            <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-4 py-3 flex flex-col md:flex-row md:items-center gap-3">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
                 Role
               </label>
-              <div className="flex-1 ml-4">
-                <select
-                  value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:border-[#00A66E] focus:ring-[#00A66E] focus:outline-none"
-                  required
-                >
-                  <option value="CLIENT">Client</option>
-                  <option value="AGENT">Agent</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
-                </select>
-              </div>
+              <select
+                value={formData.role}
+                onChange={(e) => handleInputChange('role', e.target.value)}
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:border-[#00A66E] focus:ring-[#00A66E] focus:outline-none"
+                required
+              >
+                <option value="CLIENT">Client</option>
+                <option value="AGENT">Agent</option>
+                <option value="ADMIN">Admin</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
+              </select>
             </div>
-          </div>
 
-          {/* Balance Field */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between py-3 border-b border-dashed border-gray-300">
-              <label className="text-sm font-medium text-gray-700 w-32">
+            {/* Balance Field */}
+            <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-4 py-3 flex flex-col md:flex-row md:items-center gap-3">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
                 Balance
               </label>
-              <div className="flex-1 ml-4">
-                <Input
-                  type="number"
-                  value={formData.balance}
-                  onChange={(e) => handleInputChange('balance', e.target.value)}
-                  placeholder="0.00"
-                  className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
-                  step="0.01"
-                  min="0"
-                  required
-                />
-              </div>
+              <Input
+                type="number"
+                value={formData.balance}
+                onChange={(e) => handleInputChange('balance', e.target.value)}
+                placeholder="0.00"
+                className="flex-1 border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                step="0.01"
+                min="0"
+                required
+              />
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { X, User, Lock, Loader2 } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/utils/button'
 import { useGetUserQuery } from '@/app/services/Api'
 
@@ -153,22 +153,34 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
                           {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex gap-1">
-                          <button 
-                            className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 flex items-center justify-center transition-colors"
-                            title="User Details"
-                          >
-                            <User className="w-3 h-3" />
+                      {/* <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          <button className="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded hover:bg-purple-700">
+                            D
                           </button>
-                          <button 
-                            className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 flex items-center justify-center transition-colors"
-                            title="Change Password"
-                          >
-                            <Lock className="w-3 h-3" />
+                          <button className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700">
+                            W
+                          </button>
+                          <button className="w-6 h-6 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700" title="Cash Deposit">
+                            CD
+                          </button>
+                          <button className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700" title="Cash Withdraw">
+                            CW
+                          </button>
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                            Log
+                          </button>
+                          <button className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap">
+                            User Setting
+                          </button>
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                            Change Password
+                          </button>
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                            Game Control
                           </button>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

@@ -372,7 +372,7 @@ export default function UserManagement() {
                         }) : 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           <button className="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded hover:bg-purple-700">
                             D
                           </button>
@@ -393,17 +393,17 @@ export default function UserManagement() {
                           >
                             CW
                           </button>
-                          <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
                             Log
                           </button>
-                          <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
-                            <User className="w-3 h-3" />
+                          <button className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap">
+                            User Setting
                           </button>
-                          <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
-                            <Lock className="w-3 h-3" />
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                            Change Password
                           </button>
-                          <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
-                            <Gamepad2 className="w-3 h-3" />
+                          <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                            Game Control
                           </button>
                         </div>
                       </td>

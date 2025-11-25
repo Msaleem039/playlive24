@@ -444,6 +444,10 @@ console.log("filteredMatches",filteredMatches)
                   // Use gmid first (from new API), then match_id, then id
                   const matchId = match.gmid ?? match.match_id ?? match.id
                   if (matchId) {
+                    // Set flag to auto-open TV when navigating from main page
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.setItem('fromMainPage', 'true')
+                    }
                     router.push(`/live/${matchId}`)
                   }
                 }

@@ -205,7 +205,8 @@ export function useLiveOdds(sid: number | null, gmid: number | null) {
     }
 
     // Create socket connection for live odds (base URL, no namespace)
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000"
+    // const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000" 
+     const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "https://api.playlive24.com" 
     const socket = io(baseUrl, {
       transports: ["websocket"],
       reconnection: true,

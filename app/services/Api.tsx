@@ -63,6 +63,22 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+
+    superAdminSelfTopup: builder.mutation({
+      query: (data) => ({
+        url: API_END_POINTS.superAdminSelfTopup,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    placeBet: builder.mutation({
+      query: (data) => ({
+        url: API_END_POINTS.placeBet,
+        method: "POST",
+        body: data,
+      }),
+    }),
     
     // forgotPassword: builder.mutation({
     //   query: (data) => ({
@@ -105,6 +121,8 @@ export const {
     useChangePasswordMutation,
     useTopupBalanceMutation,
     useTopDownBalanceMutation,
+    useSuperAdminSelfTopupMutation,
+    usePlaceBetMutation,
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     useGetUserQuery,

@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useMemo, useRef, useEffect, CSSProperties } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { Pin, RefreshCw, Tv } from 'lucide-react'
 import { useGetCricketMatchDetailQuery, useGetCricketMatchPrivateQuery } from '@/app/services/CricketApi'
 import { useLiveOdds } from '@/app/hooks/useWebSocket'
+import DashboardHeader from '@/components/dashboard-header'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/app/store/slices/authSlice'
+import { usePlaceBetMutation } from '@/app/services/Api'
+import { toast } from 'sonner'
 
 interface BettingOption {
   odds: number | string
@@ -15,6 +20,7 @@ interface MarketRow {
   team: string
   back: BettingOption[]
   lay: BettingOption[]
+  selectionId?: number
 }
 
 interface BettingMarket {
@@ -22,6 +28,8 @@ interface BettingMarket {
   min: number
   max: number
   rows: MarketRow[]
+  gtype?: string
+  marketId?: number
 }
 
 interface BetHistoryItem {
@@ -89,12 +97,237 @@ interface ApiResponse {
 
 export default function LiveMatchDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const matchId = params?.matchId as string
+  const authUser = useSelector(selectCurrentUser)
+  const userRole = (authUser?.role as string) || 'CLIENT'
+  const isClient = userRole === 'CLIENT'
+  const isSuperAdmin = userRole === 'SUPER_ADMIN'
+  const isAdmin = userRole === 'ADMIN'
+  const shouldShowTV = !isSuperAdmin && !isAdmin // Hide TV for SUPER_ADMIN and ADMIN
   
-  const [liveToggle, setLiveToggle] = useState(true)
+  // State for responsive layout
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+  
+  // TV toggle - check if coming from main page, otherwise default to false
+  const [liveToggle, setLiveToggle] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Check if coming from main page (via sessionStorage or URL param)
+      const fromMain = sessionStorage.getItem('fromMainPage') === 'true'
+      if (fromMain) {
+        sessionStorage.removeItem('fromMainPage') // Clear after use
+        return true
+      }
+    }
+    return false
+  })
   const [selectedTab, setSelectedTab] = useState('all')
+  const [dashboardTab, setDashboardTab] = useState('Cricket')
+
+  // Handle tab change - navigate to dashboard with selected tab
+  const handleTabChange = (tab: string) => {
+    setDashboardTab(tab)
+    // Navigate to dashboard with the selected tab
+    router.push('/dashboard')
+    // Store the selected tab in sessionStorage so dashboard can use it
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedTab', tab)
+    }
+  }
   const [blinkingOdds, setBlinkingOdds] = useState<Set<string>>(new Set())
   const previousOddsRef = useRef<Map<string, { odds: string; amount: string }>>(new Map())
+  
+  // Bet slip state
+  const [betSlipOpen, setBetSlipOpen] = useState(false)
+  const [selectedBet, setSelectedBet] = useState<{
+    team: string
+    type: 'back' | 'lay'
+    odds: string
+    market: string
+    selectionId?: number
+    marketId?: number
+    marketGType?: string
+  } | null>(null)
+  const [stake, setStake] = useState<string>('')
+  const [odds, setOdds] = useState<string>('')
+
+  const renderBetSlip = (wrapperClass = '', style?: CSSProperties) => {
+    if (!selectedBet) return null
+
+    const stakeValue = parseFloat(stake)
+    const oddsValue = parseFloat(odds || selectedBet.odds)
+    let plText = '0 / 0'
+    if (!isNaN(stakeValue) && stakeValue > 0 && !isNaN(oddsValue) && oddsValue > 0) {
+      plText =
+        selectedBet.type === 'back'
+          ? `${(stakeValue * (oddsValue - 1)).toFixed(2)} / ${stakeValue.toFixed(2)}`
+          : `${stakeValue.toFixed(2)} / ${(stakeValue * (oddsValue - 1)).toFixed(2)}`
+    }
+
+    return (
+      <div
+        className={`bg-pink-50 border-t border-gray-200 flex flex-col ${wrapperClass}`}
+        style={style}
+      >
+        <div className="bg-gray-800 text-white px-3 sm:px-4 py-2 flex items-center justify-between">
+          <span className="text-sm font-semibold">Bet Slip</span>
+          <span className="text-xs text-gray-300 cursor-pointer hover:text-white">Edit Stakes</span>
+        </div>
+
+        <div className="p-3 sm:p-4 space-y-3 overflow-y-auto">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold text-gray-700">
+            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center sm:text-left">Bet for</div>
+            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Odds</div>
+            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Stake</div>
+            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">P/L</div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center">
+            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate text-center sm:text-left">
+              {selectedBet.team}
+            </div>
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={odds}
+                onChange={(e) => setOdds(e.target.value)}
+                className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
+              />
+              <div className="flex flex-col">
+                <button className="text-xs">▲</button>
+                <button className="text-xs">▼</button>
+              </div>
+            </div>
+            <div>
+              <input
+                type="text"
+                value={stake}
+                onChange={(e) => setStake(e.target.value)}
+                placeholder="Stake"
+                className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
+              />
+            </div>
+            <div className="text-xs sm:text-sm text-gray-700 text-center">{plText}</div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
+            {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount) => (
+              <button
+                key={amount}
+                onClick={() => setStake(amount.toString())}
+                className="bg-pink-500 hover:bg-pink-600 text-white px-1 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm font-medium"
+              >
+                {isMobile && amount >= 1000 ? `${amount / 1000}k` : amount.toLocaleString()}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-1 sm:gap-2 pt-2">
+            <button
+              onClick={() => setBetSlipOpen(false)}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                setStake('')
+                setSelectedBet(null)
+              }}
+              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
+            >
+              Clear
+            </button>
+            <button
+              onClick={handlePlaceBet}
+              disabled={isPlacingBet}
+              className="flex-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPlacingBet ? 'Submitting...' : 'Submit'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const [placeBet, { isLoading: isPlaceBetLoading }] = usePlaceBetMutation()
+  const isPlacingBet = isPlaceBetLoading
+
+  const handlePlaceBet = async () => {
+    if (!selectedBet) {
+      toast.error('Please select a bet first.')
+      return
+    }
+
+    const betStake = parseFloat(stake)
+    if (isNaN(betStake) || betStake <= 0) {
+      toast.error('Please enter a valid stake amount.')
+      return
+    }
+
+    const betRate = parseFloat(odds || selectedBet.odds)
+    if (isNaN(betRate) || betRate <= 0) {
+      toast.error('Invalid odds value.')
+      return
+    }
+
+    const betType = selectedBet.type === 'back' ? 'BACK' : 'LAY'
+    const winAmount = betType === 'BACK' ? betStake * (betRate - 1) : betStake
+    const lossAmount = betType === 'BACK' ? betStake : betStake * (betRate - 1)
+
+    const userId =
+      (authUser as any)?.id ??
+      (authUser as any)?.userId ??
+      0
+
+    const payload = {
+      selection_id: selectedBet.selectionId ?? 0,
+      bet_type: betType,
+      user_id: userId,
+      bet_name: selectedBet.team,
+      bet_rate: betRate,
+      match_id: numericMatchId ?? 0,
+      market_name: selectedBet.market,
+      betvalue: betStake,
+      market_type: 'in_play',
+      win_amount: Number(winAmount.toFixed(2)),
+      loss_amount: Number(lossAmount.toFixed(2)),
+      gtype: selectedBet.marketGType || 'match_odds',
+      runner_name_2: '',
+    }
+
+    try {
+      const data = await placeBet(payload).unwrap()
+      console.log('Bet placed successfully:', data)
+      toast.success('Bet placed successfully.')
+      setBetSlipOpen(false)
+      setStake('')
+      setSelectedBet(null)
+    } catch (error) {
+      console.error('Error placing bet:', error)
+      toast.error('Failed to place bet. Please try again.')
+    }
+  }
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth
+      setIsMobile(width < 768)
+      setIsTablet(width >= 768 && width < 1024)
+    }
+
+    // Initial check
+    checkScreenSize()
+
+    // Add event listener
+    window.addEventListener('resize', checkScreenSize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
 
   // Parse matchId to get gmid
   const numericMatchId = useMemo(() => {
@@ -220,9 +453,9 @@ export default function LiveMatchDetailPage() {
       date,
       time,
       isLive: matchData.iplay || false,
-      hasLiveTV: matchData.tv || false
+      hasLiveTV: (matchData.tv || false) && shouldShowTV // Only show TV if user role allows it
     }
-  }, [matchData])
+  }, [matchData, shouldShowTV])
 
   // Streaming URL - key might come from API or be a constant
   // For now using a default key, can be updated if API provides it
@@ -309,6 +542,7 @@ export default function LiveMatchDetailPage() {
         // Take only first 3 for standard markets, all for fancy
         rows.push({
           team: section.nat || 'Unknown',
+          selectionId: section.sid,
           back: backOdds.slice(0, maxDisplay),
           lay: layOdds.slice(0, maxDisplay)
         })
@@ -319,7 +553,9 @@ export default function LiveMatchDetailPage() {
           name: marketName,
           min: marketEntry.min || 500,
           max: marketEntry.max || (marketEntry.m || 500000),
-          rows
+          rows,
+          gtype: marketEntry.gtype,
+          marketId: marketEntry.mid
         })
       }
     })
@@ -410,6 +646,55 @@ export default function LiveMatchDetailPage() {
   // Bet history data (will be populated from API)
   const betHistory: BetHistoryItem[] = []
 
+  // Responsive layout calculations
+  const getMainLayoutClass = () => {
+    if (!displayMatchData.hasLiveTV || !streamUrl) {
+      return 'flex flex-col'
+    }
+    
+    if (isMobile) {
+      return 'flex flex-col'
+    }
+    
+    if (isTablet) {
+      return 'grid grid-cols-1 md:grid-cols-12 gap-0'
+    }
+    
+    return 'grid grid-cols-12 gap-0'
+  }
+
+  const getLeftPanelClass = () => {
+    if (!displayMatchData.hasLiveTV || !streamUrl) {
+      return 'col-span-12'
+    }
+    
+    if (isMobile) {
+      return 'col-span-12'
+    }
+    
+    if (isTablet) {
+      return 'col-span-12 md:col-span-8 border-r border-gray-200'
+    }
+    
+    return 'col-span-12 md:col-span-8 border-r border-gray-200'
+  }
+
+  const getRightPanelClass = () => {
+    if (!displayMatchData.hasLiveTV || !streamUrl) {
+      return 'col-span-12'
+    }
+    
+    if (isMobile) {
+      return 'col-span-12'
+    }
+    
+    if (isTablet) {
+      return 'col-span-12 md:col-span-4'
+    }
+    
+    return 'col-span-12 md:col-span-4'
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -422,20 +707,12 @@ export default function LiveMatchDetailPage() {
     )
   }
 
-  // Error state
-  if (error || (!isLoading && (!matchData || allMarkets.length === 0))) {
+  // Error state - only show if matchId is invalid
+  if (!numericMatchId) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">
-            {error ? 'Error loading match details' : 'Match not found'}
-          </p>
-          <button
-            onClick={refetch}
-            className="px-4 py-2 bg-[#00A66E] text-white rounded hover:bg-[#008a5a]"
-          >
-            Retry
-          </button>
+          <p className="text-red-600 mb-4">Invalid match ID</p>
         </div>
       </div>
     )
@@ -443,66 +720,33 @@ export default function LiveMatchDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Header Bar */}
-      <div className="bg-[#00A66E] text-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-base sm:text-lg font-semibold">{displayMatchData.title}</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm sm:text-base">{displayMatchData.date} {displayMatchData.time}</span>
-          {displayMatchData.hasLiveTV && streamUrl && (
-            <>
-              <span className="flex items-center gap-1 text-sm">
-                <Tv className="w-4 h-4" />
-                Live TV
-              </span>
-              {/* Live TV Toggle Switch */}
-              <button
-                onClick={() => setLiveToggle(!liveToggle)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  liveToggle ? 'bg-white' : 'bg-gray-300'
-                }`}
-                title={liveToggle ? 'Turn off Live TV' : 'Turn on Live TV'}
-              >
-                <div
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-[#00A66E] transition-transform ${
-                    liveToggle ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-              {/* Channel Name (CANAL+ SPORT 360) */}
-              {liveToggle && (
-                <div className="bg-black text-white px-3 py-1 rounded text-xs font-semibold">
-                  CANAL+ SPORT 360
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content Area - Grid Layout: Fixed 50/50 split when TV available */}
-      <div className={`h-[calc(100vh-64px)] ${
-        displayMatchData.hasLiveTV && streamUrl
-          ? 'grid grid-cols-12 gap-0' 
-          : 'flex flex-col'
-      }`}>
+      {/* Dashboard Header - Only for CLIENT role */}
+      {isClient && (
+        <DashboardHeader 
+          selectedTab={dashboardTab} 
+          onSelectTab={handleTabChange} 
+        />
+      )}
+      
+      {/* Main Content Area - Responsive Grid Layout */}
+      <div className={`${isClient ? 'min-h-[calc(100vh-108px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass()}`}>
         {/* Left Panel - Betting Markets (with integrated scorecard) */}
-        <div className={`flex flex-col overflow-hidden bg-white ${
-          displayMatchData.hasLiveTV && streamUrl
-            ? 'col-span-8 border-r border-gray-200' 
-            : 'flex-1'
-        }`}>
+        <div className={`flex flex-col bg-white ${getLeftPanelClass()}`}>
           {/* Betting Markets Section - Scorecard integrated as first item */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="relative">
             {/* Live Score iframe - First item in markets section */}
             {liveScoreUrl && (
-              <div className="bg-white overflow-hidden" style={{ margin: 0, padding: 0 }}>
+              <div className="bg-white overflow-hidden relative" style={{ margin: 0, padding: 0 }}>
                 <iframe
                   key={`live-score-${numericMatchId}`}
                   src={liveScoreUrl}
                   className="w-full border-0 block"
-                  style={{ height: '400px', margin: 0, padding: 0, display: 'block' }}
+                  style={{ 
+                    height: isMobile ? '300px' : '400px', 
+                    margin: 0, 
+                    padding: 0, 
+                    display: 'block' 
+                  }}
                   allow="autoplay; encrypted-media"
                   title="Live Score Details"
                   onError={() => {
@@ -511,53 +755,205 @@ export default function LiveMatchDetailPage() {
                 />
               </div>
             )}
-          {displayMarkets.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-              No betting markets available
+
+            {/* TV Section - Show below scorecard on sm/md screens, hidden on lg+ (where it's in right panel) */}
+            {displayMatchData.hasLiveTV && streamUrl && (
+              <div className="bg-white flex flex-col sm:block md:hidden border-b border-gray-200">
+                {/* Live TV Toggle Header */}
+                <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0">
+                  <span className="text-xs sm:text-sm font-semibold">Live TV</span>
+          <button
+            onClick={() => setLiveToggle(!liveToggle)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${
+              liveToggle ? 'bg-white' : 'bg-gray-300'
+            }`}
+            title={liveToggle ? 'Turn off Live TV' : 'Turn on Live TV'}
+          >
+            <div
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[#00A66E] transition-transform flex items-center justify-center ${
+                liveToggle ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            >
+              {liveToggle ? (
+                        <span className="text-white text-xs font-bold">✓</span>
+              ) : (
+                        <span className="text-gray-600 text-xs font-bold">−</span>
+              )}
             </div>
-          ) : (
-            displayMarkets.map((market, marketIndex) => (
-            <div key={marketIndex} className="border-b border-gray-200">
+          </button>
+        </div>
+                
+                {/* Live Video Stream - Only show when toggle is ON */}
+                {liveToggle && (
+                  <div className="relative bg-black flex-shrink-0" style={{ minHeight: '250px', aspectRatio: '16/9' }}>
+                    <iframe
+                      key={`stream-sm-md-${numericMatchId}-${liveToggle}`}
+                      src={streamUrl}
+                      className="w-full h-full border-0"
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      title="Live Match Stream"
+                      onError={() => {
+                        console.error('[Stream] Failed to load stream:', streamUrl)
+                      }}
+                    />
+                  
+                  {/* Video Overlay - Score and Match Info */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 text-white">
+                    {/* Current Score Bar */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-1 sm:mb-2 text-xs sm:text-sm font-semibold gap-1">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <span className="truncate">{(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}</span>
+                        <span>{matchData?.teama?.scores || matchData?.team1_scores || '0-0'}</span>
+                        <span className="text-[10px] sm:text-xs font-normal text-gray-300">{matchData?.teama?.overs || '0'}</span>
+        </div>
+                      <div className="text-[10px] sm:text-xs text-gray-300 truncate">
+                        {(matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
+                      </div>
+                    </div>
+                    
+                    {/* Match Info Bar */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-2 gap-1">
+                      <span>DAY {matchData?.day || '1'} SESSION {matchData?.session || '1'}</span>
+                      <span>SPEED {matchData?.speed || '0'} km/h</span>
+                    </div>
+                    
+                    {/* Player Scores */}
+                    {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs mb-1 sm:mb-2">
+                        {matchData.current_batsmen.slice(0, 2).map((player: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <span className="font-semibold truncate">{player.name || `Player ${idx + 1}`}</span>
+                            <span>{player.runs || '0'}</span>
+                            <span className="text-gray-400">({player.balls || '0'})</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* This Over */}
+                    {matchData?.this_over && Array.isArray(matchData.this_over) && matchData.this_over.length > 0 && (
+                      <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                        <span className="text-gray-400 mr-1">THIS OVER:</span>
+                        <div className="flex gap-0.5 sm:gap-1">
+                          {matchData.this_over.map((ball: any, idx: number) => (
+                            <span
+                              key={idx}
+                              className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center font-medium text-[10px] sm:text-xs ${
+                                ball === 0 ? 'bg-gray-700 text-gray-300' :
+                                ball === 4 || ball === 6 ? 'bg-yellow-500 text-gray-900' :
+                                'bg-green-600 text-white'
+                              }`}
+                            >
+                              {ball}
+                            </span>
+                          ))}
+        </div>
+                      </div>
+                    )}
+                    
+                    {/* Video Controls */}
+                    <div className="flex items-center justify-end gap-2 mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-white/20">
+                      <button
+                        onClick={() => {
+                          // Toggle audio/mute
+                        }}
+                        className="p-1 hover:bg-white/20 rounded"
+                        title="Toggle Audio"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.935 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.935l3.448-3.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Close video
+                        }}
+                        className="p-1 hover:bg-white/20 rounded"
+                        title="Close Video"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Stream Branding (Top Right) */}
+                  <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-semibold">
+                    CANAL+ SPORT 360
+                  </div>
+              </div>
+            )}
+              </div>
+            )}
+            
+          {/* Bet Slip positioning */}
+          {betSlipOpen && renderBetSlip('lg:hidden', { maxHeight: isMobile ? '320px' : '360px' })}
+          {(!displayMatchData.hasLiveTV || !streamUrl) && betSlipOpen && renderBetSlip('hidden md:flex flex-col', { maxHeight: '420px' })}
+
+          {displayMarkets.length > 0 && (
+            displayMarkets.map((market, marketIndex) => {
+              // Position MATCH_ODDS to cover white area of scorecard
+              const isMatchOdds = market.name === 'MATCH_ODDS'
+              return (
+            <div 
+              key={marketIndex} 
+                    className={`border-b border-gray-200 ${
+                      isMatchOdds && liveScoreUrl && !isMobile 
+                        ? 'absolute top-[180px] left-0 right-0 z-20 bg-white shadow-lg' 
+                        : 'relative'
+                    }`}
+                    style={isMatchOdds && liveScoreUrl && !isMobile ? { marginTop: '0' } : {}}
+            >
               {/* Market Header */}
-              <div className="bg-[#00A66E] text-white px-4 py-2 flex items-center justify-between">
+                    <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Pin className="w-4 h-4" />
-                  <span className="font-semibold text-sm">{market.name}</span>
+                        <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="font-semibold text-xs sm:text-sm">{market.name}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-semibold">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold">
                     BOOK
                   </button>
                   {market.name === 'MATCH_ODDS' && (
                     <button 
                       onClick={() => refetch()}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1"
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold flex items-center gap-1"
                     >
                       <RefreshCw className="w-3 h-3" />
-                      Refresh
+                            {!isMobile && 'Refresh'}
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Betting Limits */}
-              <div className="bg-gray-50 px-4 py-1 text-xs text-gray-700 border-b">
+                    <div className="bg-gray-50 px-3 sm:px-4 py-1 text-xs text-gray-700 border-b">
                 Min: {market.min.toLocaleString()} | Max: {market.max.toLocaleString()}
               </div>
 
               {/* Betting Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                      <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20">Team</th>
+                            <th className="px-1 sm:px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-16 sm:w-20">
+                              Team
+                            </th>
                       {[...Array(3)].map((_, i) => (
-                        <th key={`back-${i}`} className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[45px]">
+                              <th 
+                                key={`back-${i}`} 
+                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[35px] sm:w-[45px]"
+                              >
                           Back
                         </th>
                       ))}
                       {[...Array(3)].map((_, i) => (
-                        <th key={`lay-${i}`} className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[45px]">
+                              <th 
+                                key={`lay-${i}`} 
+                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[35px] sm:w-[45px]"
+                              >
                           Lay
                         </th>
                       ))}
@@ -566,7 +962,9 @@ export default function LiveMatchDetailPage() {
                   <tbody>
                     {market.rows.map((row, rowIndex) => (
                       <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-0.5 py-0.5 font-medium text-sm text-gray-900">{row.team}</td>
+                              <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900 truncate">
+                                {row.team}
+                              </td>
                         {/* Back Odds - 3 columns */}
                         {row.back.map((option, optIndex) => {
                           const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
@@ -574,6 +972,21 @@ export default function LiveMatchDetailPage() {
                           return (
                           <td key={`back-${optIndex}`} className="px-0.5 py-0.5">
                             <div
+                                onClick={() => {
+                                  if (option.odds !== '0' && option.amount !== '0') {
+                                    setSelectedBet({
+                                      team: row.team,
+                                      type: 'back',
+                                      odds: option.odds.toString(),
+                                      market: market.name,
+                                      selectionId: row.selectionId,
+                                      marketId: market.marketId,
+                                      marketGType: market.gtype
+                                    })
+                                    setOdds(option.odds.toString())
+                                    setBetSlipOpen(true)
+                                  }
+                                }}
                                 className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
                                 option.odds === '0' || option.amount === '0'
                                   ? 'bg-gray-100'
@@ -595,6 +1008,21 @@ export default function LiveMatchDetailPage() {
                           return (
                           <td key={`lay-${optIndex}`} className="px-0.5 py-0.5">
                             <div
+                                onClick={() => {
+                                  if (option.odds !== '0' && option.amount !== '0') {
+                                    setSelectedBet({
+                                      team: row.team,
+                                      type: 'lay',
+                                      odds: option.odds.toString(),
+                                      market: market.name,
+                                      selectionId: row.selectionId,
+                                      marketId: market.marketId,
+                                      marketGType: market.gtype
+                                    })
+                                    setOdds(option.odds.toString())
+                                    setBetSlipOpen(true)
+                                  }
+                                }}
                                 className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
                                 option.odds === '0' || option.amount === '0'
                                   ? 'bg-gray-100'
@@ -603,7 +1031,7 @@ export default function LiveMatchDetailPage() {
                                   : 'bg-pink-100 hover:bg-pink-200 cursor-pointer'
                               }`}
                             >
-                              <div className="font-semibold text-xs text-gray-900 ">{option.odds}</div>
+                                      <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
                               <div className="text-[10px] text-gray-600">{option.amount}</div>
                             </div>
                           </td>
@@ -615,17 +1043,45 @@ export default function LiveMatchDetailPage() {
                 </table>
               </div>
             </div>
-            ))
+            )
+            })
           )}
           </div>
         </div>
 
-        {/* Right Panel - Live Video (if TV enabled and toggle ON) + Betting Summary */}
-        {displayMatchData.hasLiveTV && streamUrl && liveToggle ? (
-          <div className="col-span-4 bg-black flex flex-col">
-            {/* Live Video Stream */}
-            <div className="relative flex-1 bg-black" style={{ minHeight: '400px', aspectRatio: '16/9' }}>
-              {liveToggle ? (
+        {/* Right Panel - Live Video (if TV enabled) + Betting Summary - Desktop only (md+) */}
+        {displayMatchData.hasLiveTV && streamUrl && (
+          <div className={`hidden md:flex bg-white flex-col ${getRightPanelClass()}`}>
+            {/* Live TV Toggle Header - At top of TV section */}
+            <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0">
+              <span className="text-sm font-semibold">Live TV</span>
+              <button
+                onClick={() => setLiveToggle(!liveToggle)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  liveToggle ? 'bg-white' : 'bg-gray-300'
+                }`}
+                title={liveToggle ? 'Turn off Live TV' : 'Turn on Live TV'}
+              >
+                <div
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[#00A66E] transition-transform flex items-center justify-center ${
+                    liveToggle ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {liveToggle ? (
+                    <span className="text-white text-xs font-bold">✓</span>
+                  ) : (
+                    <span className="text-gray-600 text-xs font-bold">−</span>
+                  )}
+                </div>
+              </button>
+            </div>
+            
+            {/* Live Video Stream - Only show when toggle is ON */}
+            {liveToggle && (
+              <div className="relative bg-white flex-shrink-0" style={{ 
+                minHeight: isMobile ? '250px' : '400px', 
+                aspectRatio: isMobile ? '16/9' : 'auto'
+              }}>
                 <iframe
                   key={`stream-${numericMatchId}-${liveToggle}`}
                   src={streamUrl}
@@ -637,41 +1093,40 @@ export default function LiveMatchDetailPage() {
                     console.error('[Stream] Failed to load stream:', streamUrl)
                   }}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-sm">
-                  Live TV is turned off. Turn on the toggle to watch.
-                </div>
-              )}
               
               {/* Video Overlay - Score and Match Info */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 text-white">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 text-white">
                 {/* Current Score Bar */}
-                <div className="flex items-center justify-between mb-2 text-sm font-semibold">
-                  <div className="flex items-center gap-2">
-                    <span>{(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}</span>
+                  <div className="flex items-center justify-between mb-1 sm:mb-2 text-xs sm:text-sm font-semibold">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <span className="truncate max-w-[80px] sm:max-w-none">
+                        {(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}
+                      </span>
                     <span>{matchData?.teama?.scores || matchData?.team1_scores || '0-0'}</span>
                     <span className="text-xs font-normal text-gray-300">{matchData?.teama?.overs || '0'}</span>
                   </div>
-                  <div className="text-xs text-gray-300">
+                    <div className="text-xs text-gray-300 truncate max-w-[80px] sm:max-w-none">
                     {(matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
                   </div>
-                  <div className="text-xs text-gray-300">
+                    <div className="hidden sm:block text-xs text-gray-300">
                     {(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()} LEAD BY {(matchData?.lead_runs || matchData?.lead || '0')} RUNS
                   </div>
                 </div>
                 
                 {/* Match Info Bar */}
-                <div className="flex items-center justify-between text-xs text-gray-300 mb-2">
+                  <div className="flex items-center justify-between text-xs text-gray-300 mb-1 sm:mb-2">
                   <span>DAY {matchData?.day || '1'} SESSION {matchData?.session || '1'}</span>
-                  <span>SPEED {matchData?.speed || '0'} km/h</span>
+                    <span className="hidden sm:inline">SPEED {matchData?.speed || '0'} km/h</span>
                 </div>
                 
                 {/* Player Scores */}
                 {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
-                  <div className="flex items-center gap-4 text-xs mb-2">
+                    <div className="flex items-center gap-2 sm:gap-4 text-xs mb-1 sm:mb-2">
                     {matchData.current_batsmen.slice(0, 2).map((player: any, idx: number) => (
                       <div key={idx} className="flex items-center gap-1">
-                        <span className="font-semibold">{player.name || `Player ${idx + 1}`}</span>
+                          <span className="font-semibold truncate max-w-[60px] sm:max-w-none">
+                            {player.name || `Player ${idx + 1}`}
+                          </span>
                         <span>{player.runs || '0'}</span>
                         <span className="text-gray-400">({player.balls || '0'})</span>
                       </div>
@@ -686,7 +1141,7 @@ export default function LiveMatchDetailPage() {
                     {matchData.this_over.map((ball: any, idx: number) => (
                       <span
                         key={idx}
-                        className={`w-5 h-5 rounded flex items-center justify-center font-medium ${
+                          className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center font-medium ${
                           ball === 0 ? 'bg-gray-700 text-gray-300' :
                           ball === 4 || ball === 6 ? 'bg-yellow-500 text-gray-900' :
                           'bg-green-600 text-white'
@@ -699,7 +1154,7 @@ export default function LiveMatchDetailPage() {
                 )}
                 
                 {/* Video Controls */}
-                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-white/20">
+                  <div className="flex items-center justify-end gap-2 mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-white/20">
                   <button
                     onClick={() => {
                       // Toggle audio/mute
@@ -707,7 +1162,7 @@ export default function LiveMatchDetailPage() {
                     className="p-1 hover:bg-white/20 rounded"
                     title="Toggle Audio"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.935 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.935l3.448-3.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
                     </svg>
                   </button>
@@ -718,7 +1173,7 @@ export default function LiveMatchDetailPage() {
                     className="p-1 hover:bg-white/20 rounded"
                     title="Close Video"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
@@ -730,130 +1185,13 @@ export default function LiveMatchDetailPage() {
                 CANAL+ SPORT 360
               </div>
             </div>
+            )}
 
-            {/* Betting Summary Section */}
-            <div className="h-[300px] bg-white flex flex-col border-t border-gray-200">
-              {/* Tabs */}
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50">
-                <div className="flex gap-1 overflow-x-auto">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setSelectedTab(tab.id)}
-                      className={`px-2 py-1 text-xs font-medium whitespace-nowrap rounded transition-colors ${
-                        selectedTab === tab.id
-                          ? 'bg-[#00A66E] text-white'
-                          : 'bg-white text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {tab.label} ({tab.count})
-                    </button>
-                  ))}
-                </div>
-                <button className="text-xs text-[#00A66E] hover:underline font-medium ml-2 whitespace-nowrap">
-                  View All
-                </button>
-              </div>
+            {betSlipOpen && renderBetSlip('flex-shrink-0', { maxHeight: '420px' })}
 
-              {/* Table Headers */}
-              <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-700">
-                <div>User Name</div>
-                <div>Market</div>
-                <div>Rate</div>
-                <div>Amount</div>
-                <div>Date</div>
-              </div>
-
-              {/* Bet History Content */}
-              <div className="flex-1 overflow-y-auto">
-                {betHistory.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500 text-xs">
-                    No bets available
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {betHistory.map((bet, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-5 gap-2 px-4 py-2 hover:bg-gray-50 text-xs"
-                      >
-                        <div className="truncate">{bet.userName}</div>
-                        <div className="truncate">{bet.market}</div>
-                        <div className="truncate">{bet.rate}</div>
-                        <div className="truncate">{bet.amount}</div>
-                        <div className="truncate">{bet.date}</div>
-                      </div>
-                    ))}
                   </div>
                 )}
-              </div>
-            </div>
-          </div>
-        ) : null}
         
-        {/* Betting Summary Panel - Show when TV is off or not available */}
-        {(!displayMatchData.hasLiveTV || !streamUrl || !liveToggle) && (
-          <div className={`${
-            displayMatchData.hasLiveTV && streamUrl 
-              ? 'col-span-4' 
-              : 'w-full'
-          } bg-white ${displayMatchData.hasLiveTV && streamUrl ? 'border-l border-gray-200' : ''} flex flex-col`}>
-          {/* Tabs */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50">
-            <div className="flex gap-1 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedTab(tab.id)}
-                  className={`px-2 py-1 text-xs font-medium whitespace-nowrap rounded transition-colors ${
-                    selectedTab === tab.id
-                      ? 'bg-[#00A66E] text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
-            <button className="text-xs text-[#00A66E] hover:underline font-medium ml-2">
-              View All
-            </button>
-          </div>
-
-          {/* Table Headers */}
-          <div className="grid grid-cols-5 gap-2 px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-700">
-            <div>User Name</div>
-            <div>Market</div>
-            <div>Rate</div>
-            <div>Amount</div>
-            <div>Date</div>
-          </div>
-
-          {/* Bet History Content */}
-          <div className="flex-1 overflow-y-auto">
-            {betHistory.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                No bets available
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {betHistory.map((bet, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-5 gap-2 px-4 py-2 hover:bg-gray-50 text-xs"
-                  >
-                    <div className="truncate">{bet.userName}</div>
-                    <div className="truncate">{bet.market}</div>
-                    <div className="truncate">{bet.rate}</div>
-                    <div className="truncate">{bet.amount}</div>
-                    <div className="truncate">{bet.date}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        )}
       </div>
     </div>
   )

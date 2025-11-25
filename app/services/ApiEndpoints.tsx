@@ -39,4 +39,10 @@ export const API_END_POINTS = {
     getUser: `${BASE_URL}/auth/subordinates`,
     getSingleUser: `${BASE_URL}/users/:userId`,
     getDashboardData: `${BASE_URL}/transfer/dashboard-summary`,
+
+    /////////////////////////////<===BETTING===>//////////////////////////////
+    placeBet: `${BASE_URL}/bf_placeBet_api`,
+
+    /////////////////////////////<===SUPER ADMIN===>//////////////////////////////
+    superAdminSelfTopup: `${BASE_URL}/transfer/superadmin/self-topup`,
 }

@@ -414,46 +414,46 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         <button className="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded hover:bg-purple-700">
                           D
                         </button>
                         <button className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700">
                           W
                         </button>
-                              <button
-                                onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
-                                className="w-6 h-6 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700"
-                                title="Cash Deposit"
-                              >
-                                CD
-                              </button>
-                              <button
-                                onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
-                                className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700"
-                                title="Cash Withdraw"
-                              >
-                                CW
-                              </button>
-                        <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
+                        <button
+                          onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
+                          className="w-6 h-6 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700"
+                          title="Cash Deposit"
+                        >
+                          CD
+                        </button>
+                        <button
+                          onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
+                          className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700"
+                          title="Cash Withdraw"
+                        >
+                          CW
+                        </button>
+                        <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
                           Log
                         </button>
                         <button
                           onClick={() => handleUserDetails(user.name || user.email || '', user.id, user.email)}
-                          className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600"
+                          className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap"
                           title="User Details"
                         >
-                          <User className="w-3 h-3" />
+                          User Setting
                         </button>
                         <button
                           onClick={() => handleChangePassword(user.name || user.email || '', user.email)}
-                          className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600"
+                          className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap"
                           title="Change Password"
                         >
-                          <Lock className="w-3 h-3" />
+                          Change Password
                         </button>
-                        <button className="w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600">
-                          <Gamepad2 className="w-3 h-3" />
+                        <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
+                          Game Control
                         </button>
                       </div>
                     </td>

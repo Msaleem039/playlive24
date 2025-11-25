@@ -6,7 +6,17 @@ import { DashboardContentOptimized } from '@/components/dashboard'
 import { ErrorBoundary } from '@/components/utils/ErrorBoundary'
 
 export default function DashboardPageClient() {
-  const [tab, setTab] = useState('Home')
+  // Initialize tab from sessionStorage if available (e.g., when navigating from live match page)
+  const [tab, setTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedTab = sessionStorage.getItem('selectedTab')
+      if (savedTab) {
+        sessionStorage.removeItem('selectedTab') // Clear after use
+        return savedTab
+      }
+    }
+    return 'Home'
+  })
   const mainRef = useRef<HTMLElement>(null)
 
   const handleTabChange = useCallback((newTab: string) => {
