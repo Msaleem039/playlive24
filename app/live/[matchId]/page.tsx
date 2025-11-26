@@ -277,10 +277,24 @@ export default function LiveMatchDetailPage() {
     const winAmount = betType === 'BACK' ? betStake * (betRate - 1) : betStake
     const lossAmount = betType === 'BACK' ? betStake : betStake * (betRate - 1)
 
-    const userId =
-      (authUser as any)?.id ??
-      (authUser as any)?.userId ??
+    // Try multiple user ID fields - backend might need numeric ID or specific field
+    const userId = 
+      (authUser as any)?.user_id ??           // Try user_id first (if backend uses this)
+      (authUser as any)?.userId ??             // Try userId
+      (authUser as any)?.id ??                 // Try id
+      (authUser as any)?.numericId ??          // Try numericId if exists
+      (typeof (authUser as any)?.id === 'number' ? (authUser as any)?.id : null) ?? // Try numeric id
       0
+
+    // Log user ID for debugging
+    console.log('Bet placement - User ID fields:', {
+      user_id: (authUser as any)?.user_id,
+      userId: (authUser as any)?.userId,
+      id: (authUser as any)?.id,
+      numericId: (authUser as any)?.numericId,
+      selectedUserId: userId,
+      fullUser: authUser
+    })
 
     const payload = {
       selection_id: selectedBet.selectionId ?? 0,
@@ -305,9 +319,26 @@ export default function LiveMatchDetailPage() {
       setBetSlipOpen(false)
       setStake('')
       setSelectedBet(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error placing bet:', error)
-      toast.error('Failed to place bet. Please try again.')
+      
+      // Show specific error message from backend
+      const errorMessage = 
+        error?.data?.error || 
+        error?.data?.message || 
+        error?.message || 
+        'Failed to place bet. Please try again.'
+      
+      toast.error(errorMessage)
+      
+      // If user not found, suggest checking user ID
+      if (error?.data?.code === 'USER_NOT_FOUND' || errorMessage.includes('User not found')) {
+        console.error('User ID issue - Current user:', {
+          userId: userId,
+          userObject: authUser,
+          availableFields: Object.keys(authUser || {})
+        })
+      }
     }
   }
 
