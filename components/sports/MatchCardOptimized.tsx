@@ -1,6 +1,7 @@
 "use client"
 import { memo } from "react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 import { Tv, Trophy, Users, MapPin, Pin, Star, Sparkles } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
 
@@ -47,11 +48,11 @@ const MatchCardOptimized = memo(({
 
   const matchId = match?.match_id ? String(match.match_id) : ''
 
-  return (
+  const cardContent = (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors px-4"
+      className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors px-4 cursor-pointer"
     >
       <div className="flex items-center justify-between">
         
@@ -154,7 +155,11 @@ const MatchCardOptimized = memo(({
           <div className="flex items-center gap-1">
             {onPin && matchId && (
               <button
-                onClick={() => onPin(matchId)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onPin(matchId)
+                }}
                 className="p-1 hover:bg-gray-200 rounded transition-colors"
                 title="Pin match"
               >
@@ -163,7 +168,11 @@ const MatchCardOptimized = memo(({
             )}
             {onBookmark && matchId && (
               <button
-                onClick={() => onBookmark(matchId)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onBookmark(matchId)
+                }}
                 className="p-1 hover:bg-gray-200 rounded transition-colors"
                 title="Bookmark match"
               >
@@ -172,7 +181,11 @@ const MatchCardOptimized = memo(({
             )}
             {onFantasy && matchId && (
               <button
-                onClick={() => onFantasy(matchId)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onFantasy(matchId)
+                }}
                 className="p-1 hover:bg-gray-200 rounded transition-colors"
                 title="Fantasy match"
               >
@@ -201,6 +214,16 @@ const MatchCardOptimized = memo(({
       </div>
     </motion.div>
   )
+
+  if (matchId) {
+    return (
+      <Link href={`/live/${matchId}`} className="block">
+        {cardContent}
+      </Link>
+    )
+  }
+
+  return cardContent
 })
 
 MatchCardOptimized.displayName = 'MatchCardOptimized'

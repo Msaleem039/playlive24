@@ -1,6 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
 import { Tv, Trophy, Users, MapPin } from "lucide-react"
+import Link from "next/link"
 import { CricketMatch } from "@/lib/types/cricket"
 
 interface MatchCardProps {
@@ -35,11 +36,18 @@ export default function MatchCard({ match }: MatchCardProps) {
     }
   }
 
-  return (
+  const matchId =
+    (match as any)?.match_id ??
+    (match as any)?.id ??
+    (match as any)?.matchId
+
+  const cardContent = (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors px-4"
+      className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors px-4 cursor-pointer"
+      role="button"
+      tabIndex={0}
     >
       <div className="flex items-center justify-between">
         
@@ -159,4 +167,14 @@ export default function MatchCard({ match }: MatchCardProps) {
       </div>
     </motion.div>
   )
+
+  if (matchId) {
+    return (
+      <Link href={`/live/${matchId}`} className="block">
+        {cardContent}
+      </Link>
+    )
+  }
+
+  return cardContent
 }

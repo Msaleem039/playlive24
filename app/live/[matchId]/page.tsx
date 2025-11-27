@@ -152,6 +152,9 @@ export default function LiveMatchDetailPage() {
   const [stake, setStake] = useState<string>('')
   const [odds, setOdds] = useState<string>('')
 
+  const BACK_COLUMNS = 1
+  const LAY_COLUMNS = 1
+
   const renderBetSlip = (wrapperClass = '', style?: CSSProperties) => {
     if (!selectedBet) return null
 
@@ -560,22 +563,22 @@ export default function LiveMatchDetailPage() {
           }
         })
 
-        // Pad to 3 items each for display (for standard match odds)
-        // For fancy markets, show what's available
-        const maxDisplay = marketEntry.gtype === 'match' || marketEntry.gtype === 'match1' ? 3 : Math.max(backOdds.length, layOdds.length, 3)
-        while (backOdds.length < maxDisplay) {
-          backOdds.push({ odds: '0', amount: '0' })
+        // Only keep the primary Back/Lay columns (best available odds)
+        const normalizedBackOdds = backOdds.slice(0, BACK_COLUMNS)
+        const normalizedLayOdds = layOdds.slice(0, LAY_COLUMNS)
+
+        while (normalizedBackOdds.length < BACK_COLUMNS) {
+          normalizedBackOdds.push({ odds: '0', amount: '0' })
         }
-        while (layOdds.length < maxDisplay) {
-          layOdds.push({ odds: '0', amount: '0' })
+        while (normalizedLayOdds.length < LAY_COLUMNS) {
+          normalizedLayOdds.push({ odds: '0', amount: '0' })
         }
 
-        // Take only first 3 for standard markets, all for fancy
         rows.push({
           team: section.nat || 'Unknown',
           selectionId: section.sid,
-          back: backOdds.slice(0, maxDisplay),
-          lay: layOdds.slice(0, maxDisplay)
+          back: normalizedBackOdds,
+          lay: normalizedLayOdds
         })
       })
 
@@ -972,18 +975,18 @@ export default function LiveMatchDetailPage() {
                             <th className="px-1 sm:px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-16 sm:w-20">
                               Team
                             </th>
-                      {[...Array(3)].map((_, i) => (
+                      {Array.from({ length: BACK_COLUMNS }).map((_, i) => (
                               <th 
                                 key={`back-${i}`} 
-                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[35px] sm:w-[45px]"
+                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
                               >
                           Back
                         </th>
                       ))}
-                      {[...Array(3)].map((_, i) => (
+                      {Array.from({ length: LAY_COLUMNS }).map((_, i) => (
                               <th 
                                 key={`lay-${i}`} 
-                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[35px] sm:w-[45px]"
+                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
                               >
                           Lay
                         </th>
