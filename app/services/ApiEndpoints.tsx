@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-// export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 
@@ -42,6 +42,9 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===BETTING===>//////////////////////////////
     placeBet: `${BASE_URL}/bf_placeBet_api`,
+
+    /////////////////////////////<===WALLET===>//////////////////////////////
+    getWallet: `${BASE_URL}/users/me/wallet`,
 
     /////////////////////////////<===SUPER ADMIN===>//////////////////////////////
     superAdminSelfTopup: `${BASE_URL}/transfer/superadmin/self-topup`,

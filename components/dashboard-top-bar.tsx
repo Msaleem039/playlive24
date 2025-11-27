@@ -15,15 +15,15 @@ import {
   Clock as ClockIcon,
   User,
   Shield,
-  Mail,
-  CalendarDays,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser } from "@/app/store/slices/authSlice"
+import { useGetWalletQuery } from "@/app/services/Api"
 import Cookies from "js-cookie"
+import { RefreshCw } from "lucide-react"
 
 interface DashboardTopBarProps {
   onSidebarOpen: () => void
@@ -33,9 +33,17 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   const router = useRouter()
   const dispatch = useDispatch<any>()
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isBalanceMenuOpen, setIsBalanceMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const balanceMenuRef = useRef<HTMLDivElement | null>(null)
 
   const authUser = useSelector(selectCurrentUser)
+
+  // Fetch wallet data (balance, liability, availableBalance)
+  const { data: walletData, refetch: refetchWallet } = useGetWalletQuery(undefined, {
+    skip: !authUser, // Skip if user is not logged in
+    pollingInterval: 30000, // Poll every 30 seconds to keep balance updated
+  })
 
   const normalizeNumber = (value: any) => {
     const parsed = typeof value === "number" ? value : parseFloat(value ?? "")
@@ -60,18 +68,38 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
 
   const userInfo = useMemo(() => {
     const role = (authUser?.role as string | undefined) ?? "CLIENT"
+    
+    // Prioritize wallet data if available, otherwise fall back to authUser fields
     const balanceValue = normalizeNumber(
+      walletData?.balance ??
       authUser?.balance ??
       authUser?.walletBalance ??
       authUser?.availableBalance ??
       authUser?.available_balance ??
       authUser?.chips
     )
+    
+    const liabilityValue = normalizeNumber(
+      walletData?.liability ??
+      authUser?.liability ??
+      authUser?.exposure ??
+      authUser?.currentExposure ??
+      authUser?.totalExposure
+    )
+    
+    const availableBalanceValue = normalizeNumber(
+      walletData?.availableBalance ??
+      authUser?.availableBalance ??
+      authUser?.available_balance ??
+      (balanceValue - liabilityValue)
+    )
+    
     const exposureValue = normalizeNumber(
       authUser?.exposure ??
       authUser?.currentExposure ??
       authUser?.totalExposure
     )
+    
     const creditLimitValue = normalizeNumber(
       authUser?.creditLimit ??
       authUser?.credit_limit
@@ -86,6 +114,8 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
         "Guest",
       balanceRaw: balanceValue,
       balance: formatMoney(balanceValue),
+      liability: liabilityValue ? formatMoney(liabilityValue) : null,
+      availableBalance: availableBalanceValue ? formatMoney(availableBalanceValue) : null,
       exposure: exposureValue ? formatMoney(exposureValue) : null,
       creditLimit: creditLimitValue ? formatMoney(creditLimitValue) : null,
       timezone: authUser?.timezone ?? authUser?.time_zone ?? "GMT+5:00",
@@ -96,7 +126,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
       createdAtLabel: formatDate(authUser?.createdAt ?? authUser?.created_at),
       updatedAtLabel: formatDate(authUser?.updatedAt ?? authUser?.updated_at),
     }
-  }, [authUser])
+  }, [authUser, walletData])
 
   const dropdownItems = useMemo(() => {
     const role = userInfo.role
@@ -143,6 +173,19 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isUserMenuOpen])
 
+  useEffect(() => {
+    if (!isBalanceMenuOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (balanceMenuRef.current && !balanceMenuRef.current.contains(event.target as Node)) {
+        setIsBalanceMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isBalanceMenuOpen])
+
   const handleLogout = () => {
     try {
       Cookies.remove("token")
@@ -155,6 +198,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
 
     dispatch(logoutThunk())
     setIsUserMenuOpen(false)
+    setIsBalanceMenuOpen(false)
     router.push("/login")
   }
 
@@ -179,16 +223,75 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
           </motion.div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-          <div className="flex items-center gap-1 sm:gap-1.5 bg-[#00A66E] text-black px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 rounded-full shadow-sm min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] justify-center">
+        <div className="relative" ref={balanceMenuRef}>
+          <button
+            type="button"
+            onClick={() => {
+              setIsBalanceMenuOpen((prev) => !prev)
+              setIsUserMenuOpen(false)
+            }}
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#00A66E] text-black px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 rounded-full shadow-sm min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] justify-center hover:bg-[#00b97b] transition"
+          >
             <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
             <div className="leading-tight text-left min-w-0">
               <div className="text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>
             </div>
-          </div>
+            <ChevronDown
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform flex-shrink-0 ${isBalanceMenuOpen ? "rotate-180" : "rotate-0"}`}
+            />
+          </button>
+
+          <AnimatePresence>
+            {isBalanceMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-48 sm:w-52 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-50"
+              >
+                <div className="px-3 sm:px-4 py-3 text-gray-700 space-y-1">
+                  {userInfo.balance && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-gray-500 text-sm">Main Balance</span>
+                      <span className="text-sm font-semibold text-gray-900">{userInfo.balance}</span>
+                    </div>
+                  )}
+                  {userInfo.liability && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-gray-500 text-sm">Liability</span>
+                      <span className="text-sm font-semibold text-gray-900">{userInfo.liability}</span>
+                    </div>
+                  )}
+                  {userInfo.availableBalance && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-gray-500 text-sm">P/L</span>
+                      <span className="text-sm font-semibold text-green-600">{userInfo.availableBalance}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    refetchWallet()
+                    setIsBalanceMenuOpen(false)
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm text-gray-700 hover:bg-[#f4f7f6] border-t border-gray-200 transition"
+                  title="Refresh balance"
+                >
+                  <RefreshCw className="w-4 h-4 text-[#00A66E]" />
+                  Refresh Balance
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setIsUserMenuOpen((prev) => !prev)}
+              onClick={() => {
+                setIsUserMenuOpen((prev) => !prev)
+                setIsBalanceMenuOpen(false)
+              }}
               className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-[#00A66E] px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition min-w-0"
             >
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -217,43 +320,6 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
                       <span>{userInfo.roleLabel}</span>
                     </div>
                   </div>
-
-                  {(userInfo.userId || userInfo.email || userInfo.balance || userInfo.exposure || userInfo.creditLimit) && (
-                    <div className="px-3 sm:px-4 py-2 sm:py-3 bg-white border-b border-gray-200 text-[10px] sm:text-xs text-gray-600 space-y-1">
-                      {userInfo.email && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
-                            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#00A66E]" /> Email
-                          </span>
-                          <span className="font-medium text-gray-800 truncate max-w-[120px] sm:max-w-[140px] md:max-w-[160px] text-right">
-                            {userInfo.email}
-                          </span>
-                        </div>
-                      )}
-                      {userInfo.exposure && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-gray-500">Exposure</span>
-                          <span className="font-semibold text-gray-800 truncate">{userInfo.exposure}</span>
-                        </div>
-                      )}
-                      {userInfo.creditLimit && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-gray-500">Credit Limit</span>
-                          <span className="font-semibold text-gray-800 truncate">{userInfo.creditLimit}</span>
-                        </div>
-                      )}
-                      {userInfo.createdAtLabel && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
-                            <CalendarDays className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#00A66E]" /> Joined
-                          </span>
-                          <span className="font-medium text-gray-800 text-right max-w-[140px] sm:max-w-[160px] md:max-w-[180px] text-[9px] sm:text-[10px] md:text-xs">
-                            {userInfo.createdAtLabel}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   <div className="py-1 text-xs sm:text-sm text-gray-700">
                     {dropdownItems.map(({ label, href, icon: Icon }) => (

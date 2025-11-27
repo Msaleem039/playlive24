@@ -52,7 +52,7 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ['User', 'Wallet'] as any,
     }),
     
     topDownBalance: builder.mutation({
@@ -61,7 +61,7 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ['User', 'Wallet'] as any,
     }),
 
     superAdminSelfTopup: builder.mutation({
@@ -70,6 +70,7 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ['User', 'Wallet'] as any,
     }),
 
     placeBet: builder.mutation({
@@ -78,6 +79,7 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ['Wallet'] as any,
     }),
     
     // forgotPassword: builder.mutation({
@@ -110,6 +112,13 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
     }),
+    getWallet: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getWallet,
+        method: "GET",
+      }),
+      providesTags: ['Wallet'] as any,
+    }),
   }),
 });
 
@@ -127,5 +136,6 @@ export const {
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     useGetUserQuery,
     useGetDashboardDataQuery,
+    useGetWalletQuery,
     
 } = api;
