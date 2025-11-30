@@ -118,13 +118,26 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         })
         
         // Redirect based on user role using Next.js router for smooth navigation
-        const dashboardPath = getDashboardPath(result.user.role)
-        console.log("Redirecting to:", dashboardPath)
+        const resolvedRole = resolveRole(result.user.role)
+        const normalizedRole = typeof resolvedRole === 'string'
+          ? resolvedRole.toUpperCase().replace(/[-\s]+/g, "_")
+          : undefined
+        
+        let redirectPath = "/dashboard"
+        
+        // For SUPER_ADMIN, redirect to selection page
+        if (normalizedRole === UserRole.SUPER_ADMIN) {
+          redirectPath = "/super-admin/select"
+        } else {
+          redirectPath = getDashboardPath(result.user.role)
+        }
+        
+        console.log("Redirecting to:", redirectPath)
         
         // Use router.push for client-side navigation (no full page reload)
         // Small delay ensures cookies are set before navigation
         setTimeout(() => {
-          router.push(dashboardPath)
+          router.push(redirectPath)
         }, 50)
       } else {
         console.error("Invalid response structure:", result)
@@ -162,11 +175,23 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         })
         
         // Redirect based on user role using Next.js router for smooth navigation
-        const dashboardPath = getDashboardPath(err.data.user.role)
+        const resolvedRole = resolveRole(err.data.user.role)
+        const normalizedRole = typeof resolvedRole === 'string'
+          ? resolvedRole.toUpperCase().replace(/[-\s]+/g, "_")
+          : undefined
+        
+        let redirectPath = "/dashboard"
+        
+        // For SUPER_ADMIN, redirect to selection page
+        if (normalizedRole === UserRole.SUPER_ADMIN) {
+          redirectPath = "/super-admin/select"
+        } else {
+          redirectPath = getDashboardPath(err.data.user.role)
+        }
         
         // Use router.push for client-side navigation (no full page reload)
         setTimeout(() => {
-          router.push(dashboardPath)
+          router.push(redirectPath)
           router.refresh() // Force Next.js to revalidate and read cookies
         }, 50)
       } else {

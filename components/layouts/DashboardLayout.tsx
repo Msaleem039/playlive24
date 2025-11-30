@@ -11,6 +11,7 @@ import {
   AccountStatementView,
   BetHistoryView,
   BalanceSheetView,
+  SettlementAdminPanel,
 } from "@/components/dashboardagent"
 import { MyReportView } from "@/components/MyReportView"
 import MatchesView from "@/components/MatchesView"
@@ -139,6 +140,7 @@ export default function DashboardLayout({ role }: { role: string }) {
         {activeTab === "Detail Report" && <DetailReportView />}
         {activeTab === "System Settings" && <SystemSettingsView />}
         {activeTab === "Reports" && <ReportsView />}
+        {activeTab === "Settlement" && <SettlementAdminPanel />}
       </main>
 
       {/* ======= Modals ======= */}
@@ -154,7 +156,6 @@ export default function DashboardLayout({ role }: { role: string }) {
         <AllUsersModal
           isOpen={isAllUsersModalOpen}
           onClose={() => setIsAllUsersModalOpen(false)}
-          users={users}
         />
       )}
     </div>

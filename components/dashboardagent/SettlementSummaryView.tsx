@@ -35,7 +35,7 @@ export function SettlementSummaryView() {
       </div>
 
       {/* Purple Bar */}
-      <div className="bg-purple-600 h-2"></div>
+      {/* <div className="bg-purple-600 h-2"></div> */}
 
       {/* Search Section */}
       <div className="bg-white px-4 py-4">

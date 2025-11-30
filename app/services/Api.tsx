@@ -119,6 +119,49 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['Wallet'] as any,
     }),
+
+    /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
+    getPendingSettlements: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getPendingSettlements,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+
+    getSettlementDetails: builder.query({
+      query: (settlementId: string) => ({
+        url: `${API_END_POINTS.getSettlementDetails}?settlement_id=${settlementId}`,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+
+    getSettlementBets: builder.query({
+      query: (params: { status?: string; match_id?: string; settlement_id?: string; user_id?: string; limit?: number }) => {
+        const queryParams = new URLSearchParams()
+        if (params.status) queryParams.append('status', params.status)
+        if (params.match_id) queryParams.append('match_id', params.match_id)
+        if (params.settlement_id) queryParams.append('settlement_id', params.settlement_id)
+        if (params.user_id) queryParams.append('user_id', params.user_id)
+        if (params.limit) queryParams.append('limit', params.limit.toString())
+        return {
+          url: `${API_END_POINTS.getSettlementBets}?${queryParams.toString()}`,
+          method: "GET",
+        }
+      },
+      providesTags: ['Settlement'] as any,
+    }),
+
+    /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
+    manualSettlement: builder.mutation({
+      query: (data: { settlement_id: string; winner: string }) => ({
+        url: API_END_POINTS.manualSettlement,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
   }),
 });
 
@@ -137,5 +180,13 @@ export const {
     useGetUserQuery,
     useGetDashboardDataQuery,
     useGetWalletQuery,
+
+    /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
+    useGetPendingSettlementsQuery,
+    useGetSettlementDetailsQuery,
+    useGetSettlementBetsQuery,
+
+    /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
+    useManualSettlementMutation,
     
 } = api;

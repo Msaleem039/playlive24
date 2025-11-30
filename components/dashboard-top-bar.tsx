@@ -34,6 +34,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   const dispatch = useDispatch<any>()
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isBalanceMenuOpen, setIsBalanceMenuOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const balanceMenuRef = useRef<HTMLDivElement | null>(null)
 
@@ -44,6 +45,11 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
     skip: !authUser, // Skip if user is not logged in
     pollingInterval: 30000, // Poll every 30 seconds to keep balance updated
   })
+
+  // Track if component has mounted to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const normalizeNumber = (value: any) => {
     const parsed = typeof value === "number" ? value : parseFloat(value ?? "")
@@ -69,29 +75,35 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   const userInfo = useMemo(() => {
     const role = (authUser?.role as string | undefined) ?? "CLIENT"
     
-    // Prioritize wallet data if available, otherwise fall back to authUser fields
+    // During SSR or before mount, use authUser data only to prevent hydration mismatch
+    // After mount, prioritize wallet data if available, otherwise fall back to authUser fields
     const balanceValue = normalizeNumber(
-      walletData?.balance ??
-      authUser?.balance ??
-      authUser?.walletBalance ??
-      authUser?.availableBalance ??
-      authUser?.available_balance ??
-      authUser?.chips
+      isMounted && walletData?.balance !== undefined
+        ? walletData.balance
+        : authUser?.balance ??
+          authUser?.walletBalance ??
+          authUser?.availableBalance ??
+          authUser?.available_balance ??
+          authUser?.chips ??
+          0
     )
     
     const liabilityValue = normalizeNumber(
-      walletData?.liability ??
-      authUser?.liability ??
-      authUser?.exposure ??
-      authUser?.currentExposure ??
-      authUser?.totalExposure
+      isMounted && walletData?.liability !== undefined
+        ? walletData.liability
+        : authUser?.liability ??
+          authUser?.exposure ??
+          authUser?.currentExposure ??
+          authUser?.totalExposure ??
+          0
     )
     
     const availableBalanceValue = normalizeNumber(
-      walletData?.availableBalance ??
-      authUser?.availableBalance ??
-      authUser?.available_balance ??
-      (balanceValue - liabilityValue)
+      isMounted && walletData?.availableBalance !== undefined
+        ? walletData.availableBalance
+        : authUser?.availableBalance ??
+          authUser?.available_balance ??
+          (balanceValue - liabilityValue)
     )
     
     const exposureValue = normalizeNumber(
@@ -126,7 +138,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
       createdAtLabel: formatDate(authUser?.createdAt ?? authUser?.created_at),
       updatedAtLabel: formatDate(authUser?.updatedAt ?? authUser?.updated_at),
     }
-  }, [authUser, walletData])
+  }, [authUser, walletData, isMounted])
 
   const dropdownItems = useMemo(() => {
     const role = userInfo.role

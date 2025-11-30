@@ -1,9 +1,7 @@
- export const BASE_URL = 'https://api.playlive24.com'
-// export const BASE_URL = 'http://localhost:3000'
+ //export const BASE_URL = 'https://api.playlive24.com'
+ export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
-
-
 export const API_END_POINTS = {
     /////////////////////////////<===MUTATIONS===>//////////////////////////////
     register: `${BASE_URL}/auth/create-user`,
@@ -48,4 +46,10 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===SUPER ADMIN===>//////////////////////////////
     superAdminSelfTopup: `${BASE_URL}/transfer/superadmin/self-topup`,
+
+    /////////////////////////////<===SETTLEMENT===>//////////////////////////////
+    getPendingSettlements: `${BASE_URL}/settlement/pending`,
+    getSettlementDetails: `${BASE_URL}/settlement/details`,
+    getSettlementBets: `${BASE_URL}/settlement/bets`,
+    manualSettlement: `${BASE_URL}/settlement/manual/with-result`,
 }
