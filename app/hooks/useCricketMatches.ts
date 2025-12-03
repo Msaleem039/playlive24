@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useCricketLiveUpdates } from "./useWebSocket"
 import { API_END_POINTS } from "@/app/services/ApiEndpoints"
 import type { CricketMatch, CricketMatchesResponse } from "@/lib/types/cricket"
 
@@ -147,19 +146,7 @@ export function useCricketMatches({
     return Array.from(matchMap.values())
   }
 
-  // ✅ WebSocket live updates
-  const {
-    isConnected,
-    isConnecting,
-    error: wsError,
-    liveMatches: wsLiveMatches,
-    lastUpdate,
-    connect: wsConnect,
-    disconnect: wsDisconnect
-  } = useCricketLiveUpdates({
-    url: "ws://localhost:3000/entitysport",
-    autoConnect: mounted
-  })
+  // WebSocket live updates removed - using API only
 
   // ✅ Fetch matches from API
   const fetchMatches = async () => {
@@ -253,21 +240,10 @@ export function useCricketMatches({
     if (mounted) fetchMatches()
   }, [mounted, page, per_page, status, format])
 
-  // ✅ Merge API + Live data
+  // Using API data only (WebSocket removed)
   const mergedMatches = useMemo(() => {
-    if (!wsLiveMatches?.length) return matches
-    const updated = matches.map((match: any) => {
-      // Match by match_id or gmid
-      const live = wsLiveMatches.find((l: any) => 
-        l.match_id === match.match_id || 
-        l.match_id === match.gmid ||
-        l.gmid === match.match_id ||
-        l.gmid === match.gmid
-      )
-      return live ? { ...match, ...live } : match
-    })
-    return updated
-  }, [matches, wsLiveMatches])
+    return matches
+  }, [matches])
 
   return {
     matches: mergedMatches,
@@ -279,11 +255,5 @@ export function useCricketMatches({
     live: liveList,
     upcoming: upcomingList,
     liveIds,
-    // WebSocket info
-    isConnected,
-    isConnecting,
-    wsError,
-    lastUpdate,
-    reconnectWebSocket: wsConnect,
   }
 }

@@ -8,7 +8,7 @@ import { useLiveOdds } from '@/app/hooks/useWebSocket'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
-import { usePlaceBetMutation } from '@/app/services/Api'
+import { usePlaceBetMutation, useGetMyPendingBetsQuery } from '@/app/services/Api'
 import { toast } from 'sonner'
 
 interface BettingOption {
@@ -151,6 +151,7 @@ export default function LiveMatchDetailPage() {
   } | null>(null)
   const [stake, setStake] = useState<string>('')
   const [odds, setOdds] = useState<string>('')
+  const [isBetSlipModal, setIsBetSlipModal] = useState<boolean>(true) // always show as popup for now
 
   const BACK_COLUMNS = 1
   const LAY_COLUMNS = 1
@@ -257,6 +258,81 @@ export default function LiveMatchDetailPage() {
 
   const [placeBet, { isLoading: isPlaceBetLoading }] = usePlaceBetMutation()
   const isPlacingBet = isPlaceBetLoading
+
+  // Pending settlements/bets for logged-in user across matches
+  const { data: myPendingBetsData, isLoading: isLoadingPendingBets } = useGetMyPendingBetsQuery(undefined)
+
+  const userPendingBets = useMemo(() => {
+    if (!myPendingBetsData) return []
+    const root = myPendingBetsData as any
+    const all: any[] = Array.isArray(root) ? root : Array.isArray(root.results) ? root.results : []
+  
+    const numeric = Number(matchId)
+    const hasNumeric = !Number.isNaN(numeric)
+  
+    return all.filter((bet: any) => {
+      const betMatchId = bet.match_id ?? bet.matchId ?? bet.match?.id
+      if (betMatchId == null) return false
+  
+      return hasNumeric
+        ? String(betMatchId) === String(numeric)
+        : String(betMatchId) === String(matchId)
+    })
+  }, [myPendingBetsData, matchId])
+
+  const renderUserPendingBets = () => {
+    if (!authUser) return null
+
+    return (
+      <div className="w-full bg-white rounded-lg border-2 border-gray-300 shadow-md">
+        <div className="px-3 sm:px-4 py-2.5 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex items-center justify-between">
+          <span className="text-sm sm:text-base font-bold text-gray-900">
+            Your Pending Settlements
+          </span>
+          {isLoadingPendingBets && (
+            <span className="text-xs sm:text-sm text-gray-600 animate-pulse">Loading...</span>
+          )}
+        </div>
+        <div className="max-h-48 overflow-y-auto">
+          {!isLoadingPendingBets && userPendingBets.length === 0 ? (
+            <div className="px-3 sm:px-4 py-4 text-xs sm:text-sm text-gray-500 text-center">
+              No pending settlements for this match.
+            </div>
+          ) : (
+            <table className="w-full text-xs sm:text-sm">
+              <thead className="bg-gray-100 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left font-bold text-gray-700 border-b border-gray-200">Bet</th>
+                  <th className="px-3 py-2 text-center font-bold text-gray-700 border-b border-gray-200">Amount</th>
+                  <th className="px-3 py-2 text-center font-bold text-gray-700 border-b border-gray-200">Odds</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userPendingBets.map((bet: any, idx: number) => (
+                  <tr key={bet.id || idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-3 py-2">
+                      <div className="font-semibold text-gray-900 truncate">
+                        {bet.betName || 'Bet'}
+                      </div>
+                      <div className="text-[10px] text-gray-600 truncate mt-0.5">
+                        {bet.marketName || bet.gtype || 'MATCH'}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-center text-gray-900 font-medium">
+                      Rs {(bet.amount || 0).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 text-center text-gray-900 font-medium">
+                      {bet.odds ?? '--'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const handlePlaceBet = async () => {
     if (!selectedBet) {
@@ -922,10 +998,6 @@ export default function LiveMatchDetailPage() {
               </div>
             )}
             
-          {/* Bet Slip positioning */}
-          {betSlipOpen && renderBetSlip('lg:hidden', { maxHeight: isMobile ? '320px' : '360px' })}
-          {(!displayMatchData.hasLiveTV || !streamUrl) && betSlipOpen && renderBetSlip('hidden md:flex flex-col', { maxHeight: '420px' })}
-
           {displayMarkets.length > 0 && (
             displayMarkets.map((market, marketIndex) => {
               // Position MATCH_ODDS to cover white area of scorecard
@@ -1080,7 +1152,17 @@ export default function LiveMatchDetailPage() {
             )
             })
           )}
+
           </div>
+
+          {/* Logged-in user's pending settlements for this match
+              - For matches WITHOUT TV, or on mobile view, show below markets in the left panel
+              - For matches WITH TV on desktop, this section is shown under the TV block on the right panel */}
+          {authUser && (!displayMatchData.hasLiveTV || !streamUrl || isMobile) && (
+            <div className="px-3 sm:px-4 py-4 border-t-2 border-gray-200">
+              {renderUserPendingBets()}
+            </div>
+          )}
         </div>
 
         {/* Right Panel - Live Video (if TV enabled) + Betting Summary - Desktop only (md+) */}
@@ -1221,12 +1303,27 @@ export default function LiveMatchDetailPage() {
             </div>
             )}
 
-            {betSlipOpen && renderBetSlip('flex-shrink-0', { maxHeight: '420px' })}
+            {/* Logged-in user's pending settlements for this match - shown below TV on desktop */}
+            {authUser && (
+              <div className="px-3 sm:px-4 py-4 border-t border-gray-200">
+                {renderUserPendingBets()}
+              </div>
+            )}
+          </div>
+        )}
 
-                  </div>
-                )}
-        
       </div>
+
+      {/* Bet Slip Popup Modal */}
+      {betSlipOpen && selectedBet && (
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40">
+          <div className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0" onClick={(e) => e.stopPropagation()}>
+            {renderBetSlip('rounded-t-lg sm:rounded-lg overflow-hidden shadow-xl', {
+              maxHeight: isMobile ? '360px' : '420px',
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

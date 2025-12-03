@@ -5,8 +5,6 @@ import {
   Eye, 
   X, 
   RefreshCw, 
-  Search, 
-  Filter,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -25,7 +23,9 @@ import {
   useGetPendingSettlementsQuery, 
   useGetSettlementDetailsQuery,
   useGetSettlementBetsQuery,
-  useManualSettlementMutation 
+  useManualSettlementMutation ,
+  useGetAllSettlementReportQuery,
+  useReverseSettlementMutation
 } from "@/app/services/Api"
 import { toast } from "sonner"
 
@@ -279,11 +279,14 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
 }
 
 export function SettlementAdminPanel() {
-  const { data: pendingData, isLoading, refetch } = useGetPendingSettlementsQuery({})
+  const [activeTab, setActiveTab] = useState<"pending" | "results">("pending")
+  const { data: pendingData, isLoading, refetch } = useGetPendingSettlementsQuery({}, { skip: activeTab !== "pending" })
+  const { data: resultsData, isLoading: isLoadingResults, refetch: refetchResults } = useGetAllSettlementReportQuery({}, { skip: activeTab !== "results" })
+  const [reverseSettlement, { isLoading: isReversing }] = useReverseSettlementMutation()
   const [selectedSettlementId, setSelectedSettlementId] = useState<string | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [searchTerm] = useState("")
+  // const [filterStatus, setFilterStatus] = useState<string>("all")
 
   const handleViewDetails = (settlementId: string) => {
     setSelectedSettlementId(settlementId)
@@ -297,12 +300,35 @@ export function SettlementAdminPanel() {
 
   const handleSettle = () => {
     refetch()
+    if (activeTab === "results") {
+      refetchResults()
+    }
+  }
+
+  const handleReverseSettlement = async (settlementId: string) => {
+    try {
+      const res: any = await reverseSettlement({ settlement_id: settlementId }).unwrap()
+
+      // Backend might return a 200 with success=false, so check payload explicitly
+      if (res?.success === false || res?.error) {
+        toast.error(res?.error || res?.message || "Failed to reverse settlement")
+        return
+      }
+
+      toast.success(res?.message || "Settlement reversed successfully")
+      // Refresh both pending and results, since reversing will affect both lists
+      refetch()
+      refetchResults()
+    } catch (error: any) {
+      toast.error(error?.data?.error || error?.data?.message || "Failed to reverse settlement")
+    }
   }
 
   const settlements = (pendingData as any) || []
+  const results = (resultsData as any)?.results || []
 
-  // Calculate statistics
-  const stats = useMemo(() => {
+  // Calculate statistics for pending settlements
+  const pendingStats = useMemo(() => {
     const totalPending = settlements.length
     const totalBets = settlements.reduce((sum: number, s: any) => sum + (s.pending_bets_count || 0), 0)
     const totalAmount = settlements.reduce((sum: number, s: any) => sum + (s.total_bet_amount || 0), 0)
@@ -315,6 +341,25 @@ export function SettlementAdminPanel() {
       avgAmount
     }
   }, [settlements])
+
+  // Calculate statistics for results
+  const resultsStats = useMemo(() => {
+    const totalResults = results.length
+    const totalAmount = results.reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+    const totalProfitLoss = results.reduce((sum: number, r: any) => sum + (r.profitLoss || 0), 0)
+    const wonCount = results.filter((r: any) => r.status === "WON").length
+    const lostCount = results.filter((r: any) => r.status === "LOST").length
+
+    return {
+      totalResults,
+      totalAmount,
+      totalProfitLoss,
+      wonCount,
+      lostCount
+    }
+  }, [results])
+
+  // Use the appropriate stats based on active tab
 
   // Filter settlements
   const filteredSettlements = useMemo(() => {
@@ -330,6 +375,22 @@ export function SettlementAdminPanel() {
     })
   }, [settlements, searchTerm])
 
+  // Filter results
+  const filteredResults = useMemo(() => {
+    return results.filter((result: any) => {
+      const matchesSearch = 
+        result.settlement_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.match?.homeTeam?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.match?.awayTeam?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.match?.eventName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.betName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.user?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      return matchesSearch
+    })
+  }, [results, searchTerm])
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -337,7 +398,13 @@ export function SettlementAdminPanel() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-lg font-bold">Settlement Admin Panel</h1>
           <button
-            onClick={() => refetch()}
+            onClick={() => {
+              if (activeTab === "pending") {
+                refetch()
+              } else {
+                refetchResults()
+              }
+            }}
             className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-semibold transition-all"
           >
             <RefreshCw className="w-4 h-4" />
@@ -349,76 +416,53 @@ export function SettlementAdminPanel() {
       {/* Purple Bar */}
       {/* <div className="bg-purple-600 h-2"></div> */}
 
-      {/* Statistics Cards */}
+      {/* Stats pills (also act as tab selectors) */}
       <div className="px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-black text-white px-4 py-2">
-              <h3 className="font-semibold text-sm">TOTAL PENDING</h3>
+        <div className="flex flex-col sm:flex-row gap-4 mb-2">
+          {/* Pending Settlement stat */}
+          <button
+            type="button"
+            onClick={() => setActiveTab("pending")}
+            className={`flex-1 rounded-lg border text-center px-4 py-3 transition-all ${
+              activeTab === "pending"
+                ? "bg-white text-[#00A66E] border-white shadow"
+                : "bg-transparent text-white border-white/50"
+            }`}
+            style={{ backgroundColor: activeTab === "pending" ? "#ffffff" : "#00A66E" }}
+          >
+            <div className="text-sm font-semibold">Pending Settlement</div>
+            <div className="mt-1 text-2xl font-bold">
+              {pendingStats.totalPending}
             </div>
-            <div className="p-6 text-center">
-              <div className="text-4xl font-bold text-black">{stats.totalPending}</div>
-            </div>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-black text-white px-4 py-2">
-              <h3 className="font-semibold text-sm">TOTAL BETS</h3>
+          {/* Result Stats stat */}
+          <button
+            type="button"
+            onClick={() => setActiveTab("results")}
+            className={`flex-1 rounded-lg border text-center px-4 py-3 transition-all ${
+              activeTab === "results"
+                ? "bg-white text-[#00A66E] border-white shadow"
+                : "bg-transparent text-white border-white/50"
+            }`}
+            style={{ backgroundColor: activeTab === "results" ? "#ffffff" : "#00A66E" }}
+          >
+            <div className="text-sm font-semibold">Result Stats</div>
+            <div className="mt-1 text-2xl font-bold">
+              {resultsStats.totalResults}
             </div>
-            <div className="p-6 text-center">
-              <div className="text-4xl font-bold text-black">{stats.totalBets}</div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-black text-white px-4 py-2">
-              <h3 className="font-semibold text-sm">TOTAL AMOUNT</h3>
-            </div>
-            <div className="p-6 text-center">
-              <div className="text-4xl font-bold text-green-600">RS{stats.totalAmount.toLocaleString()}</div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-black text-white px-4 py-2">
-              <h3 className="font-semibold text-sm">AVG. AMOUNT</h3>
-            </div>
-            <div className="p-6 text-center">
-              <div className="text-4xl font-bold text-black">RS{stats.avgAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="bg-gray-600 px-4 py-4 mb-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by settlement ID, match, or bet name..."
-                className="w-full pl-10 border border-gray-300 rounded"
-              />
-            </div>
-            <Button
-              className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-4 py-2"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-          </div>
+          </button>
         </div>
 
         {/* Settlements Table */}
         <div className="bg-white mx-4 sm:mx-6 shadow-sm rounded-lg overflow-hidden">
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <RefreshCw className="w-10 h-10 animate-spin text-[#00A66E]" />
-            </div>
-          ) : filteredSettlements.length > 0 ? (
+          {activeTab === "pending" ? (
+            isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <RefreshCw className="w-10 h-10 animate-spin text-[#00A66E]" />
+              </div>
+            ) : filteredSettlements.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -490,51 +534,238 @@ export function SettlementAdminPanel() {
                 </tbody>
               </table>
             </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Settlement ID
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Match
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Event
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Bet Info
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Pending Bets
+                      </th>
+                      <th className="px-4 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Total Amount
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    <tr>
+                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        No Record Found
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Settlement ID
-                    </th>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Match
-                    </th>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Event
-                    </th>
-                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Bet Info
-                    </th>
-                    <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Pending Bets
-                    </th>
-                    <th className="px-4 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Total Amount
-                    </th>
-                    <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      No Record Found
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            isLoadingResults ? (
+              <div className="flex items-center justify-center py-20">
+                <RefreshCw className="w-10 h-10 animate-spin text-[#00A66E]" />
+              </div>
+            ) : filteredResults.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Settlement ID
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Match
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Bet Name
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Market
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Odds
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Win Amount
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Loss Amount
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        P/L
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredResults.map((result: any, index: number) => (
+                      <tr 
+                        key={result.id || index} 
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className="text-sm font-mono font-semibold text-gray-900">
+                            {result.settlement_id}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.user?.name || result.user?.username || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.match?.homeTeam || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.betName || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.marketName || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <span className="text-sm font-semibold text-gray-900">
+                            Rs{result.amount?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {result.odds || "N/A"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            result.status === "WON" ? "bg-green-100 text-green-800" :
+                            result.status === "LOST" ? "bg-red-100 text-red-800" :
+                            result.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {result.status || "N/A"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <span className="text-sm font-semibold text-green-600">
+                            Rs{result.winAmount?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <span className="text-sm font-semibold text-red-600">
+                            Rs{result.lossAmount?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <span className={`text-sm font-semibold ${
+                            (result.profitLoss || 0) >= 0 ? "text-green-600" : "text-red-600"
+                          }`}>
+                            Rs{result.profitLoss?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {result.createdAt ? new Date(result.createdAt).toLocaleDateString() : "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() => handleReverseSettlement(result.settlement_id)}
+                            disabled={isReversing}
+                            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-3 py-1 rounded text-xs font-semibold"
+                          >
+                            {isReversing ? "Reversing..." : "Reverse"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Settlement ID
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Match
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Bet Name
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Market
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Odds
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Win Amount
+                      </th>
+                      <th className="px-4 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Loss Amount
+                      </th>
+                      <th className="px-4 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        P/L
+                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    <tr>
+                      <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
+                        No Record Found
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </div>
 
         {/* Pagination */}
-        {filteredSettlements.length > 0 && (
+        {((activeTab === "pending" && filteredSettlements.length > 0) || (activeTab === "results" && filteredResults.length > 0)) && (
           <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700">Total Counts: {filteredSettlements.length}</span>
+              <span className="text-sm text-gray-700">
+                Total Counts: {activeTab === "pending" ? filteredSettlements.length : filteredResults.length}
+              </span>
             </div>
             <div className="flex gap-2">
               <Button className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 text-sm rounded">

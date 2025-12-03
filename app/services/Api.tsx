@@ -121,9 +121,24 @@ export const api = SplitApiSettings.injectEndpoints({
     }),
 
     /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
+    getAllSettlementReport: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getallsettlementreport,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
     getPendingSettlements: builder.query({
       query: () => ({
         url: API_END_POINTS.getPendingSettlements,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+
+    getPendingSettlementsByMatch: builder.query({
+      query: (matchId: string | number) => ({
+        url: API_END_POINTS.getPendingSettlementsByMatch.replace(":matchId", String(matchId)),
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
@@ -153,10 +168,27 @@ export const api = SplitApiSettings.injectEndpoints({
       providesTags: ['Settlement'] as any,
     }),
 
+    getMyPendingBets: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getMyPendingBets,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+
     /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
     manualSettlement: builder.mutation({
       query: (data: { settlement_id: string; winner: string }) => ({
         url: API_END_POINTS.manualSettlement,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
+    reverseSettlement: builder.mutation({
+      query: (data: { settlement_id: string }) => ({
+        url: API_END_POINTS.reverseSettlement,
         method: "POST",
         body: data,
       }),
@@ -183,10 +215,14 @@ export const {
 
     /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
     useGetPendingSettlementsQuery,
+    useGetPendingSettlementsByMatchQuery,
     useGetSettlementDetailsQuery,
     useGetSettlementBetsQuery,
+    useGetMyPendingBetsQuery,
+    useGetAllSettlementReportQuery,
 
     /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
     useManualSettlementMutation,
+    useReverseSettlementMutation,
     
 } = api;

@@ -1,4 +1,4 @@
- export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'https://api.playlive24.com'
  //export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
@@ -49,7 +49,11 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===SETTLEMENT===>//////////////////////////////
     getPendingSettlements: `${BASE_URL}/settlement/pending`,
+    getPendingSettlementsByMatch: `${BASE_URL}/settlement/pending/match/:matchId`,
     getSettlementDetails: `${BASE_URL}/settlement/details`,
     getSettlementBets: `${BASE_URL}/settlement/bets`,
+    getMyPendingBets: `${BASE_URL}/settlement/bets/me/pending`,
     manualSettlement: `${BASE_URL}/settlement/manual/with-result`,
+    getallsettlementreport: `${BASE_URL}/settlement/results`,
+    reverseSettlement: `${BASE_URL}/settlement/reverse`,
 }
