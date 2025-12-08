@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
- //export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 export const API_END_POINTS = {
@@ -7,7 +7,8 @@ export const API_END_POINTS = {
     register: `${BASE_URL}/auth/create-user`,
     // createRvLead: BASE_URL + "api/rv-leads",
     login: `${BASE_URL}/auth/login`,
-    changePassword: `${BASE_URL}/auth/change-password`,
+    changePassword: `${BASE_URL}/auth/update-password`,
+    toggleUserStatus: `${BASE_URL}/auth/toggle-user-status/:targetUserId`,
     topupBalance: `${BASE_URL}/transfer/top-up/:targetUserId`,
     topDownBalance: `${BASE_URL}/transfer/top-down/:targetUserId`,
 
@@ -53,7 +54,7 @@ export const API_END_POINTS = {
     getSettlementDetails: `${BASE_URL}/settlement/details`,
     getSettlementBets: `${BASE_URL}/settlement/bets`,
     getMyPendingBets: `${BASE_URL}/settlement/bets/me/pending`,
-    manualSettlement: `${BASE_URL}/settlement/manual/with-result`,
+    manualSettlement: `${BASE_URL}/settlement/manual/session-bet`,
     getallsettlementreport: `${BASE_URL}/settlement/results`,
     reverseSettlement: `${BASE_URL}/settlement/reverse`,
 }

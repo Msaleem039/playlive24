@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2 } from "lucide-react"
+import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2, Check, X } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
 import { AddClientModal, AllUsersModal } from "./index"
@@ -9,7 +9,7 @@ import DepositCashModal from "@/components/modal/DepositCashModal"
 import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
 import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
-import { useChangePasswordMutation, useGetUserQuery } from "@/app/services/Api"
+import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
 interface UserProps {
@@ -23,11 +23,17 @@ interface UserProps {
 interface UserData {
   id: string
   name: string
+  username?: string
   email: string
   role: string
   balance: number
+  creditLimit?: number
+  liability?: number
+  plCash?: number
+  availableBalance?: number
   parentId: string
   commissionPercentage: number
+  isActive?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -62,10 +68,12 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     isOpen: boolean
     username: string
     userId?: string
+    userData?: UserData
   }>({
     isOpen: false,
     username: "",
     userId: undefined,
+    userData: undefined,
   })
   const [changePasswordModal, setChangePasswordModal] = useState<{
     isOpen: boolean
@@ -75,6 +83,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     username: "",
   })
   const [changePassword] = useChangePasswordMutation()
+  const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
 
   // Format balance helper
   const formatBalance = (balance: number | string | undefined | null) => {
@@ -154,10 +163,13 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
 
   const handleUserDetails = (name: string, userId?: string, email?: string) => {
     const username = extractUsername(name, email)
+    // Find the user data from the filtered users
+    const userData = displayUsers.find((user: UserData) => user.id === userId) as UserData | undefined
     setUserDetailsModal({
       isOpen: true,
       username,
       userId,
+      userData,
     })
   }
 
@@ -211,20 +223,40 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     }
   }
 
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      await toggleUserStatus({
+        userId,
+        isActive: !currentStatus,
+      }).unwrap()
+      toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`)
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to toggle user status. Please try again."
+      toast.error("Toggle status failed", {
+        description: errorMessage,
+      })
+    }
+  }
+
   // Use API users or fallback to prop users
   const displayUsers = filteredUsers.length > 0 ? filteredUsers : (users || [])
 
   return (
-    <div className="bg-white mt-6">
+    <div className="bg-white mt-4">
       {/* Tabs */}
-      <div className="bg-gray-800 text-white mb-4">
+      <div className="bg-gray-800 text-white mb-3">
         <div className="flex">
           <button
             onClick={() => setUserTab("Active Users")}
-            className={`px-6 py-3 font-semibold relative ${
+            className={`px-6 py-2 text-xs sm:text-sm font-semibold relative ${
               userTab === "Active Users" 
                 ? "text-white" 
-                : "text-gray-400 hover:text-white"
+                : "text-gray-400 hover:text-white text-xs sm:text-sm"
             }`}
           >
             Active Users
@@ -234,7 +266,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           </button>
           <button
             onClick={() => setUserTab("Close Users")}
-            className={`px-6 py-3 font-semibold relative ${
+            className={`px-6 py-2 font-semibold text-xs sm:text-sm relative ${
               userTab === "Close Users" 
                 ? "text-white" 
                 : "text-gray-400 hover:text-white"
@@ -248,80 +280,62 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         </div>
       </div>
 
-      {/* Action Buttons */}
-      {userTab === "Active Users" && (
-        <div className="bg-white p-4 mb-4 rounded-lg shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4">
+      {/* Combined Action Buttons and Table Controls */}
+      <div className="bg-white p-2 sm:p-3 mb-3 rounded-lg shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 justify-between">
+          {/* Left side: Action buttons (only for Active Users) and table controls */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            {userTab === "Active Users" && (
+              <>
+                <Button
+                  onClick={() => setIsAddUserModalOpen(true)}
+                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm"
+                >
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Add Client
+                </Button>
+                <Button 
+                  onClick={() => setIsAllUsersModalOpen(true)}
+                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                  All User Sports Settings
+                </Button>
+              </>
+            )}
+            <div className="flex gap-1.5 sm:gap-2">
               <Button
-                onClick={() => setIsAddUserModalOpen(true)}
-                className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-6 py-2 flex items-center gap-2"
+                onClick={handleExportExcel}
+                className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm flex items-center gap-1"
               >
-                <Plus className="w-4 h-4" />
-                Add Client
+                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                Excel
               </Button>
-              <Button 
-                onClick={() => setIsAllUsersModalOpen(true)}
-                className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-6 py-2 flex items-center gap-2"
+              <Button
+                onClick={handleExportPDF}
+                className="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm flex items-center gap-1"
               >
-                <Users className="w-4 h-4" />
-                All User Sports Settings
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                PDF
               </Button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Table Controls - Show for both tabs */}
-      <div className="bg-white p-4 mb-4 rounded-lg shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">Show</span>
-                <select
-                  value={showRows}
-                  onChange={(e) => setShowRows(Number(e.target.value))}
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
-                >
-                  <option value={10}>10 rows</option>
-                  <option value={25}>25 rows</option>
-                  <option value={50}>50 rows</option>
-                  <option value={100}>100 rows</option>
-                </select>
-                <span className="text-sm text-gray-700">rows</span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleExportExcel}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm flex items-center gap-1"
-                >
-                  <Download className="w-4 h-4" />
-                  Excel
-                </Button>
-                <Button
-                  onClick={handleExportPDF}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm flex items-center gap-1"
-                >
-                  <FileText className="w-4 h-4" />
-                  PDF
-                </Button>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Search:</span>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search users..."
-                  className="pl-8 w-64"
-                />
-              </div>
+          {/* Right side: Search */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-gray-700">Search:</span>
+            <div className="relative">
+              <Search className="hidden sm:block absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search users..."
+                className="pl-2 sm:pl-8 w-32 sm:w-64 text-xs sm:text-sm"
+              />
             </div>
           </div>
         </div>
+      </div>
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -342,125 +356,141 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
             <p className="text-gray-500">No users found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <ChevronUp className="w-4 h-4" />
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Balance
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Commission
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {displayUsers.map((user: UserData, index) => (
-                  <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-purple-600 rounded-full text-white text-xs font-bold flex items-center justify-center mr-2">
-                          {(user.name || user.email || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{user.name || user.email || 'Unknown User'}</div>
-                          <div className="text-xs text-gray-500">{user.id?.slice(0, 8) || 'N/A'}...</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.email || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        (user.role || '').toUpperCase() === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                        (user.role || '').toUpperCase() === 'AGENT' ? 'bg-blue-100 text-blue-800' :
-                        (user.role || '').toUpperCase() === 'CLIENT' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.role || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
-                      ${formatBalance(user.balance)}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.commissionPercentage || 0}%
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        <button className="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded hover:bg-purple-700">
-                          D
-                        </button>
-                        <button className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700">
-                          W
-                        </button>
-                        <button
-                          onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
-                          className="w-6 h-6 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700"
-                          title="Cash Deposit"
-                        >
-                          CD
-                        </button>
-                        <button
-                          onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
-                          className="w-6 h-6 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700"
-                          title="Cash Withdraw"
-                        >
-                          CW
-                        </button>
-                        <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
-                          Log
-                        </button>
-                        <button
-                          onClick={() => handleUserDetails(user.name || user.email || '', user.id, user.email)}
-                          className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap"
-                          title="User Details"
-                        >
-                          User Setting
-                        </button>
-                        <button
-                          onClick={() => handleChangePassword(user.name || user.email || '', user.email)}
-                          className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap"
-                          title="Change Password"
-                        >
-                          Change Password
-                        </button>
-                        <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
-                          Game Control
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-[#00A66E]">
+                    <tr>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[100px] sm:min-w-[130px]">
+                        Login Name
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                        PL+Cash
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                        Balance
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                        Share
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                        Liability
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[90px] sm:min-w-[110px]">
+                        Available Balance
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px]">
+                        Active
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[55px] sm:min-w-[65px]">
+                        Cash
+                      </th>
+                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider w-auto">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {displayUsers.map((user: UserData, index) => (
+                      <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 break-words leading-tight">
+                            <span className="block sm:inline">{user.name || 'Unknown'}</span>
+                            <span className="text-gray-600 text-[10px] sm:text-xs"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="text-xs sm:text-sm text-green-500">
+                            ${formatBalance(user.plCash || 0)}
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="text-xs sm:text-sm text-gray-900">
+                            ${formatBalance(user.balance)}
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="text-xs sm:text-sm text-gray-900">
+                            ${formatBalance(user?.commissionPercentage || 0)}
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="text-xs sm:text-sm text-red-600 font-medium">
+                            ${formatBalance(user.liability || 0)}
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="text-xs sm:text-sm text-gray-900">
+                            ${formatBalance(user.availableBalance || 0)}
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <button
+                            onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)}
+                            disabled={isTogglingStatus}
+                            className="w-4 h-4 sm:w-4 sm:h-4 rounded flex items-center justify-center mx-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={user.isActive === false ? 'Click to activate' : 'Click to deactivate'}
+                          >
+                            {user.isActive !== false ? (
+                              <div className="w-full h-full bg-green-500 rounded flex items-center justify-center">
+                                <Check className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 text-white" />
+                              </div>
+                            ) : (
+                              <div className="w-full h-full bg-red-500 rounded flex items-center justify-center">
+                                <X className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 text-white" />
+                              </div>
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                          <div className="flex gap-0.5 sm:gap-1 justify-center sm:justify-start">
+                            <button
+                              onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
+                              className="w-5 h-5 sm:w-5 sm:h-5 bg-green-600 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center"
+                              title="Cash Deposit"
+                            >
+                              CD
+                            </button>
+                            <button
+                              onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
+                              className="w-5 h-5 sm:w-5 sm:h-5 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center"
+                              title="Cash Withdraw"
+                            >
+                              CW
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5">
+                          <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start">
+                            <button className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors">
+                              Log
+                            </button>
+                            <button
+                              onClick={() => handleUserDetails(user.name || user.email || '', user.id, user.email)}
+                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-[#00A66E] text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
+                              title="User Details"
+                            >
+                              User Setting
+                            </button>
+                            <button
+                              onClick={() => handleChangePassword(user.name || user.email || '', user.email)}
+                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
+                              title="Change Password"
+                            >
+                              Change Password
+                            </button>
+                            <button className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors">
+                              Game Control
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -508,12 +538,12 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         onClose={() => setUserDetailsModal({ ...userDetailsModal, isOpen: false })}
         username={userDetailsModal.username}
         initialData={{
-          name: "Murad", // TODO: Fetch from API based on userId
-          exposure: "500000", // TODO: Fetch from API based on userId
-          userStatus: "Active", // TODO: Fetch from API
-          fancyBetStatus: "Active", // TODO: Fetch from API
-          marketBetStatus: "Active", // TODO: Fetch from API
-          casinoBetStatus: "Active", // TODO: Fetch from API
+          name: userDetailsModal.userData?.name || "",
+          exposure: userDetailsModal.userData?.balance?.toString() || "0",
+          userStatus: "Active", // TODO: Fetch from API if available
+          fancyBetStatus: "Active", // TODO: Fetch from API if available
+          marketBetStatus: "Active", // TODO: Fetch from API if available
+          casinoBetStatus: "Active", // TODO: Fetch from API if available
         }}
         onSubmit={handleUserDetailsSubmit}
       />
@@ -528,4 +558,5 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     </div>
   )
 }
+
 

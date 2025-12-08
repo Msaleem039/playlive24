@@ -58,9 +58,10 @@ export const useCricketLiveUpdates = ({
     })
 
     /** ERROR */
-    socket.on("connect_error", (err) => {
-      console.error("⛔ Connection error:", err.message)
-      setError(err.message)
+    socket.on("connect_error", (err: Error) => {
+      const errorMessage = err?.message || err?.toString() || "Connection failed"
+      console.error("⛔ Connection error:", errorMessage)
+      setError(errorMessage)
       setIsConnecting(false)
     })
 

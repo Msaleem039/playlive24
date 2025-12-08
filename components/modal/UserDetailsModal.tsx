@@ -64,14 +64,14 @@ export default function UserDetailsModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !exposure.trim()) {
+    if (!exposure.trim()) {
       return
     }
 
     setIsLoading(true)
     try {
       await onSubmit({
-        name,
+        name: name || initialData?.name || "",
         exposure,
         userStatus,
         fancyBetStatus,
@@ -120,61 +120,47 @@ export default function UserDetailsModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.3 }}
-            className="relative z-10 w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden"
+            className="relative z-10 w-full max-w-lg bg-white rounded-lg shadow-xl overflow-hidden"
           >
             {/* Header - Green Background */}
-            <div className="bg-[#2ECC71] px-6 py-4 flex items-center justify-between">
-              <h2 className="text-white font-bold text-lg">User Details</h2>
+            <div className="bg-[#2ECC71] px-4 py-3 flex items-center justify-between">
+              <h2 className="text-white font-bold text-base">User Details</h2>
               <button
                 onClick={handleClose}
                 className="text-white hover:text-gray-200 transition-colors p-1 rounded hover:bg-white/20"
                 aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Content Area - White Background */}
             <form onSubmit={handleSubmit} className="bg-white">
-              <div className="px-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Name Field */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Name
-                    </label>
-                    <Input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Name"
-                      className="mt-2 border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
+              <div className="px-4 py-3 space-y-3">
+                {/* Exposure Field - Single field at top */}
+                <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Exposure
+                  </label>
+                  <Input
+                    type="number"
+                    value={exposure}
+                    onChange={(e) => setExposure(e.target.value)}
+                    placeholder="Exposure"
+                    className="mt-1 border-gray-300 rounded-md"
+                    required
+                    min="0"
+                  />
+                </div>
 
-                  {/* Exposure Field */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Exposure
-                    </label>
-                    <Input
-                      type="number"
-                      value={exposure}
-                      onChange={(e) => setExposure(e.target.value)}
-                      placeholder="Exposure"
-                      className="mt-2 border-gray-300 rounded-md"
-                      required
-                      min="0"
-                    />
-                  </div>
-
+                {/* Status Sections - 2x2 Grid */}
+                <div className="grid grid-cols-2 gap-3">
                   {/* User Status */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
+                  <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       User Status
                     </label>
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -182,7 +168,7 @@ export default function UserDetailsModal({
                           value="Active"
                           checked={userStatus === "Active"}
                           onChange={() => setUserStatus("Active")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Active</span>
                       </label>
@@ -193,38 +179,7 @@ export default function UserDetailsModal({
                           value="Inactive"
                           checked={userStatus === "Inactive"}
                           onChange={() => setUserStatus("Inactive")}
-                          className="w-4 h-4 text-blue-600"
-                        />
-                        <span className="text-sm text-gray-700">Inactive</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Fancy Bet Status */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      Fancy Bet Status
-                    </label>
-                    <div className="flex flex-wrap items-center gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="fancyBetStatus"
-                          value="Active"
-                          checked={fancyBetStatus === "Active"}
-                          onChange={() => setFancyBetStatus("Active")}
-                          className="w-4 h-4 text-blue-600"
-                        />
-                        <span className="text-sm text-gray-700">Active</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="fancyBetStatus"
-                          value="Inactive"
-                          checked={fancyBetStatus === "Inactive"}
-                          onChange={() => setFancyBetStatus("Inactive")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Inactive</span>
                       </label>
@@ -232,11 +187,11 @@ export default function UserDetailsModal({
                   </div>
 
                   {/* Market Bet Status */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
+                  <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Market Bet Status
                     </label>
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -244,7 +199,7 @@ export default function UserDetailsModal({
                           value="Active"
                           checked={marketBetStatus === "Active"}
                           onChange={() => setMarketBetStatus("Active")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Active</span>
                       </label>
@@ -255,7 +210,38 @@ export default function UserDetailsModal({
                           value="Inactive"
                           checked={marketBetStatus === "Inactive"}
                           onChange={() => setMarketBetStatus("Inactive")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">Inactive</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Fancy Bet Status */}
+                  <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Fancy Bet Status
+                    </label>
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="fancyBetStatus"
+                          value="Active"
+                          checked={fancyBetStatus === "Active"}
+                          onChange={() => setFancyBetStatus("Active")}
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">Active</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="fancyBetStatus"
+                          value="Inactive"
+                          checked={fancyBetStatus === "Inactive"}
+                          onChange={() => setFancyBetStatus("Inactive")}
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Inactive</span>
                       </label>
@@ -263,11 +249,11 @@ export default function UserDetailsModal({
                   </div>
 
                   {/* Casino Bet Status */}
-                  <div className="p-4 border border-dashed border-gray-200 rounded-lg bg-gray-50 md:col-span-2 flex flex-col gap-2">
+                  <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Casino Bet Status
                     </label>
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 mt-1">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -275,7 +261,7 @@ export default function UserDetailsModal({
                           value="Active"
                           checked={casinoBetStatus === "Active"}
                           onChange={() => setCasinoBetStatus("Active")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Active</span>
                       </label>
@@ -286,7 +272,7 @@ export default function UserDetailsModal({
                           value="Inactive"
                           checked={casinoBetStatus === "Inactive"}
                           onChange={() => setCasinoBetStatus("Inactive")}
-                          className="w-4 h-4 text-blue-600"
+                          className="w-4 h-4 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm text-gray-700">Inactive</span>
                       </label>
@@ -296,11 +282,11 @@ export default function UserDetailsModal({
               </div>
 
               {/* Action Button */}
-              <div className="px-6 py-4 flex justify-end border-t border-gray-100">
+              <div className="px-4 py-3 flex justify-end border-t border-gray-100">
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading || !name.trim() || !exposure.trim()}
+                  className="px-5 py-1.5 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading || !exposure.trim()}
                 >
                   {isLoading ? "Updating..." : "Update"}
                 </button>

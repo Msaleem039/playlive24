@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect, CSSProperties } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Pin, RefreshCw, Tv } from 'lucide-react'
 import { useGetCricketMatchDetailQuery, useGetCricketMatchPrivateQuery } from '@/app/services/CricketApi'
@@ -8,8 +8,8 @@ import { useLiveOdds } from '@/app/hooks/useWebSocket'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
-import { usePlaceBetMutation, useGetMyPendingBetsQuery } from '@/app/services/Api'
-import { toast } from 'sonner'
+import { useGetMyPendingBetsQuery } from '@/app/services/Api'
+import BetSlipModal from '@/components/modal/BetSlipModal'
 
 interface BettingOption {
   odds: number | string
@@ -106,6 +106,18 @@ export default function LiveMatchDetailPage() {
   const isAdmin = userRole === 'ADMIN'
   const shouldShowTV = !isSuperAdmin && !isAdmin // Hide TV for SUPER_ADMIN and ADMIN
   
+  // Redirect SUPER_ADMIN and ADMIN away from detail page
+  useEffect(() => {
+    if (isSuperAdmin || isAdmin) {
+      router.push('/dashboard')
+    }
+  }, [isSuperAdmin, isAdmin, router])
+
+  // Early return if SUPER_ADMIN or ADMIN tries to access
+  if (isSuperAdmin || isAdmin) {
+    return null
+  }
+
   // State for responsive layout
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
@@ -149,118 +161,12 @@ export default function LiveMatchDetailPage() {
     marketId?: number
     marketGType?: string
   } | null>(null)
-  const [stake, setStake] = useState<string>('')
-  const [odds, setOdds] = useState<string>('')
-  const [isBetSlipModal, setIsBetSlipModal] = useState<boolean>(true) // always show as popup for now
 
   const BACK_COLUMNS = 1
   const LAY_COLUMNS = 1
 
-  const renderBetSlip = (wrapperClass = '', style?: CSSProperties) => {
-    if (!selectedBet) return null
-
-    const stakeValue = parseFloat(stake)
-    const oddsValue = parseFloat(odds || selectedBet.odds)
-    let plText = '0 / 0'
-    if (!isNaN(stakeValue) && stakeValue > 0 && !isNaN(oddsValue) && oddsValue > 0) {
-      plText =
-        selectedBet.type === 'back'
-          ? `${(stakeValue * (oddsValue - 1)).toFixed(2)} / ${stakeValue.toFixed(2)}`
-          : `${stakeValue.toFixed(2)} / ${(stakeValue * (oddsValue - 1)).toFixed(2)}`
-    }
-
-    return (
-      <div
-        className={`bg-pink-50 border-t border-gray-200 flex flex-col ${wrapperClass}`}
-        style={style}
-      >
-        <div className="bg-gray-800 text-white px-3 sm:px-4 py-2 flex items-center justify-between">
-          <span className="text-sm font-semibold">Bet Slip</span>
-          <span className="text-xs text-gray-300 cursor-pointer hover:text-white">Edit Stakes</span>
-        </div>
-
-        <div className="p-3 sm:p-4 space-y-3 overflow-y-auto">
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold text-gray-700">
-            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center sm:text-left">Bet for</div>
-            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Odds</div>
-            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Stake</div>
-            <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">P/L</div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center">
-            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate text-center sm:text-left">
-              {selectedBet.team}
-            </div>
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                value={odds}
-                onChange={(e) => setOdds(e.target.value)}
-                className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
-              />
-              <div className="flex flex-col">
-                <button className="text-xs">▲</button>
-                <button className="text-xs">▼</button>
-              </div>
-            </div>
-            <div>
-              <input
-                type="text"
-                value={stake}
-                onChange={(e) => setStake(e.target.value)}
-                placeholder="Stake"
-                className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
-              />
-            </div>
-            <div className="text-xs sm:text-sm text-gray-700 text-center">{plText}</div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-1 sm:gap-2">
-            {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount) => (
-              <button
-                key={amount}
-                onClick={() => setStake(amount.toString())}
-                className="bg-pink-500 hover:bg-pink-600 text-white px-1 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm font-medium"
-              >
-                {isMobile && amount >= 1000 ? `${amount / 1000}k` : amount.toLocaleString()}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-1 sm:gap-2 pt-2">
-            <button
-              onClick={() => setBetSlipOpen(false)}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
-            >
-              Close
-            </button>
-            <button
-              onClick={() => {
-                setStake('')
-                setSelectedBet(null)
-              }}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
-            >
-              Clear
-            </button>
-            <button
-              onClick={handlePlaceBet}
-              disabled={isPlacingBet}
-              className="flex-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isPlacingBet ? 'Submitting...' : 'Submit'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const [placeBet, { isLoading: isPlaceBetLoading }] = usePlaceBetMutation()
-  const isPlacingBet = isPlaceBetLoading
-
   // Pending settlements/bets for logged-in user across matches
-  const { data: myPendingBetsData, isLoading: isLoadingPendingBets } = useGetMyPendingBetsQuery(undefined)
+  const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(undefined)
 
   const userPendingBets = useMemo(() => {
     if (!myPendingBetsData) return []
@@ -334,92 +240,21 @@ export default function LiveMatchDetailPage() {
     )
   }
 
-  const handlePlaceBet = async () => {
-    if (!selectedBet) {
-      toast.error('Please select a bet first.')
-      return
-    }
 
-    const betStake = parseFloat(stake)
-    if (isNaN(betStake) || betStake <= 0) {
-      toast.error('Please enter a valid stake amount.')
-      return
-    }
-
-    const betRate = parseFloat(odds || selectedBet.odds)
-    if (isNaN(betRate) || betRate <= 0) {
-      toast.error('Invalid odds value.')
-      return
-    }
-
-    const betType = selectedBet.type === 'back' ? 'BACK' : 'LAY'
-    const winAmount = betType === 'BACK' ? betStake * (betRate - 1) : betStake
-    const lossAmount = betType === 'BACK' ? betStake : betStake * (betRate - 1)
-
-    // Try multiple user ID fields - backend might need numeric ID or specific field
-    const userId = 
-      (authUser as any)?.user_id ??           // Try user_id first (if backend uses this)
-      (authUser as any)?.userId ??             // Try userId
-      (authUser as any)?.id ??                 // Try id
-      (authUser as any)?.numericId ??          // Try numericId if exists
-      (typeof (authUser as any)?.id === 'number' ? (authUser as any)?.id : null) ?? // Try numeric id
-      0
-
-    // Log user ID for debugging
-    console.log('Bet placement - User ID fields:', {
-      user_id: (authUser as any)?.user_id,
-      userId: (authUser as any)?.userId,
-      id: (authUser as any)?.id,
-      numericId: (authUser as any)?.numericId,
-      selectedUserId: userId,
-      fullUser: authUser
-    })
-
-    const payload = {
-      selection_id: selectedBet.selectionId ?? 0,
-      bet_type: betType,
-      user_id: userId,
-      bet_name: selectedBet.team,
-      bet_rate: betRate,
-      match_id: numericMatchId ?? 0,
-      market_name: selectedBet.market,
-      betvalue: betStake,
-      market_type: 'in_play',
-      win_amount: Number(winAmount.toFixed(2)),
-      loss_amount: Number(lossAmount.toFixed(2)),
-      gtype: selectedBet.marketGType || 'match_odds',
-      runner_name_2: '',
-    }
-
-    try {
-      const data = await placeBet(payload).unwrap()
-      console.log('Bet placed successfully:', data)
-      toast.success('Bet placed successfully.')
-      setBetSlipOpen(false)
-      setStake('')
-      setSelectedBet(null)
-    } catch (error: any) {
-      console.error('Error placing bet:', error)
+  // Refetch pending bets on mount and periodically
+  useEffect(() => {
+    if (authUser) {
+      // Initial refetch
+      refetchPendingBets()
       
-      // Show specific error message from backend
-      const errorMessage = 
-        error?.data?.error || 
-        error?.data?.message || 
-        error?.message || 
-        'Failed to place bet. Please try again.'
-      
-      toast.error(errorMessage)
-      
-      // If user not found, suggest checking user ID
-      if (error?.data?.code === 'USER_NOT_FOUND' || errorMessage.includes('User not found')) {
-        console.error('User ID issue - Current user:', {
-          userId: userId,
-          userObject: authUser,
-          availableFields: Object.keys(authUser || {})
-        })
-      }
+      // Set up periodic refetch every 30 seconds
+      const interval = setInterval(() => {
+        refetchPendingBets()
+      }, 30000)
+
+      return () => clearInterval(interval)
     }
-  }
+  }, [authUser, refetchPendingBets])
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -1089,7 +924,6 @@ export default function LiveMatchDetailPage() {
                                       marketId: market.marketId,
                                       marketGType: market.gtype
                                     })
-                                    setOdds(option.odds.toString())
                                     setBetSlipOpen(true)
                                   }
                                 }}
@@ -1125,7 +959,6 @@ export default function LiveMatchDetailPage() {
                                       marketId: market.marketId,
                                       marketGType: market.gtype
                                     })
-                                    setOdds(option.odds.toString())
                                     setBetSlipOpen(true)
                                   }
                                 }}
@@ -1315,15 +1148,16 @@ export default function LiveMatchDetailPage() {
       </div>
 
       {/* Bet Slip Popup Modal */}
-      {betSlipOpen && selectedBet && (
-        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40">
-          <div className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0" onClick={(e) => e.stopPropagation()}>
-            {renderBetSlip('rounded-t-lg sm:rounded-lg overflow-hidden shadow-xl', {
-              maxHeight: isMobile ? '360px' : '420px',
-            })}
-          </div>
-        </div>
-      )}
+      <BetSlipModal
+        isOpen={betSlipOpen}
+        selectedBet={selectedBet}
+        onClose={() => setBetSlipOpen(false)}
+        onClear={() => setSelectedBet(null)}
+        matchId={numericMatchId}
+        authUser={authUser}
+        onBetPlaced={refetchPendingBets}
+        isMobile={isMobile}
+      />
     </div>
   )
 }

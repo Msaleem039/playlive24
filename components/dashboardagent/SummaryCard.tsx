@@ -20,7 +20,7 @@ export function SummaryCard({ title, value, color = 'black', className = '' }: S
         <h3 className="font-semibold text-sm">{title}</h3>
       </div>
       <div className="p-6 text-center">
-        <div className={`text-4xl font-bold ${colorClasses[color]}`}>
+        <div className={`text-sm font-semibold ${colorClasses[color]}`}>
           {value}
         </div>
       </div>

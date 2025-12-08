@@ -112,7 +112,7 @@ export default function DashboardLayout({ role }: { role: string }) {
       </div>
 
       {/* Spacer to push content below fixed header - Top bar (h-10=40px mobile, h-12=48px desktop) + Marquee (py-1≈20px) + Nav bar (≈44px mobile, ≈48px desktop) */}
-      <div className="h-[104px] sm:h-[116px] flex-shrink-0" />
+      <div className="h-[90px] sm:h-[110px] flex-shrink-0" />
 
       {/* ======= Tab Content ======= - Scrollable area starts below header */}
       <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">

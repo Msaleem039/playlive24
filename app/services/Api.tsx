@@ -24,9 +24,18 @@ export const api = SplitApiSettings.injectEndpoints({
     changePassword: builder.mutation({
       query: (data) => ({
         url: API_END_POINTS.changePassword,
-        method: "POST",
+        method: "PATCH",
         body: data,
       }),
+    }),
+
+    toggleUserStatus: builder.mutation({
+      query: ({ userId, isActive }) => ({
+        url: API_END_POINTS.toggleUserStatus.replace(":targetUserId", userId),
+        method: "PATCH",
+        body: { isActive },
+      }),
+      invalidatesTags: ['User'] as any,
     }),
 
     // topupBalance: builder.mutation({
@@ -178,7 +187,7 @@ export const api = SplitApiSettings.injectEndpoints({
 
     /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
     manualSettlement: builder.mutation({
-      query: (data: { settlement_id: string; winner: string }) => ({
+      query: (data: { match_id: string; selection_id: number; gtype: string; bet_name: string; winner_id: number }) => ({
         url: API_END_POINTS.manualSettlement,
         method: "POST",
         body: data,
@@ -203,6 +212,7 @@ export const {
     useLoginMutation,
     useRegisterMutation,
     useChangePasswordMutation,
+    useToggleUserStatusMutation,
     useTopupBalanceMutation,
     useTopDownBalanceMutation,
     useSuperAdminSelfTopupMutation,

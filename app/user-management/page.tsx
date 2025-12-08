@@ -8,6 +8,7 @@ import { AddClientModal, AllUsersModal } from "@/components/dashboardagent"
 import DashboardHeader from "@/components/dashboard-header"
 import DepositCashModal from "@/components/modal/DepositCashModal"
 import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
+import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import { useGetUserQuery } from "@/app/services/Api"
 
 interface UserData {
@@ -48,6 +49,17 @@ export default function UserManagement() {
     isOpen: false,
     username: "",
     userId: undefined,
+  })
+  const [userDetailsModal, setUserDetailsModal] = useState<{
+    isOpen: boolean
+    username: string
+    userId?: string
+    userData?: UserData
+  }>({
+    isOpen: false,
+    username: "",
+    userId: undefined,
+    userData: undefined,
   })
 
   // Format balance helper
@@ -143,6 +155,28 @@ export default function UserManagement() {
     //   amount: data.amount,
     //   remarks: data.remarks,
     // })
+  }
+
+  const handleUserDetails = (user: UserData) => {
+    const username = extractUsername(user.name, user.email)
+    setUserDetailsModal({
+      isOpen: true,
+      username,
+      userId: user.id,
+      userData: user,
+    })
+  }
+
+  const handleUserDetailsSubmit = async (data: {
+    name: string
+    exposure: string
+    userStatus: "Active" | "Inactive"
+    fancyBetStatus: "Active" | "Inactive"
+    marketBetStatus: "Active" | "Inactive"
+    casinoBetStatus: "Active" | "Inactive"
+  }) => {
+    console.log("Update User Details for", userDetailsModal.username, ":", data)
+    // TODO: Implement API call here
   }
 
   return (
@@ -396,7 +430,10 @@ export default function UserManagement() {
                           <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
                             Log
                           </button>
-                          <button className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap">
+                          <button
+                            onClick={() => handleUserDetails(user)}
+                            className="px-3 py-1.5 bg-[#00A66E] text-white text-xs font-bold rounded hover:bg-[#008a5a] whitespace-nowrap"
+                          >
                             User Setting
                           </button>
                           <button className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded hover:bg-orange-600 whitespace-nowrap">
@@ -476,6 +513,18 @@ export default function UserManagement() {
         username={withdrawModal.username}
         userId={withdrawModal.userId}
         onSubmit={handleWithdrawSubmit}
+      />
+
+      {/* User Details Modal */}
+      <UserDetailsModal
+        isOpen={userDetailsModal.isOpen}
+        onClose={() => setUserDetailsModal({ ...userDetailsModal, isOpen: false })}
+        username={userDetailsModal.username}
+        initialData={userDetailsModal.userData ? {
+          name: userDetailsModal.userData.name,
+          exposure: userDetailsModal.userData.balance?.toString() || "0",
+        } : undefined}
+        onSubmit={handleUserDetailsSubmit}
       />
     </div>
   )

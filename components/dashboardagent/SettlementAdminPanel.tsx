@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { 
   Eye, 
   X, 
@@ -31,28 +31,50 @@ import { toast } from "sonner"
 
 interface SettlementDetailsModalProps {
   settlementId: string
+  selectionId?: number
   isOpen: boolean
   onClose: () => void
   onSettle: () => void
 }
 
-function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: SettlementDetailsModalProps) {
+function SettlementDetailsModal({ settlementId, selectionId: initialSelectionId, isOpen, onClose, onSettle }: SettlementDetailsModalProps) {
   const { data: detailsData, isLoading, refetch } = useGetSettlementDetailsQuery(settlementId, {
-    skip: !isOpen || !settlementId
+    skip: !isOpen || !settlementId || settlementId.trim() === ""
   })
   const [manualSettlement, { isLoading: isSettling }] = useManualSettlementMutation()
-  const [winner, setWinner] = useState("")
+  const [selectionId, setSelectionId] = useState(initialSelectionId ? String(initialSelectionId) : "")
+  const [winnerId, setWinnerId] = useState("")
+
+  // Reset form fields when modal closes or settlement changes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectionId("")
+      setWinnerId("")
+    } else if (initialSelectionId) {
+      // Pre-populate selection_id when modal opens
+      setSelectionId(String(initialSelectionId))
+    }
+  }, [isOpen, settlementId, initialSelectionId])
 
   const handleManualSettlement = async () => {
-    if (!winner.trim()) {
-      toast.error("Please enter the winner/result")
+    if (!selectionId.trim() || !winnerId.trim()) {
+      toast.error("Please enter selection ID and winner ID")
+      return
+    }
+
+    const details = detailsData as any
+    if (!details?.match_id || !details?.bet_info?.gtype || !details?.bet_info?.betName) {
+      toast.error("Missing required bet information")
       return
     }
 
     try {
       await manualSettlement({
-        settlement_id: settlementId,
-        winner: winner.trim()
+        match_id: details.match_id,
+        selection_id: Number(selectionId),
+        gtype: details.bet_info.gtype,
+        bet_name: details.bet_info.betName,
+        winner_id: Number(winnerId)
       }).unwrap()
       toast.success("Settlement completed successfully")
       onSettle()
@@ -67,8 +89,8 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
   const details = detailsData as any
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="bg-[#00A66E] text-white px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">Settlement Details</h2>
@@ -171,23 +193,39 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
               {details.status_counts?.PENDING > 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <h3 className="font-semibold text-lg mb-3">Manual Settlement</h3>
-                  <div className="flex flex-col md:flex-row gap-4 items-end">
-                    <div className="flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="w-full">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Winner/Result
+                        Selection ID <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        type="text"
-                        value={winner}
-                        onChange={(e) => setWinner(e.target.value)}
-                        placeholder="Enter winner (e.g., Team A, Team B, Draw)"
-                        className="w-full"
+                        type="number"
+                        value={selectionId}
+                        onChange={(e) => setSelectionId(e.target.value)}
+                        placeholder="Enter selection ID"
+                        className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                        required
                       />
                     </div>
+                    <div className="w-full">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Winner ID <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="number"
+                        value={winnerId}
+                        onChange={(e) => setWinnerId(e.target.value)}
+                        placeholder="Enter winner ID"
+                        className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
                     <Button
                       onClick={handleManualSettlement}
-                      disabled={isSettling || !winner.trim()}
-                      className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-6 py-2 disabled:opacity-50"
+                      disabled={isSettling || !selectionId.trim() || !winnerId.trim()}
+                      className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {isSettling ? "Settling..." : "Settle Now"}
                     </Button>
@@ -284,18 +322,25 @@ export function SettlementAdminPanel() {
   const { data: resultsData, isLoading: isLoadingResults, refetch: refetchResults } = useGetAllSettlementReportQuery({}, { skip: activeTab !== "results" })
   const [reverseSettlement, { isLoading: isReversing }] = useReverseSettlementMutation()
   const [selectedSettlementId, setSelectedSettlementId] = useState<string | null>(null)
+  const [selectedSelectionId, setSelectedSelectionId] = useState<number | undefined>(undefined)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [searchTerm] = useState("")
   // const [filterStatus, setFilterStatus] = useState<string>("all")
 
-  const handleViewDetails = (settlementId: string) => {
+  const handleViewDetails = (settlementId: string, selectionId?: number) => {
+    if (!settlementId) {
+      toast.error("Settlement ID is missing")
+      return
+    }
     setSelectedSettlementId(settlementId)
+    setSelectedSelectionId(selectionId)
     setIsDetailsModalOpen(true)
   }
 
   const handleCloseDetails = () => {
     setIsDetailsModalOpen(false)
     setSelectedSettlementId(null)
+    setSelectedSelectionId(undefined)
   }
 
   const handleSettle = () => {
@@ -364,12 +409,13 @@ export function SettlementAdminPanel() {
   // Filter settlements
   const filteredSettlements = useMemo(() => {
     return settlements.filter((settlement: any) => {
+      const settlementId = settlement.settlement_ids?.[0] || ""
       const matchesSearch = 
-        settlement.settlement_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        settlementId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         settlement.match?.homeTeam?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         settlement.match?.awayTeam?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         settlement.match?.eventName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        settlement.first_bet?.betName?.toLowerCase().includes(searchTerm.toLowerCase())
+        settlement.bet_name?.toLowerCase().includes(searchTerm.toLowerCase())
       
       return matchesSearch
     })
@@ -491,46 +537,50 @@ export function SettlementAdminPanel() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredSettlements.map((settlement: any, index: number) => (
-                    <tr 
-                      key={settlement.settlement_id || index} 
-                      className="border-b border-gray-200 hover:bg-gray-50"
-                    >
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="text-sm font-mono font-semibold text-gray-900">
-                          {settlement.settlement_id}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {settlement.match?.homeTeam || "N/A"} vs {settlement.match?.awayTeam || "N/A"}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {settlement.match?.eventName || settlement.match?.ename || "N/A"}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {settlement.first_bet?.betName || "N/A"} ({settlement.first_bet?.marketName || "N/A"})
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-center">
-                        <span className="text-sm font-semibold text-gray-900">
-                          {settlement.pending_bets_count || 0}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right">
-                        <span className="text-sm font-semibold text-green-600">
-                          Rs{settlement.total_bet_amount?.toLocaleString() || 0}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => handleViewDetails(settlement.settlement_id)}
-                          className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1"
-                        >
-                          <Eye className="w-3 h-3" />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredSettlements.map((settlement: any, index: number) => {
+                    const settlementId = settlement.settlement_ids?.[0] || ""
+                    return (
+                      <tr 
+                        key={settlementId || `settlement-${index}`} 
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className="text-sm font-mono font-semibold text-gray-900">
+                            {settlementId || "N/A"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {settlement.match?.homeTeam || "N/A"} vs {settlement.match?.awayTeam || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {settlement.match?.eventName || "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {settlement.bet_name || "N/A"} ({settlement.gtype || "N/A"})
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {settlement.pending_bets_count || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <span className="text-sm font-semibold text-green-600">
+                            Rs{settlement.total_bet_amount?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() => handleViewDetails(settlementId, settlement.selection_id)}
+                            disabled={!settlementId}
+                            className="bg-[#00A66E] hover:bg-[#00A66E]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -783,14 +833,13 @@ export function SettlementAdminPanel() {
       </div>
 
       {/* Settlement Details Modal */}
-      {selectedSettlementId && (
-        <SettlementDetailsModal
-          settlementId={selectedSettlementId}
-          isOpen={isDetailsModalOpen}
-          onClose={handleCloseDetails}
-          onSettle={handleSettle}
-        />
-      )}
+      <SettlementDetailsModal
+        settlementId={selectedSettlementId || ""}
+        selectionId={selectedSelectionId}
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetails}
+        onSettle={handleSettle}
+      />
     </div>
   )
 }
