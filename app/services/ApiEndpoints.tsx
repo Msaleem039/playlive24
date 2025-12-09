@@ -1,5 +1,7 @@
 //export const BASE_URL = 'https://api.playlive24.com'
 export const BASE_URL = 'http://localhost:3000'
+ //export const BASE_URL = 'https://72.61.140.55'
+
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 export const API_END_POINTS = {
@@ -11,7 +13,6 @@ export const API_END_POINTS = {
     toggleUserStatus: `${BASE_URL}/auth/toggle-user-status/:targetUserId`,
     topupBalance: `${BASE_URL}/transfer/top-up/:targetUserId`,
     topDownBalance: `${BASE_URL}/transfer/top-down/:targetUserId`,
-
     // register: BASE_URL + "api/auth/register",
     // changePassword: BASE_URL + "api/auth/reset-password",
     // truckApplication: BASE_URL + "api/rv-leads/status",
@@ -31,7 +32,8 @@ export const API_END_POINTS = {
     // getUser: BASE_URL + "api/users/me",
     
     /////////////////////////////<===SPORTS API===>//////////////////////////////
-    cricketMatches: BASE_URL + "/cricketid/matches/details/4",
+    // cricketMatches: BASE_URL + "/cricketid/matches/details/4",
+    cricketMatches: `${BASE_URL}/cricket/fetchmatch`,
     cricketMatchDetail: BASE_URL + "/cricketid/match/detail",
     cricketMatchPrivate: BASE_URL + "/cricketid/match/private",
     // loginUser: BASE_URL + "api/auth/login",
