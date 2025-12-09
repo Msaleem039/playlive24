@@ -18,6 +18,14 @@ const nextConfig = {
   // Fix for nested directory structure warning
   // This tells Next.js where the project root is
   outputFileTracingRoot: join(__dirname),
+  // Explicitly configure webpack to resolve @ alias
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': join(__dirname),
+    }
+    return config
+  },
   async headers() {
     return [
       {
