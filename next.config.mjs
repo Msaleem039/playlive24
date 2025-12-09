@@ -1,3 +1,9 @@
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -9,6 +15,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Fix for nested directory structure warning
+  // This tells Next.js where the project root is
+  outputFileTracingRoot: join(__dirname),
   async headers() {
     return [
       {
