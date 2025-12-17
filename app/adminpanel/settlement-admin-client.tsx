@@ -4,38 +4,35 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
-import { SettlementAdminPanel } from '@/components/dashboardagent/SettlementAdminPanel'
+import SettlementAdminLayout from '@/components/layouts/SettlementAdminLayout'
 import Loader from '@/components/utils/Loader'
 
 export default function SettlementAdminPanelClient() {
   const router = useRouter()
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
-  const isSuperAdmin = userRole === 'SUPER_ADMIN'
+  const isSettlementAdmin = userRole === 'SETTLEMENT_ADMIN'
 
   useEffect(() => {
-    // Client-side role check as backup
+    // Client-side role check
     if (!authUser) {
       router.push('/login')
       return
     }
 
-    if (!isSuperAdmin) {
+    // Only SETTLEMENT_ADMIN role can access
+    if (!isSettlementAdmin) {
       router.push('/dashboard')
       return
     }
-  }, [authUser, isSuperAdmin, router])
+  }, [authUser, isSettlementAdmin, router])
 
   // Show loader while checking auth
-  if (!authUser || !isSuperAdmin) {
+  if (!authUser || !isSettlementAdmin) {
     return <Loader />
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <SettlementAdminPanel />
-    </div>
-  )
+  return <SettlementAdminLayout />
 }
 
 

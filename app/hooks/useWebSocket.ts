@@ -218,13 +218,39 @@ export const useCricketLiveUpdates = ({
 
 /* -------------------------------------------------------------
    LIVE ODDS HOOK
+   Supports both new API (eventId/marketIds) and legacy (sid/gmid)
+   Merges incremental updates for multiple markets
 -------------------------------------------------------------- */
-export function useLiveOdds(sid: number | null, gmid: number | null) {
+export function useLiveOdds(
+  sid: number | null, 
+  gmid: number | null,
+  eventId?: string | null,
+  marketIds?: string[]
+) {
   const [odds, setOdds] = useState<any>(null)
   const socketRef = useRef<Socket | null>(null)
+  const oddsMapRef = useRef<Map<string, any>>(new Map()) // Store odds by marketId
 
   useEffect(() => {
-    if (!sid || !gmid) return setOdds(null)
+    // Use new API format if eventId and marketIds are provided
+    const useNewFormat = eventId && marketIds && marketIds.length > 0
+    
+    // Use legacy format if sid and gmid are provided
+    const useLegacyFormat = sid && gmid
+
+    // Skip WebSocket for new API format - use direct API polling instead (backend has cronjob)
+    if (useNewFormat) {
+      console.log("📊 [LIVE ODDS] Skipping WebSocket for new API format - using direct API polling")
+      setOdds(null)
+      oddsMapRef.current.clear()
+      return
+    }
+
+    if (!useLegacyFormat) {
+      setOdds(null)
+      oddsMapRef.current.clear()
+      return
+    }
 
     const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "https://api.playlive24.com"
 
@@ -240,24 +266,127 @@ export function useLiveOdds(sid: number | null, gmid: number | null) {
     socketRef.current = socket
 
     socket.on("connect", () => {
-      console.log("📊 [LIVE ODDS] Connected:", { sid, gmid })
-      socket.emit("subscribe_match", { sid, gmid })
+      if (useNewFormat) {
+        console.log("📊 [LIVE ODDS] Connected (New API):", { eventId, marketIds })
+        // Subscribe to markets for odds updates
+        socket.emit("subscribe_markets", { eventId, marketIds })
+        // Also try alternative event names
+        socket.emit("subscribe", { event: "market_odds", eventId, marketIds })
+      } else if (useLegacyFormat) {
+        console.log("📊 [LIVE ODDS] Connected (Legacy):", { sid, gmid })
+        socket.emit("subscribe_match", { sid, gmid })
+      }
     })
 
     socket.on("disconnect", () => console.warn("📊 Live odds disconnected"))
     socket.on("connect_error", (e) => console.error("📊 Live odds error:", e))
 
-    socket.on("odds_update", setOdds)
-    socket.on("webhook_update", setOdds)
+    // Handle odds updates - transform to match API format and merge incremental updates
+    const handleOddsUpdate = (payload: any) => {
+      console.log("📊 [LIVE ODDS] Update received:", payload)
+      
+      // Handle new API format - odds update for specific markets
+      if (useNewFormat) {
+        let updatedOdds = null
+        
+        // Check if this is a single market update or array of markets
+        if (payload?.marketId) {
+          // Single market update - merge into map
+          const marketId = payload.marketId
+          oddsMapRef.current.set(marketId, {
+            marketId: payload.marketId,
+            isMarketDataDelayed: payload.isMarketDataDelayed || false,
+            status: payload.status || "OPEN",
+            betDelay: payload.betDelay || 5,
+            inplay: payload.inplay || false,
+            totalMatched: payload.totalMatched || 0,
+            totalAvailable: payload.totalAvailable || 0,
+            runners: payload.runners || []
+          })
+          
+          // Convert map to array format
+          updatedOdds = {
+            status: true,
+            data: Array.from(oddsMapRef.current.values())
+          }
+        } else if (Array.isArray(payload)) {
+          // Array of market updates
+          payload.forEach((market: any) => {
+            if (market?.marketId) {
+              oddsMapRef.current.set(market.marketId, {
+                marketId: market.marketId,
+                isMarketDataDelayed: market.isMarketDataDelayed || false,
+                status: market.status || "OPEN",
+                betDelay: market.betDelay || 5,
+                inplay: market.inplay || false,
+                totalMatched: market.totalMatched || 0,
+                totalAvailable: market.totalAvailable || 0,
+                runners: market.runners || []
+              })
+            }
+          })
+          
+          updatedOdds = {
+            status: true,
+            data: Array.from(oddsMapRef.current.values())
+          }
+        } else if (payload?.data && Array.isArray(payload.data)) {
+          // Wrapped array format
+          payload.data.forEach((market: any) => {
+            if (market?.marketId) {
+              oddsMapRef.current.set(market.marketId, market)
+            }
+          })
+          
+          updatedOdds = {
+            status: true,
+            data: Array.from(oddsMapRef.current.values())
+          }
+        }
+        
+        if (updatedOdds) {
+          setOdds(updatedOdds)
+        }
+        return
+      }
+
+      // Handle legacy format or generic updates
+      if (useLegacyFormat) {
+        setOdds(payload)
+        return
+      }
+
+      // Try to extract market data from various payload formats
+      if (payload?.data) {
+        setOdds(payload)
+      } else if (Array.isArray(payload)) {
+        setOdds({ status: true, data: payload })
+      } else {
+        setOdds(payload)
+      }
+    }
+
+    // Listen for various odds update events
+    socket.on("odds_update", handleOddsUpdate)
+    socket.on("webhook_update", handleOddsUpdate)
+    socket.on("market_odds_update", handleOddsUpdate) // New API format event
+    socket.on("market_odds", handleOddsUpdate) // Alternative event name
+    socket.on("odds", handleOddsUpdate) // Generic odds event
 
     return () => {
       if (socketRef.current?.connected) {
-        socketRef.current.emit("unsubscribe_match", { sid, gmid })
+        if (useNewFormat) {
+          socketRef.current.emit("unsubscribe_markets", { eventId, marketIds })
+          socketRef.current.emit("unsubscribe", { event: "market_odds", eventId, marketIds })
+        } else if (useLegacyFormat) {
+          socketRef.current.emit("unsubscribe_match", { sid, gmid })
+        }
       }
       socketRef.current?.disconnect()
       socketRef.current = null
+      oddsMapRef.current.clear()
     }
-  }, [sid, gmid])
+  }, [sid, gmid, eventId, marketIds])
 
-  return odds
+  return { data: odds }
 }

@@ -137,6 +137,20 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['Settlement'] as any,
     }),
+    getSettlementHistory: builder.query({
+      query: (params: { startDate?: string; endDate?: string; limit?: number; offset?: number }) => {
+        const queryParams = new URLSearchParams()
+        if (params.startDate) queryParams.append('startDate', params.startDate)
+        if (params.endDate) queryParams.append('endDate', params.endDate)
+        if (params.limit) queryParams.append('limit', params.limit.toString())
+        if (params.offset) queryParams.append('offset', params.offset.toString())
+        return {
+          url: `${API_END_POINTS.getSettlementHistory}?${queryParams.toString()}`,
+          method: "GET",
+        }
+      },
+      providesTags: ['Settlement'] as any,
+    }),
     getPendingSettlements: builder.query({
       query: () => ({
         url: API_END_POINTS.getPendingSettlements,
@@ -203,6 +217,50 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       invalidatesTags: ['Settlement'] as any,
     }),
+
+    settleFancy: builder.mutation({
+      query: (data: { eventId: string; selectionId: string; decisionRun?: number; isCancel: boolean; marketId?: string }) => ({
+        url: API_END_POINTS.settleFancy,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
+    settleMatchOdds: builder.mutation({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
+        url: API_END_POINTS.settleMatchOdds,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
+    settleBookmaker: builder.mutation({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
+        url: API_END_POINTS.settleBookmaker,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
+    rollbackSettlement: builder.mutation({
+      query: (data: { settlementId: string }) => ({
+        url: API_END_POINTS.rollbackSettlement,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
+    deleteBet: builder.mutation({
+      query: (betIdOrSettlementId: string) => ({
+        url: `${API_END_POINTS.deleteBet}/${betIdOrSettlementId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
   }),
 });
 
@@ -230,9 +288,15 @@ export const {
     useGetSettlementBetsQuery,
     useGetMyPendingBetsQuery,
     useGetAllSettlementReportQuery,
+    useGetSettlementHistoryQuery,
 
     /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
     useManualSettlementMutation,
     useReverseSettlementMutation,
+    useSettleFancyMutation,
+    useSettleMatchOddsMutation,
+    useSettleBookmakerMutation,
+    useRollbackSettlementMutation,
+    useDeleteBetMutation,
     
 } = api;

@@ -113,4 +113,47 @@ export interface CricketMatchesParams {
   date_to?: string;
 }
 
+// New aggregator API response types
+export interface CricketEvent {
+  id: string;
+  name: string;
+  countryCode: string;
+  timezone: string;
+  openDate: string;
+}
+
+export interface CricketAggregatorEvent {
+  event: CricketEvent;
+  isPremiumActive: string;
+  marketCount: number;
+}
+
+export interface CricketAggregatorResponse {
+  total: number;
+  live: CricketAggregatorEvent[];
+  upcoming: CricketAggregatorEvent[];
+}
+
+// Sports API Types
+export interface EventType {
+  id: string;
+  name: string;
+}
+
+export interface Sport {
+  _id: string;
+  eventType: EventType;
+  marketCount: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface SportsResponse {
+  message: string;
+  code: number;
+  error: boolean;
+  data: Sport[];
+}
+
 

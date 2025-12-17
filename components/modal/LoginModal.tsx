@@ -24,7 +24,8 @@ enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN", 
   AGENT = "AGENT",
-  CLIENT = "CLIENT"
+  CLIENT = "CLIENT",
+  SETTLEMENT_ADMIN = "SETTLEMENT_ADMIN"
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProps) {
@@ -68,6 +69,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         return "/agent-dashboard"
       case UserRole.CLIENT:
         return "/dashboard"
+      case UserRole.SETTLEMENT_ADMIN:
+        return "/adminpanel/settlement-admin"
       default:
         return "/dashboard"
     }
@@ -125,9 +128,11 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         
         let redirectPath = "/dashboard"
         
-        // For SUPER_ADMIN, redirect to selection page
+        // Direct role-based redirects
         if (normalizedRole === UserRole.SUPER_ADMIN) {
           redirectPath = "/super-admin/select"
+        } else if (normalizedRole === UserRole.SETTLEMENT_ADMIN) {
+          redirectPath = "/adminpanel/settlement-admin"
         } else {
           redirectPath = getDashboardPath(result.user.role)
         }

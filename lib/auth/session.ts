@@ -56,6 +56,7 @@ export function getDashboardPath(role: string | undefined): string {
     case 'ADMIN': return '/admin'
     case 'AGENT': return '/agent-dashboard'
     case 'CLIENT': return '/dashboard'
+    case 'SETTLEMENT_ADMIN': return '/adminpanel/settlement-admin'
     default: return '/dashboard'
   }
 }

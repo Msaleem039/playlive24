@@ -273,7 +273,8 @@ interface SelectedBet {
   odds: string
   market: string
   selectionId?: number
-  marketId?: number
+  marketId?: number | string
+  marketIdString?: string
   marketGType?: string
 }
 
@@ -286,6 +287,7 @@ interface BetSlipModalProps {
   authUser: any
   onBetPlaced?: () => void
   isMobile?: boolean
+  eventId?: string | null
 }
 
 export default function BetSlipModal({
@@ -296,7 +298,8 @@ export default function BetSlipModal({
   matchId,
   authUser,
   onBetPlaced,
-  isMobile = false
+  isMobile = false,
+  eventId = null
 }: BetSlipModalProps) {
   const [stake, setStake] = useState<string>('')
   const [odds, setOdds] = useState<string>('')
@@ -447,30 +450,65 @@ export default function BetSlipModal({
       return
     }
 
-    // Log user ID for debugging
-    console.log('Bet placement - User ID fields:', {
-      user_id: (authUser as any)?.user_id,
-      userId: (authUser as any)?.userId,
-      id: (authUser as any)?.id,
-      numericId: (authUser as any)?.numericId,
-      selectedUserId: userId,
-      fullUser: authUser
+    // Get marketId - prefer marketIdString (full string format like "1.250049502"), fallback to marketId
+    const marketIdValue = selectedBet.marketIdString || selectedBet.marketId?.toString() || ''
+    
+    // Get eventId - prefer from prop, fallback to matchId as string
+    const eventIdValue = eventId || matchId?.toString() || ''
+
+    if (!marketIdValue) {
+      toast.error('Market ID not found. Please try again.')
+      return
+    }
+
+    if (!eventIdValue) {
+      toast.error('Event ID not found. Please try again.')
+      return
+    }
+
+    // Determine market_type based on gtype
+    const marketType = selectedBet.marketGType === 'fancy' || selectedBet.marketGType === 'fancy1' || selectedBet.marketGType === 'fancy2'
+      ? 'fancy'
+      : selectedBet.marketGType === 'bookmaker' || selectedBet.marketGType === 'bookmatch'
+      ? 'bookmaker'
+      : 'in_play'
+
+    // Log for debugging
+    console.log('Bet placement - Payload data:', {
+      user_id: String(userId),
+      match_id: String(matchId ?? ''),
+      selection_id: selectedBet.selectionId,
+      bet_type: betType,
+      bet_rate: betRate,
+      betvalue: betStake,
+      marketId: marketIdValue,
+      eventId: eventIdValue,
+      bet_name: selectedBet.team,
+      market_name: selectedBet.market,
+      market_type: marketType,
+      win_amount: winAmount,
+      loss_amount: lossAmount,
+      gtype: selectedBet.marketGType || 'match_odds',
+      selectedBet
     })
 
+    // API payload format - includes both new fields (marketId, eventId) and legacy fields
     const payload = {
+      user_id: String(userId),
+      match_id: String(matchId ?? ''),
       selection_id: selectedBet.selectionId ?? 0,
       bet_type: betType,
-      user_id: String(userId), // Ensure it's a string
-      bet_name: selectedBet.team,
       bet_rate: betRate,
-      match_id: matchId ?? 0,
-      market_name: selectedBet.market,
       betvalue: betStake,
-      market_type: 'in_play',
+      marketId: marketIdValue,
+      eventId: eventIdValue,
+      // Legacy required fields
+      bet_name: selectedBet.team || '',
+      market_name: selectedBet.market || '',
+      market_type: marketType,
       win_amount: Number(winAmount.toFixed(2)),
       loss_amount: Number(lossAmount.toFixed(2)),
-      gtype: selectedBet.marketGType || 'match_odds',
-      runner_name_2: '',
+      gtype: selectedBet.marketGType || 'match_odds'
     }
 
     console.log('Placing bet with payload:', payload)

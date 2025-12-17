@@ -1,6 +1,6 @@
-//export const BASE_URL = 'https://api.playlive24.com'
-export const BASE_URL = 'http://localhost:3000'
- //export const BASE_URL = 'https://72.61.140.55'
+export const BASE_URL = 'https://api.playlive24.com'
+//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
@@ -33,9 +33,13 @@ export const API_END_POINTS = {
     
     /////////////////////////////<===SPORTS API===>//////////////////////////////
     // cricketMatches: BASE_URL + "/cricketid/matches/details/4",
-    cricketMatches: `${BASE_URL}/cricket/fetchmatch`,
+    cricketMatches: `${BASE_URL}/cricketid/aggregator/cricket`,
+    cricketMatchMarkets: `${BASE_URL}/cricketid/markets`,
+    cricketMatchOdds: `${BASE_URL}/cricketid/odds`,
     cricketMatchDetail: BASE_URL + "/cricketid/match/detail",
     cricketMatchPrivate: BASE_URL + "/cricketid/match/private",
+    cricketBookmakerFancy: `${BASE_URL}/cricketid/bookmaker-fancy`,
+    getAllSports: `${BASE_URL}/cricketid/sports`,
     // loginUser: BASE_URL + "api/auth/login",
     getUser: `${BASE_URL}/auth/subordinates`,
     getSingleUser: `${BASE_URL}/users/:userId`,
@@ -51,12 +55,19 @@ export const API_END_POINTS = {
     superAdminSelfTopup: `${BASE_URL}/transfer/superadmin/self-topup`,
 
     /////////////////////////////<===SETTLEMENT===>//////////////////////////////
-    getPendingSettlements: `${BASE_URL}/settlement/pending`,
+    getPendingSettlements: `${BASE_URL}/admin/settlement/pending`,
     getPendingSettlementsByMatch: `${BASE_URL}/settlement/pending/match/:matchId`,
     getSettlementDetails: `${BASE_URL}/settlement/details`,
     getSettlementBets: `${BASE_URL}/settlement/bets`,
     getMyPendingBets: `${BASE_URL}/settlement/bets/me/pending`,
     manualSettlement: `${BASE_URL}/settlement/manual/session-bet`,
     getallsettlementreport: `${BASE_URL}/settlement/results`,
+    getSettlementHistory: `${BASE_URL}/admin/settlement/history`,
     reverseSettlement: `${BASE_URL}/settlement/reverse`,
+    settleFancy: `${BASE_URL}/admin/settlement/fancy`,
+    settleMatchOdds: `${BASE_URL}/admin/settlement/match-odds`,
+    settleBookmaker: `${BASE_URL}/admin/settlement/bookmaker`,
+    rollbackSettlement: `${BASE_URL}/admin/settlement/rollback`,
+    deleteBet: `${BASE_URL}/admin/settlement/bet`,
+ 
 }

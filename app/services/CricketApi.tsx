@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { API_END_POINTS } from './ApiEndpoints';
-import { CricketCompetitionsResponse, CricketMatchesResponse, CricketMatchesParams } from '../../lib/types/cricket';
+import { CricketCompetitionsResponse, CricketMatchesResponse, CricketMatchesParams, CricketAggregatorResponse, SportsResponse } from '../../lib/types/cricket';
 
 // Create a separate API for cricket/sports data
 export const cricketApi = createApi({
@@ -13,7 +13,7 @@ export const cricketApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['CricketCompetitions', 'CricketMatches'],
+  tagTypes: ['CricketCompetitions', 'CricketMatches', 'Sports'],
   endpoints: (builder) => ({
     // Get cricket competitions (what the API actually returns)
     getCricketCompetitions: builder.query<CricketCompetitionsResponse, void>({
@@ -25,13 +25,11 @@ export const cricketApi = createApi({
     }),
     
     // Get cricket matches with optional filters (if this endpoint exists)
-    getCricketMatches: builder.query<CricketMatchesResponse, CricketMatchesParams | void>({
+    getCricketMatches: builder.query<CricketAggregatorResponse | CricketMatchesResponse, CricketMatchesParams | void>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         
-        // Add query parameters if provided
-        if (params?.page) searchParams.append('page', params.page.toString());
-        if (params?.per_page) searchParams.append('per_page', params.per_page.toString());
+        // Add query parameters if provided (pagination removed - not used in backend)
         if (params?.format) searchParams.append('format', params.format.toString());
         if (params?.status) searchParams.append('status', params.status.toString());
         if (params?.competition_id) searchParams.append('competition_id', params.competition_id.toString());
@@ -48,7 +46,35 @@ export const cricketApi = createApi({
       providesTags: ['CricketMatches'],
     }),
     
-    // Get cricket match details by gmid
+    // Get cricket match markets by eventId
+    getCricketMatchMarkets: builder.query<any, { eventId: string | number }>({
+      query: ({ eventId }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('eventId', eventId.toString());
+        
+        return {
+          url: `${API_END_POINTS.cricketMatchMarkets}?${searchParams.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['CricketMatches'],
+    }),
+    
+    // Get cricket match odds by marketIds - uses direct API polling (backend has cronjob)
+    getCricketMatchOdds: builder.query<any, { marketIds: string[] }>({
+      query: ({ marketIds }) => {
+        const searchParams = new URLSearchParams();
+        marketIds.forEach(id => searchParams.append('marketIds', id));
+        
+        return {
+          url: `${API_END_POINTS.cricketMatchOdds}?${searchParams.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['CricketMatches'],
+    }),
+    
+    // Get cricket match details by gmid (legacy)
     getCricketMatchDetail: builder.query<any, { sid: number; gmid: number }>({
       query: ({ sid, gmid }) => {
         const searchParams = new URLSearchParams();
@@ -77,6 +103,29 @@ export const cricketApi = createApi({
       },
       providesTags: ['CricketMatches'],
     }),
+    
+    // Get bookmaker and fancy markets by eventId
+    getCricketBookmakerFancy: builder.query<any, { eventId: string | number }>({
+      query: ({ eventId }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('eventId', eventId.toString());
+        
+        return {
+          url: `${API_END_POINTS.cricketBookmakerFancy}?${searchParams.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['CricketMatches'],
+    }),
+    
+    // Get all sports
+    getAllSports: builder.query<SportsResponse, void>({
+      query: () => ({
+        url: API_END_POINTS.getAllSports,
+        method: 'GET',
+      }),
+      providesTags: ['Sports'],
+    }),
   }),
 });
 
@@ -84,6 +133,10 @@ export const cricketApi = createApi({
 export const {
   useGetCricketCompetitionsQuery,
   useGetCricketMatchesQuery,
+  useGetCricketMatchMarketsQuery,
+  useGetCricketMatchOddsQuery,
   useGetCricketMatchDetailQuery,
   useGetCricketMatchPrivateQuery,
+  useGetCricketBookmakerFancyQuery,
+  useGetAllSportsQuery,
 } = cricketApi;

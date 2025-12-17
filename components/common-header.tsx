@@ -79,6 +79,12 @@ const roleNavigationItems = {
     'Account Statement',
     'Bet History',
     'Profit Loss'
+  ],
+  SETTLEMENT_ADMIN: [
+    'Settlement Management',
+    'Pending Settlements',
+    'Settlement Results',
+    'Settlement Reports'
   ]
 }
 
@@ -259,6 +265,14 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         { label: "Account Statement", href: "/agent/account-statement", icon: FileText, action: "navigate" },
         { label: "Bet History", href: "/agent/bet-history", icon: History, action: "navigate" },
         { label: "Balance Sheet", href: "/agent/balance-sheet", icon: BarChart2, action: "navigate" },
+        { label: "Rules", href: "/rules", icon: BookOpen, action: "navigate" },
+      ]
+    }
+
+    if (role === "SETTLEMENT_ADMIN") {
+      return [
+        { label: "Change Password", href: null, icon: Lock, action: "modal" },
+        { label: "Settlement Management", href: "/adminpanel/settlement-admin", icon: Shield, action: "navigate" },
         { label: "Rules", href: "/rules", icon: BookOpen, action: "navigate" },
       ]
     }

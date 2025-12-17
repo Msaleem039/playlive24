@@ -16,9 +16,12 @@ export function middleware(request: NextRequest) {
   // Redirect authenticated users away from login/signup
   if ((pathname === '/login' || pathname === '/signup') && session.isValid && session.user) {
     const role = session.user.role?.toUpperCase().replace(/[-\s]+/g, '_')
-    // For SUPER_ADMIN, redirect to selection page
+    // Direct role-based redirects
     if (role === 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/super-admin/select', request.url))
+    }
+    if (role === 'SETTLEMENT_ADMIN') {
+      return NextResponse.redirect(new URL('/adminpanel/settlement-admin', request.url))
     }
     const dashboardPath = getDashboardPath(session.user.role)
     return NextResponse.redirect(new URL(dashboardPath, request.url))

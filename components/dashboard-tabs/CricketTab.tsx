@@ -94,6 +94,32 @@ console.log("filteredMatches",filteredMatches)
   const liveCount = liveMatchesList.length
   const upcomingCount = upcomingMatchesList.length
 
+  // Generate dummy odds for matches without real odds data
+  const generateDummyOdds = (matchId: number | string) => {
+    // Use matchId as seed for consistent dummy odds per match
+    const seed = typeof matchId === 'number' ? matchId : matchId.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    
+    // Generate consistent dummy odds based on match ID
+    const baseOdds = [
+      [1.85, 1.95], [2.10, 1.80], [1.75, 2.05], [2.20, 1.70], [1.90, 1.90],
+      [1.65, 2.25], [2.30, 1.65], [1.95, 1.85], [2.05, 1.75], [1.80, 2.10]
+    ]
+    const oddsIndex = seed % baseOdds.length
+    const [team1Base, team2Base] = baseOdds[oddsIndex]
+    
+    // Add small variations for other odds types
+    const variation = (seed % 20) / 100 // 0.00 to 0.19
+    
+    return {
+      team1: (team1Base + variation).toFixed(2),
+      team2: (team2Base - variation).toFixed(2),
+      over: (1.90 + (seed % 10) / 50).toFixed(2),
+      under: (1.90 + (seed % 10) / 50).toFixed(2),
+      total1: (1.85 + (seed % 15) / 50).toFixed(2),
+      total2: (1.85 + (seed % 15) / 50).toFixed(2),
+    }
+  }
+
   // Extract and format odds from match markets
   const matchesWithOdds = useMemo(() => {
     return filteredMatches.map((match: any) => {
@@ -143,15 +169,21 @@ console.log("filteredMatches",filteredMatches)
         total2Odds = match?.total2 || total2Odds
       }
 
+      // Get match ID for dummy odds generation
+      const matchId = match.gmid ?? match.match_id ?? match.id ?? 0
+      
+      // Generate dummy odds if real odds are missing
+      const dummyOdds = generateDummyOdds(matchId)
+
       return {
         ...match,
         formattedOdds: {
-          team1: team1Odds,
-          team2: team2Odds,
-          over: overOdds,
-          under: underOdds,
-          total1: total1Odds,
-          total2: total2Odds,
+          team1: team1Odds !== '-' ? team1Odds : dummyOdds.team1,
+          team2: team2Odds !== '-' ? team2Odds : dummyOdds.team2,
+          over: overOdds !== '-' ? overOdds : dummyOdds.over,
+          under: underOdds !== '-' ? underOdds : dummyOdds.under,
+          total1: total1Odds !== '-' ? total1Odds : dummyOdds.total1,
+          total2: total2Odds !== '-' ? total2Odds : dummyOdds.total2,
         }
       }
     })
