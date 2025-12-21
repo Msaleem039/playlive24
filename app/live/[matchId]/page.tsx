@@ -574,7 +574,21 @@ export default function LiveMatchDetailPage() {
       })
     }
     
-    return markets
+    // Filter out markets with "2nd" in mname and "Tied Match" markets (case-insensitive)
+    const filteredMarkets = markets.filter((market: any) => {
+      const mname = (market.mname || market.marketName || '').toLowerCase().trim()
+      // Exclude markets with "2nd" in the name
+      if (mname.includes('2nd')) {
+        return false
+      }
+      // Exclude "Tied Match" markets (exact match or contains "tied match" as a phrase)
+      if (mname === 'tied match' || mname.startsWith('tied match')) {
+        return false
+      }
+      return true
+    })
+    
+    return filteredMarkets
   }, [marketsData, oddsData, liveOdds, matchPrivateData, bookmakerFancyData, numericMatchId, eventId, marketIds])
 
   // Transform API data to component format

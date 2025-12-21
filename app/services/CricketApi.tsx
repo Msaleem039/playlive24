@@ -61,15 +61,63 @@ export const cricketApi = createApi({
     }),
     
     // Get cricket match odds by marketIds - uses direct API polling (backend has cronjob)
+    // API has a limit of maximum 10 marketIds per request, so we batch requests
     getCricketMatchOdds: builder.query<any, { marketIds: string[] }>({
-      query: ({ marketIds }) => {
-        const searchParams = new URLSearchParams();
-        marketIds.forEach(id => searchParams.append('marketIds', id));
+      queryFn: async ({ marketIds }, _queryApi, _extraOptions, baseQuery) => {
+        // API limit: maximum 10 marketIds per request
+        const MAX_MARKET_IDS_PER_REQUEST = 10;
         
-        return {
-          url: `${API_END_POINTS.cricketMatchOdds}?${searchParams.toString()}`,
-          method: 'GET',
-        };
+        // Split marketIds into chunks of 10
+        const chunks: string[][] = [];
+        for (let i = 0; i < marketIds.length; i += MAX_MARKET_IDS_PER_REQUEST) {
+          chunks.push(marketIds.slice(i, i + MAX_MARKET_IDS_PER_REQUEST));
+        }
+        
+        try {
+          // Make parallel requests for each chunk using RTK Query's baseQuery
+          const requests = chunks.map(async (chunk) => {
+            const marketIdsString = chunk.join(',');
+            const result = await baseQuery({
+              url: `${API_END_POINTS.cricketMatchOdds}?marketIds=${marketIdsString}`,
+              method: 'GET',
+            });
+            
+            if (result.error) {
+              throw result.error;
+            }
+            
+            return result.data;
+          });
+          
+          // Wait for all requests to complete
+          const responses = await Promise.all(requests);
+          
+          // Combine all successful responses
+          const combinedData = {
+            status: true,
+            data: [] as any[]
+          };
+          
+          responses.forEach((responseData: any) => {
+            if (responseData?.status && Array.isArray(responseData.data)) {
+              combinedData.data.push(...responseData.data);
+            } else if (Array.isArray(responseData)) {
+              combinedData.data.push(...responseData);
+            } else if (responseData?.data && Array.isArray(responseData.data)) {
+              combinedData.data.push(...responseData.data);
+            }
+          });
+          
+          return { data: combinedData };
+        } catch (error: any) {
+          return { 
+            error: { 
+              status: 'CUSTOM_ERROR', 
+              error: error.message || 'Failed to fetch odds',
+              data: error
+            } 
+          };
+        }
       },
       providesTags: ['CricketMatches'],
     }),

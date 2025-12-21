@@ -253,14 +253,6 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       invalidatesTags: ['Settlement'] as any,
     }),
-
-    deleteBet: builder.mutation({
-      query: (betIdOrSettlementId: string) => ({
-        url: `${API_END_POINTS.deleteBet}/${betIdOrSettlementId}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ['Settlement'] as any,
-    }),
   }),
 });
 
@@ -297,6 +289,5 @@ export const {
     useSettleMatchOddsMutation,
     useSettleBookmakerMutation,
     useRollbackSettlementMutation,
-    useDeleteBetMutation,
     
 } = api;

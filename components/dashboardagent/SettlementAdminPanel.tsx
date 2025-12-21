@@ -28,8 +28,7 @@ import {
   RotateCcw,
   Menu,
   TrendingUp,
-  TrendingDown,
-  Trash2
+  TrendingDown
 } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
@@ -44,8 +43,7 @@ import {
   useSettleFancyMutation,
   useSettleMatchOddsMutation,
   useSettleBookmakerMutation,
-  useRollbackSettlementMutation,
-  useDeleteBetMutation
+  useRollbackSettlementMutation
 } from "@/app/services/Api"
 import { toast } from "sonner"
 
@@ -439,7 +437,6 @@ export function SettlementAdminPanel() {
     offset: 0
   })
   const [rollbackSettlement, { isLoading: isRollingBack }] = useRollbackSettlementMutation()
-  const [deleteBet, { isLoading: isDeletingBet }] = useDeleteBetMutation()
 
   // Transform API response
   const matches = useMemo(() => {
@@ -538,37 +535,6 @@ export function SettlementAdminPanel() {
       refetchHistory()
     } catch (error: any) {
       toast.error(error?.data?.error || error?.data?.message || "Failed to rollback settlement")
-    }
-  }
-
-  const handleDeleteBet = async (betId: string, settlementId?: string) => {
-    // Use betId if available, otherwise use settlementId
-    const idToDelete = betId || settlementId
-    if (!idToDelete) {
-      toast.error("Bet ID or Settlement ID is required")
-      return
-    }
-
-    if (!confirm(`Are you sure you want to delete this bet? The refund amount will be processed.`)) {
-      return
-    }
-
-    try {
-      const result = await deleteBet(idToDelete).unwrap()
-      toast.success(result?.message || "Bet deleted successfully", {
-        description: result?.data?.refundAmount 
-          ? `Refund amount: Rs${result.data.refundAmount.toLocaleString()}` 
-          : undefined
-      })
-      refetch()
-      refetchResults()
-      refetchHistory()
-      // If we're viewing a match detail, refresh the selected match
-      if (selectedMatch) {
-        refetch()
-      }
-    } catch (error: any) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to delete bet")
     }
   }
 
@@ -963,7 +929,6 @@ export function SettlementAdminPanel() {
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Settlement ID</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
                           <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
-                          <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Delete</th>
                     </tr>
                   </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -1013,22 +978,11 @@ export function SettlementAdminPanel() {
                                   Settle
                                 </Button>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center">
-                                <Button
-                                  onClick={() => handleDeleteBet(bet.id, bet.settlementId)}
-                                  disabled={isDeletingBet}
-                                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                                  title="Delete bet and refund amount"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                  Delete
-                                </Button>
-                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={9} className="px-6 py-12 text-center">
+                            <td colSpan={8} className="px-6 py-12 text-center">
                               <div className="flex flex-col items-center">
                                 <FileText className="w-12 h-12 text-gray-400 mb-3" />
                                 <p className="text-gray-500 font-medium">No bets found for this market</p>
