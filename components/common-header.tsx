@@ -624,7 +624,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
       {/* Marquee */}
       <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
         <div className="animate-marquee text-[0.6rem] xs:text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-white font-medium whitespace-nowrap">
-          Welcome to Playlive7! If you have any queries, contact us +923216258560
+          Welcome to Playlive7! If you have any queries, contact us +923254353
         </div>
       </div>
 

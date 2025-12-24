@@ -412,8 +412,11 @@ console.log("filteredMatches",filteredMatches)
               const total1Odds = match.formattedOdds?.total1 || '-'
               const total2Odds = match.formattedOdds?.total2 || '-'
 
-              // Create unique keys for each odd type
+              // Check if match has valid ID (declare once, use everywhere)
               const matchId = match.gmid ?? match.match_id ?? match.id ?? index
+              const canNavigate = !!matchId
+
+              // Create unique keys for each odd type
               const oddKeys = {
                 team1: `match-${matchId}-team1`,
                 team2: `match-${matchId}-team2`,
@@ -440,26 +443,23 @@ console.log("filteredMatches",filteredMatches)
                   })()
 
               const handleMatchClick = () => {
-                if (isLive) {
-                  // Use gmid first (from new API), then match_id, then id
-                  const matchId = match.gmid ?? match.match_id ?? match.id
-                  if (matchId) {
-                    // Set flag to auto-open TV when navigating from main page
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('fromMainPage', 'true')
-                    }
-                    router.push(`/live/${matchId}`)
+                // Allow navigation for both live and upcoming matches
+                if (matchId) {
+                  // Set flag to auto-open TV when navigating from main page (only for live matches)
+                  if (isLive && typeof window !== 'undefined') {
+                    sessionStorage.setItem('fromMainPage', 'true')
                   }
+                  router.push(`/live/${matchId}`)
                 }
               }
 
               return (
                 <div 
                   key={match.gmid ?? match.match_id ?? match.id ?? index} 
-                  onClick={isLive ? handleMatchClick : undefined}
+                  onClick={canNavigate ? handleMatchClick : undefined}
                   className={`grid grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 py-2 hover:bg-gray-50 items-center ${
                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  } ${isLive ? 'cursor-pointer' : ''}`}
+                  } ${canNavigate ? 'cursor-pointer' : ''}`}
                   style={{ minHeight: '60px' }}
                 >
                   {/* Match Details (left) with TV + time + teams */}

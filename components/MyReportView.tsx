@@ -11,12 +11,22 @@ import { CalendarDatePicker } from "@/components/DatePicker"
 import { Button } from "@/components/utils/button"
 
 const DEFAULT_DASHBOARD = {
-  totalDeposit: 0,
-  totalWithdraw: 0,
-  clientBalance: 0,
-  totalExposure: 0,
-  userCount: [],
-  totalActiveClient: 0,
+  cash: {
+    totalDeposit: 0,
+    totalWithdraw: 0,
+    clientBalance: 0,
+  },
+  risk: {
+    totalExposure: 0,
+  },
+  pnl: {
+    clientTotalPnl: 0,
+    adminNetPnl: 0,
+  },
+  users: {
+    byRole: [],
+    totalActiveClient: 0,
+  },
   topWinningPlayers: [],
   topLosingPlayers: [],
   topWinningMarkets: [],
@@ -37,7 +47,7 @@ export function MyReportView() {
   const dashboardData = data ?? DEFAULT_DASHBOARD
 
   const userCountData = useMemo(() => {
-    const base = (dashboardData.userCount as Array<any>) ?? []
+    const base = (dashboardData.users?.byRole as Array<any>) ?? []
     const rows = base.map((item) => ({
       role: item.role ?? "N/A",
       count: formatNumber(item.count ?? 0),
@@ -45,7 +55,7 @@ export function MyReportView() {
 
     rows.push({
       role: "Total Active Client",
-      count: formatNumber(dashboardData.totalActiveClient ?? 0),
+      count: formatNumber(dashboardData.users?.totalActiveClient ?? 0),
     })
 
     return rows
@@ -162,22 +172,22 @@ export function MyReportView() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <SummaryCard
             title="TOTAL DEPOSIT"
-            value={showLoadingState ? "…" : formatNumber(dashboardData.totalDeposit)}
+            value={showLoadingState ? "…" : formatNumber(dashboardData.cash?.totalDeposit)}
             color="green"
           />
           <SummaryCard
             title="TOTAL WITHDRAW"
-            value={showLoadingState ? "…" : formatNumber(dashboardData.totalWithdraw)}
+            value={showLoadingState ? "…" : formatNumber(dashboardData.cash?.totalWithdraw)}
             color="red"
           />
           <SummaryCard
             title="CLIENT BALANCE"
-            value={showLoadingState ? "…" : formatNumber(dashboardData.clientBalance)}
+            value={showLoadingState ? "…" : formatNumber(dashboardData.cash?.clientBalance)}
             color="green"
           />
           <SummaryCard
             title="TOTAL EXPOSURE"
-            value={showLoadingState ? "…" : formatNumber(dashboardData.totalExposure)}
+            value={showLoadingState ? "…" : formatNumber(dashboardData.risk?.totalExposure)}
             color="black"
           />
         </div>

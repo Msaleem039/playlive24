@@ -228,7 +228,7 @@ export const api = SplitApiSettings.injectEndpoints({
     }),
 
     settleMatchOdds: builder.mutation({
-      query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string; betId?: string | number }) => ({
         url: API_END_POINTS.settleMatchOdds,
         method: "POST",
         body: data,
@@ -252,6 +252,24 @@ export const api = SplitApiSettings.injectEndpoints({
         body: data,
       }),
       invalidatesTags: ['Settlement'] as any,
+    }),
+
+    /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
+    getAdminMatches: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getAdminMatches,
+        method: "GET",
+      }),
+      providesTags: ['AdminMatches'] as any,
+    }),
+
+    toggleMatchVisibility: builder.mutation({
+      query: ({ eventId, isEnabled }: { eventId: string; isEnabled: boolean }) => ({
+        url: API_END_POINTS.toggleMatchVisibility.replace(":eventId", eventId),
+        method: "PATCH",
+        body: { isEnabled },
+      }),
+      invalidatesTags: ['AdminMatches'] as any,
     }),
   }),
 });
@@ -289,5 +307,9 @@ export const {
     useSettleMatchOddsMutation,
     useSettleBookmakerMutation,
     useRollbackSettlementMutation,
+
+    /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
+    useGetAdminMatchesQuery,
+    useToggleMatchVisibilityMutation,
     
 } = api;

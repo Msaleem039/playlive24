@@ -69,5 +69,9 @@ export const API_END_POINTS = {
     settleBookmaker: `${BASE_URL}/admin/settlement/bookmaker`,
     rollbackSettlement: `${BASE_URL}/admin/settlement/rollback`,
     deleteBet: `${BASE_URL}/admin/settlement/bet`,
+
+    /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
+    getAdminMatches: `${BASE_URL}/admin/matches`,
+    toggleMatchVisibility: `${BASE_URL}/admin/matches/:eventId`,
  
 }

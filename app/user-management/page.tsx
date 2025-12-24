@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { ChevronDown, ChevronUp, Search, Download, FileText, Settings, User, Lock, Gamepad2, Eye, Plus, Users, Loader2 } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
 import { AddClientModal, AllUsersModal } from "@/components/dashboardagent"
-import DashboardHeader from "@/components/dashboard-header"
+import CommonHeader from "@/components/common-header"
 import DepositCashModal from "@/components/modal/DepositCashModal"
 import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
 import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import { useGetUserQuery } from "@/app/services/Api"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "@/app/store/slices/authSlice"
 
 interface UserData {
   id: string
@@ -24,14 +26,25 @@ interface UserData {
 }
 
 export default function UserManagement() {
-  const [headerTab, setHeaderTab] = useState("Home")
-  const [activeTab, setActiveTab] = useState("Active Users")
+  const authUser = useSelector(selectCurrentUser)
+  const userRole = (authUser?.role as string) || 'ADMIN'
+  const [activeTab, setActiveTab] = useState("User List")
+  const [userTab, setUserTab] = useState("Active Users")
   const [searchTerm, setSearchTerm] = useState("")
   const [showRows, setShowRows] = useState(25)
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
   
   // Fetch users from API
   const { data: apiUsers, isLoading, error } = useGetUserQuery(undefined, {})
+
+  // Prevent body scrolling when dashboard is mounted
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
   const [depositModal, setDepositModal] = useState<{
     isOpen: boolean
     username: string
@@ -179,61 +192,52 @@ export default function UserManagement() {
     // TODO: Implement API call here
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Top Header with Menu Button */}
-      <DashboardHeader selectedTab={headerTab} onSelectTab={setHeaderTab} />
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+  }
 
-      {/* Main Navigation Bar */}
-      <div className="bg-[#00A66E] text-white">
-        <div className="px-4 sm:px-6 py-3">
-          <div className="flex items-center space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto no-scrollbar">
-            {["Dashboard", "User List", "Matches", "My Market", "Casino Analysis", "Game Controls", "Chip Summary", "Game List", "Detail Report"].map((item) => (
-              <button
-                key={item}
-                className={`font-semibold flex items-center whitespace-nowrap text-sm sm:text-base ${
-                  item === "Game Controls" ? "hover:text-gray-200" : ""
-                } ${
-                  item === "User List" ? "bg-[#00A66E] px-3 py-1 rounded" : ""
-                }`}
-              >
-                {item}
-                {item === "Game Controls" && (
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+  return (
+    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+      {/* Header with Navigation - Fixed position */}
+      <div className="fixed top-0 left-0 right-0 z-30 flex-shrink-0">
+        <CommonHeader activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* User Management Section */}
-      <div className="p-4 sm:p-6">
-        {/* Tabs */}
-        <div className="bg-gray-800 text-white mb-4">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab("Active Users")}
-              className={`px-6 py-3 font-semibold border-b-2 ${
-                activeTab === "Active Users" 
-                  ? "border-white text-white" 
-                  : "border-transparent text-gray-300 hover:text-white"
-              }`}
-            >
-              Active Users
-            </button>
-            <button
-              onClick={() => setActiveTab("Close Users")}
-              className={`px-6 py-3 font-semibold border-b-2 ${
-                activeTab === "Close Users" 
-                  ? "border-white text-white" 
-                  : "border-transparent text-gray-300 hover:text-white"
-              }`}
-            >
-              Close Users
-            </button>
-          </div>
-        </div>
+      {/* Spacer to push content below fixed header */}
+      <div className="h-[90px] sm:h-[110px] flex-shrink-0" />
+
+      {/* Main Content - Scrollable area */}
+      <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">
+
+        {/* User Management Section - Only show when User List or User Management tab is active */}
+        {(activeTab === "User List" || activeTab === "User Management") && (
+          <div className="p-4 sm:p-6">
+            {/* Tabs */}
+            <div className="bg-gray-800 text-white mb-4">
+              <div className="flex">
+                <button
+                  onClick={() => setUserTab("Active Users")}
+                  className={`px-6 py-3 font-semibold border-b-2 ${
+                    userTab === "Active Users" 
+                      ? "border-white text-white" 
+                      : "border-transparent text-gray-300 hover:text-white"
+                  }`}
+                >
+                  Active Users
+                </button>
+                <button
+                  onClick={() => setUserTab("Close Users")}
+                  className={`px-6 py-3 font-semibold border-b-2 ${
+                    userTab === "Close Users" 
+                      ? "border-white text-white" 
+                      : "border-transparent text-gray-300 hover:text-white"
+                  }`}
+                >
+                  Close Users
+                </button>
+              </div>
+            </div>
 
         {/* Action Buttons */}
         <div className="bg-white p-4 mb-4 rounded-lg shadow-sm">
@@ -483,7 +487,9 @@ export default function UserManagement() {
             </div>
           </div>
         </div>
-      </div>
+          </div>
+        )}
+      </main>
 
       {/* Add Client Modal */}
       {isAddUserModalOpen && (

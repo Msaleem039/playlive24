@@ -2,158 +2,29 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Pin, RefreshCw, Tv } from 'lucide-react'
+import { RefreshCw, Tv } from 'lucide-react'
 import { useGetCricketMatchDetailQuery, useGetCricketMatchPrivateQuery, useGetCricketMatchMarketsQuery, useGetCricketMatchOddsQuery, useGetCricketBookmakerFancyQuery } from '@/app/services/CricketApi'
-import { useLiveOdds } from '@/app/hooks/useWebSocket'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
 import { useGetMyPendingBetsQuery } from '@/app/services/Api'
 import BetSlipModal from '@/components/modal/BetSlipModal'
-
-interface BettingOption {
-  odds: number | string
-  amount: number | string
-}
-
-interface MarketRow {
-  team: string
-  back: BettingOption[]
-  lay: BettingOption[]
-  selectionId?: number
-}
-
-interface BettingMarket {
-  name: string
-  min: number
-  max: number
-  rows: MarketRow[]
-  gtype?: string
-  marketId?: number | string
-  marketIdString?: string // Store the full marketId string for API calls
-}
-
-interface BetHistoryItem {
-  userName: string
-  market: string
-  rate: string
-  amount: string
-  date: string
-}
-
-// API Response interfaces
-interface ApiOdds {
-  sid: number
-  psid: number
-  odds: number
-  otype: 'back' | 'lay'
-  oname: string
-  tno: number
-  size: number
-}
-
-interface ApiSection {
-  sid: number
-  sno: number
-  gstatus: string
-  gscode: number
-  nat: string
-  odds: ApiOdds[]
-}
-
-interface ApiMatchMarket {
-  gmid: number
-  ename: string
-  etid: number
-  cid: number
-  cname: string
-  iplay: boolean
-  stime: string
-  tv: boolean
-  bm: boolean
-  f: boolean
-  f1: boolean
-  iscc: number
-  mid: number
-  mname: string
-  status: string
-  rc: number
-  gscode: number
-  m: number
-  oid: number
-  gtype: string
-  section: ApiSection[]
-}
-
-interface ApiResponse {
-  success: boolean
-  msg: string
-  status: number
-  data: {
-    t1: ApiMatchMarket[]  // Live matches
-    t2?: ApiMatchMarket[] // Upcoming matches (optional)
-  }
-  lastUpdatedaAt?: string  // Note: typo in API response
-}
-
-// New API Response interfaces
-interface MarketRunner {
-  selectionId: number
-  runnerName: string
-  handicap: number
-  sortPriority: number
-}
-
-interface MarketResponse {
-  marketId: string
-  competition: {
-    id: string
-    name: string
-    provider: string
-  }
-  event: {
-    id: string
-    name: string
-    countryCode: string
-    timezone: string
-    openDate: string
-  }
-  eventType: {
-    id: string
-    name: string
-  }
-  marketName: string
-  runners: MarketRunner[]
-  totalMatched: number
-  marketStartTime: string
-}
-
-interface OddsRunner {
-  selectionId: number
-  handicap: number
-  status: string
-  lastPriceTraded: number
-  totalMatched: number
-  ex: {
-    availableToBack: Array<{ price: number; size: number }>
-    availableToLay: Array<{ price: number; size: number }>
-    tradedVolume: Array<{ price: number; size: number }>
-  }
-}
-
-interface OddsResponse {
-  status: boolean
-  data: Array<{
-    marketId: string
-    isMarketDataDelayed: boolean
-    status: string
-    betDelay: number
-    inplay: boolean
-    totalMatched: number
-    totalAvailable: number
-    runners: OddsRunner[]
-  }>
-}
+import MatchOdds from '@/components/markets/MatchOdds'
+import FancyDetail from '@/components/markets/FancyDetail'
+import type {
+  BettingOption,
+  MarketRow,
+  BettingMarket,
+  BetHistoryItem,
+  ApiOdds,
+  ApiSection,
+  ApiMatchMarket,
+  ApiResponse,
+  MarketRunner,
+  MarketResponse,
+  OddsRunner,
+  OddsResponse
+} from './types'
 
 export default function LiveMatchDetailPage() {
   const params = useParams()
@@ -176,6 +47,10 @@ export default function LiveMatchDetailPage() {
   // State for responsive layout
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
+  
+  // State for iframe loading errors
+  const [scorecardLoadError, setScorecardLoadError] = useState(false)
+  const [streamLoadError, setStreamLoadError] = useState(false)
   
   // TV toggle - check if coming from main page, otherwise default to false
   const [liveToggle, setLiveToggle] = useState(() => {
@@ -216,6 +91,7 @@ export default function LiveMatchDetailPage() {
     marketId?: number | string
     marketIdString?: string
     marketGType?: string
+    size?: number // For fancy markets: the percentage/size value
   } | null>(null)
 
   const BACK_COLUMNS = 1
@@ -391,15 +267,6 @@ export default function LiveMatchDetailPage() {
     }
   )
 
-  // Subscribe to live odds updates via WebSocket (legacy format only)
-  // New API format uses direct API polling instead of WebSocket (backend has cronjob)
-  const liveOdds = useLiveOdds(
-    4, // legacy sid (fallback)
-    numericMatchId, // legacy gmid (fallback)
-    undefined, // Skip WebSocket for new API format - use direct API polling
-    undefined // Skip WebSocket for new API format - use direct API polling
-  )
-
   const isLoading = isLoadingMarkets || isLoadingOdds || isLoadingDetail || isLoadingPrivate || isLoadingBookmakerFancy
   const error = marketsError || oddsError || detailError || privateError || bookmakerFancyError
 
@@ -445,7 +312,7 @@ export default function LiveMatchDetailPage() {
     return match
   }, [marketsData, matchDetailData])
 
-  // Extract all markets - use new markets API with odds from direct API polling (no WebSocket for new API)
+  // Extract all markets - use new markets API with odds from direct API polling
   // Also merge bookmaker-fancy markets from the dedicated endpoint
   const allMarkets = useMemo(() => {
     let markets: any[] = []
@@ -459,20 +326,6 @@ export default function LiveMatchDetailPage() {
         
         if (oddsData?.status && Array.isArray(oddsData.data)) {
           oddsForMarket = oddsData.data.find((odds: any) => odds.marketId === market.marketId)
-        }
-        
-        // Only use WebSocket for legacy format (not for new API)
-        if (!oddsForMarket && liveOdds?.data && numericMatchId) {
-          // Legacy format WebSocket fallback
-          if (Array.isArray(liveOdds.data)) {
-            oddsForMarket = liveOdds.data.find((odds: any) => 
-              odds.gmid && odds.gmid.toString() === numericMatchId.toString()
-            )
-          } else if (liveOdds.data?.data && Array.isArray(liveOdds.data.data)) {
-            oddsForMarket = liveOdds.data.data.find((odds: any) => 
-              odds.gmid && odds.gmid.toString() === numericMatchId.toString()
-            )
-          }
         }
         
         return {
@@ -538,26 +391,6 @@ export default function LiveMatchDetailPage() {
       }
     }
     
-    // If no new API markets, fallback to live odds from WebSocket (legacy format)
-    if (markets.length === 0 && liveOdds?.data) {
-      // Handle live odds response structure - could be direct array or wrapped
-      if (Array.isArray(liveOdds.data)) {
-        markets = liveOdds.data
-      } else if (liveOdds.data?.success && Array.isArray(liveOdds.data.data)) {
-        markets = liveOdds.data.data
-      } else if (liveOdds.data?.data && Array.isArray(liveOdds.data.data)) {
-        markets = liveOdds.data.data
-      }
-      
-      if (markets.length > 0) {
-        console.log('[MatchDetail] Using live odds from WebSocket (legacy):', {
-          matchId: numericMatchId,
-          marketsFound: markets.length,
-          markets: markets.map((m: any) => ({ gmid: m.gmid, mid: m.mid, mname: m.mname, gtype: m.gtype }))
-        })
-      }
-    }
-    
     // Final fallback to API data from private endpoint
     if (markets.length === 0 && matchPrivateData) {
       // Handle API response structure
@@ -574,7 +407,7 @@ export default function LiveMatchDetailPage() {
       })
     }
     
-    // Filter out markets with "2nd" in mname and "Tied Match" markets (case-insensitive)
+    // Filter out markets with "2nd" in mname, "Tied Match", "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", and "Match Odds Including Tie" markets (case-insensitive)
     const filteredMarkets = markets.filter((market: any) => {
       const mname = (market.mname || market.marketName || '').toLowerCase().trim()
       // Exclude markets with "2nd" in the name
@@ -585,11 +418,33 @@ export default function LiveMatchDetailPage() {
       if (mname === 'tied match' || mname.startsWith('tied match')) {
         return false
       }
+      // Exclude "TOURNAMENT_WINNER" markets
+      if (mname === 'tournament_winner' || mname.includes('tournament winner')) {
+        return false
+      }
+      // Exclude "Bookmaker Big Bash Cup" markets
+      if (mname.includes('bookmaker big bash cup')) {
+        return false
+      }
+      // Exclude "Match Odds Including Tie" markets
+      if (mname === 'match odds including tie' || mname.includes('match odds including tie')) {
+        return false
+      }
+      // Exclude "Match Odds" markets (with space)
+      if (mname === 'match odds') {
+        return false
+      }
+      // Exclude match-type markets that are not MATCH_ODDS
+      const marketType = (market.gtype || '').toLowerCase()
+      const marketNameUpper = (market.mname || market.marketName || '').toUpperCase().trim()
+      if (marketType === 'match' && marketNameUpper !== 'MATCH_ODDS' && marketNameUpper !== 'MATCH ODDS') {
+        return false
+      }
       return true
     })
     
     return filteredMarkets
-  }, [marketsData, oddsData, liveOdds, matchPrivateData, bookmakerFancyData, numericMatchId, eventId, marketIds])
+  }, [marketsData, oddsData, matchPrivateData, bookmakerFancyData, numericMatchId, eventId, marketIds])
 
   // Transform API data to component format
   const transformedMatchData = useMemo(() => {
@@ -700,6 +555,11 @@ export default function LiveMatchDetailPage() {
 
         // Process each runner from the market
         market.runners.forEach((runner: MarketRunner) => {
+          // Skip runners with "Tie" as runnerName
+          if (runner.runnerName === 'Tie' || runner.runnerName?.toLowerCase() === 'tie') {
+            return
+          }
+          
           const oddsForRunner = market.odds?.runners?.find((r: OddsRunner) => r.selectionId === runner.selectionId)
           
           const backOdds: BettingOption[] = []
@@ -823,6 +683,11 @@ export default function LiveMatchDetailPage() {
         })
 
         if (rows.length > 0) {
+          // Get gscode and gstatus from first section or market entry
+          const firstSection = marketEntry.section?.[0]
+          const gscode = firstSection?.gscode ?? marketEntry.gscode
+          const gstatus = firstSection?.gstatus ?? marketEntry.gstatus
+          
           markets.push({
             name: marketName,
             min: marketEntry.min || 500,
@@ -830,13 +695,53 @@ export default function LiveMatchDetailPage() {
             rows,
             gtype: marketEntry.gtype,
             marketId: marketEntry.mid,
-            marketIdString: marketEntry.mid ? marketEntry.mid.toString() : undefined // Convert mid to string for API calls
+            marketIdString: marketEntry.mid ? marketEntry.mid.toString() : undefined, // Convert mid to string for API calls
+            gscode,
+            gstatus
           })
         }
       }
     })
 
-    return markets
+    // Sort markets in the correct order:
+    // 1. MATCH_ODDS (first)
+    // 2. Bookmaker-fancy (match1 type) - shown on top of normal fancy
+    // 3. Fancy markets (fancy, fancy2, fancy1, oddeven, cricketcasino, meter)
+    // 4. Other detail API markets (like "1st Innings 20 Overs Line", "Completed Match")
+    const sortedMarkets = [...markets].sort((a: BettingMarket, b: BettingMarket) => {
+      const aName = (a.name || '').toUpperCase()
+      const bName = (b.name || '').toUpperCase()
+      const aType = (a.gtype || '').toLowerCase()
+      const bType = (b.gtype || '').toLowerCase()
+      
+      // Helper function to get sort priority
+      const getPriority = (name: string, type: string): number => {
+        // 1. MATCH_ODDS always first
+        if (name === 'MATCH_ODDS' || name === 'MATCH ODDS') return 1
+        // 2. Bookmaker-fancy (match1 type) - show on top of normal fancy
+        if (type === 'match1' || name === 'BOOKMAKER') return 2
+        // 3. Fancy markets
+        if (type === 'fancy' || type === 'fancy2' || type === 'fancy1' || type === 'oddeven' || type === 'cricketcasino' || type === 'meter') return 3
+        // 4. Other detail API markets (from new API format - no gtype or specific market names)
+        // These include markets like "1st Innings 20 Overs Line", "Completed Match", etc.
+        if (!type || type === '' || (type !== 'match1' && type !== 'match')) return 4
+        // 5. Other match types
+        return 5
+      }
+      
+      const aPriority = getPriority(aName, aType)
+      const bPriority = getPriority(bName, bType)
+      
+      // Sort by priority
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority
+      }
+      
+      // If same priority, maintain original order or sort by name
+      return aName.localeCompare(bName)
+    })
+
+    return sortedMarkets
   }, [allMarkets])
 
   // Detect odds changes and trigger blink animation
@@ -1046,16 +951,15 @@ export default function LiveMatchDetailPage() {
           {/* Betting Markets Section - Scorecard integrated as first item */}
           <div className="relative" style={{ margin: 0, padding: 0, gap: 0 }}>
             {/* Live Score iframe - First item in markets section */}
-            {liveScoreUrl && (
+            {liveScoreUrl && !scorecardLoadError && (
               <div 
-                className="bg-gray-900 overflow-hidden relative" 
+                className="bg-gray-50 overflow-hidden relative border-b border-gray-200" 
                 style={{ 
                   margin: 0, 
                   marginBottom: 0,
                   padding: 0, 
                   lineHeight: 0,
                   fontSize: 0,
-                  borderBottom: 'none'
                 }}
               >
                 <iframe
@@ -1069,7 +973,8 @@ export default function LiveMatchDetailPage() {
                     display: 'block',
                     border: 'none',
                     overflow: 'hidden',
-                    verticalAlign: 'top'
+                    verticalAlign: 'top',
+                    backgroundColor: '#f9fafb'
                   }}
                   allow="autoplay; encrypted-media"
                   scrolling="no"
@@ -1077,9 +982,11 @@ export default function LiveMatchDetailPage() {
                   title="Live Score Details"
                   onLoad={() => {
                     console.log('[LiveScore] Scorecard iframe loaded successfully:', liveScoreUrl)
+                    setScorecardLoadError(false)
                   }}
                   onError={() => {
                     console.error('[LiveScore] Failed to load live score iframe:', liveScoreUrl)
+                    setScorecardLoadError(true)
                   }}
                 />
               </div>
@@ -1114,18 +1021,56 @@ export default function LiveMatchDetailPage() {
                 
                 {/* Live Video Stream - Only show when toggle is ON */}
                 {liveToggle && (
-                  <div className="relative bg-black flex-shrink-0" style={{ minHeight: '250px', aspectRatio: '16/9' }}>
-                    <iframe
-                      key={`stream-sm-md-${numericMatchId}-${liveToggle}`}
-                      src={streamUrl}
-                      className="w-full h-full border-0"
-                      allow="autoplay; encrypted-media; fullscreen"
-                      allowFullScreen
-                      title="Live Match Stream"
-                      onError={() => {
-                        console.error('[Stream] Failed to load stream:', streamUrl)
-                      }}
-                    />
+                  <div className="relative bg-gray-900 flex-shrink-0 flex items-center justify-center" style={{ minHeight: '250px', aspectRatio: '16/9' }}>
+                    {!streamLoadError ? (
+                      <>
+                        <iframe
+                          key={`stream-sm-md-${numericMatchId}-${liveToggle}`}
+                          src={streamUrl}
+                          className="w-full h-full border-0 absolute inset-0"
+                          allow="autoplay; encrypted-media; fullscreen"
+                          allowFullScreen
+                          title="Live Match Stream"
+                          onLoad={() => {
+                            console.log('[Stream] Stream iframe loaded successfully')
+                            setStreamLoadError(false)
+                          }}
+                          onError={() => {
+                            console.error('[Stream] Failed to load stream:', streamUrl)
+                            setStreamLoadError(true)
+                          }}
+                        />
+                        {/* Loading overlay - shown initially */}
+                        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-300" id="stream-loading-overlay">
+                          <div className="text-center text-white px-4">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 opacity-50" />
+                            <p className="text-sm opacity-75">Loading stream...</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      /* Error state when stream fails to load */
+                      <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-10">
+                        <div className="text-center text-white px-4">
+                          <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm font-medium mb-2">Stream Unavailable</p>
+                          <p className="text-xs opacity-75 mb-4">The live stream is not available at this time.</p>
+                          <button
+                            onClick={() => {
+                              setStreamLoadError(false)
+                              // Force iframe reload by toggling
+                              setLiveToggle(false)
+                              setTimeout(() => setLiveToggle(true), 100)
+                            }}
+                            className="px-4 py-2 bg-[#00A66E] hover:bg-[#00C97A] text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   
                   {/* Video Overlay - Score and Match Info */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 text-white">
@@ -1142,13 +1087,13 @@ export default function LiveMatchDetailPage() {
                     </div>
                     
                     {/* Match Info Bar */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-2 gap-1">
+                    {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-2 gap-1">
                       <span>DAY {matchData?.day || '1'} SESSION {matchData?.session || '1'}</span>
                       <span>SPEED {matchData?.speed || '0'} km/h</span>
-                    </div>
+                    </div> */}
                     
                     {/* Player Scores */}
-                    {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
+                    {/* {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
                       <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs mb-1 sm:mb-2">
                         {matchData.current_batsmen.slice(0, 2).map((player: any, idx: number) => (
                           <div key={idx} className="flex items-center gap-1">
@@ -1158,10 +1103,10 @@ export default function LiveMatchDetailPage() {
                           </div>
                         ))}
                       </div>
-                    )}
+                    )} */}
                     
                     {/* This Over */}
-                    {matchData?.this_over && Array.isArray(matchData.this_over) && matchData.this_over.length > 0 && (
+                    {/* {matchData?.this_over && Array.isArray(matchData.this_over) && matchData.this_over.length > 0 && (
                       <div className="flex items-center gap-1 text-[10px] sm:text-xs">
                         <span className="text-gray-400 mr-1">THIS OVER:</span>
                         <div className="flex gap-0.5 sm:gap-1">
@@ -1179,7 +1124,7 @@ export default function LiveMatchDetailPage() {
                           ))}
                         </div>
                       </div>
-                    )}
+                    )} */}
                     
                     {/* Video Controls */}
                     <div className="flex items-center justify-end gap-2 mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-white/20">
@@ -1216,158 +1161,95 @@ export default function LiveMatchDetailPage() {
               )}
               </div>
             )}
-            {displayMarkets.length > 0 && (
+            {displayMarkets.length > 0 ? (
               displayMarkets.map((market, marketIndex) => {
+                // Determine if this is a match odds market or fancy market
+                const marketName = (market.name || '').toUpperCase()
+                const marketType = (market.gtype || '').toLowerCase()
+                const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS' || (marketType === 'match' && marketName !== 'TIED MATCH')
+                const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
+                
+                const handleBetSelect = (bet: {
+                  team: string
+                  type: 'back' | 'lay'
+                  odds: string
+                  market: string
+                  selectionId?: number
+                  marketId?: number | string
+                  marketIdString?: string
+                  marketGType?: string
+                  size?: number // For fancy markets: the percentage/size value
+                }) => {
+                  setSelectedBet(bet)
+                  setBetSlipOpen(true)
+                }
+
+                // Use MatchOdds component for match odds markets
+                if (isMatchOdds) {
+                  return (
+                    <MatchOdds
+                      key={marketIndex}
+                      market={market}
+                      marketIndex={marketIndex}
+                      blinkingOdds={blinkingOdds}
+                      isMobile={isMobile}
+                      onBetSelect={handleBetSelect}
+                      onRefresh={refetch}
+                    />
+                  )
+                }
+
+                // Use FancyDetail component for fancy markets
+                if (isFancy) {
+                  return (
+                    <FancyDetail
+                      key={marketIndex}
+                      market={market}
+                      marketIndex={marketIndex}
+                      blinkingOdds={blinkingOdds}
+                      isMobile={isMobile}
+                      onBetSelect={handleBetSelect}
+                    />
+                  )
+                }
+
+                // Fallback to MatchOdds for other markets (bookmaker, etc.)
                 return (
-                <div 
-                  key={marketIndex} 
-                  className={`border-b border-gray-200 relative ${marketIndex === 0 ? 'border-t-0' : ''}`}
-                  style={{ 
-                    marginTop: marketIndex === 0 ? '0' : '0',
-                    marginBottom: '0',
-                    paddingTop: '0',
-                    paddingBottom: '0'
-                  }}
-                >
-                    {/* Market Header */}
-                    <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="font-semibold text-xs sm:text-sm">{market.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold">
-                          BOOK
-                        </button>
-                        {market.name === 'MATCH_ODDS' && (
-                          <button 
-                            onClick={() => refetch()}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold flex items-center gap-1"
-                          >
-                            <RefreshCw className="w-3 h-3" />
-                            {!isMobile && 'Refresh'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Betting Limits */}
-                    <div className="bg-gray-50 px-3 sm:px-4 py-1 text-xs text-gray-700 border-b">
-                      Min: {market.min.toLocaleString()} | Max: {market.max.toLocaleString()}
-                    </div>
-
-                    {/* Betting Table */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs sm:text-sm">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="px-1 sm:px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-16 sm:w-20">
-                              Team
-                            </th>
-                            {Array.from({ length: BACK_COLUMNS }).map((_, i) => (
-                              <th 
-                                key={`back-${i}`} 
-                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
-                              >
-                                Back
-                              </th>
-                            ))}
-                            {Array.from({ length: LAY_COLUMNS }).map((_, i) => (
-                              <th 
-                                key={`lay-${i}`} 
-                                className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
-                              >
-                                Lay
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {market.rows.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                              <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900 truncate">
-                                {row.team}
-                              </td>
-                              {/* Back Odds - 3 columns */}
-                              {row.back.map((option, optIndex) => {
-                                const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
-                                const isBlinking = blinkingOdds.has(oddKey)
-                                return (
-                                  <td key={`back-${optIndex}`} className="px-0.5 py-0.5">
-                                    <div
-                                      onClick={() => {
-                                        if (option.odds !== '0' && option.amount !== '0') {
-                                          setSelectedBet({
-                                            team: row.team,
-                                            type: 'back',
-                                            odds: option.odds.toString(),
-                                            market: market.name,
-                                            selectionId: row.selectionId,
-                                            marketId: market.marketId,
-                                            marketIdString: market.marketIdString,
-                                            marketGType: market.gtype
-                                          })
-                                          setBetSlipOpen(true)
-                                        }
-                                      }}
-                                      className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
-                                        option.odds === '0' || option.amount === '0'
-                                          ? 'bg-gray-100'
-                                          : isBlinking
-                                          ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                                          : 'bg-blue-100 hover:bg-blue-200 cursor-pointer'
-                                      }`}
-                                    >
-                                      <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                                      <div className="text-[10px] text-gray-600">{option.amount}</div>
-                                    </div>
-                                  </td>
-                                )
-                              })}
-                              {/* Lay Odds - 3 columns */}
-                              {row.lay.map((option, optIndex) => {
-                                const oddKey = `${marketIndex}-${rowIndex}-lay-${optIndex}`
-                                const isBlinking = blinkingOdds.has(oddKey)
-                                return (
-                                  <td key={`lay-${optIndex}`} className="px-0.5 py-0.5">
-                                    <div
-                                      onClick={() => {
-                                        if (option.odds !== '0' && option.amount !== '0') {
-                                          setSelectedBet({
-                                            team: row.team,
-                                            type: 'lay',
-                                            odds: option.odds.toString(),
-                                            market: market.name,
-                                            selectionId: row.selectionId,
-                                            marketId: market.marketId,
-                                            marketIdString: market.marketIdString,
-                                            marketGType: market.gtype
-                                          })
-                                          setBetSlipOpen(true)
-                                        }
-                                      }}
-                                      className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
-                                        option.odds === '0' || option.amount === '0'
-                                          ? 'bg-gray-100'
-                                          : isBlinking
-                                          ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                                          : 'bg-pink-100 hover:bg-pink-200 cursor-pointer'
-                                      }`}
-                                    >
-                                      <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                                      <div className="text-[10px] text-gray-600">{option.amount}</div>
-                                    </div>
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                  <MatchOdds
+                    key={marketIndex}
+                    market={market}
+                    marketIndex={marketIndex}
+                    blinkingOdds={blinkingOdds}
+                    isMobile={isMobile}
+                    onBetSelect={handleBetSelect}
+                    onRefresh={market.name === 'MATCH_ODDS' ? refetch : undefined}
+                  />
                 )
               })
+            ) : (
+              // Empty state when no markets are available
+              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white">
+                <div className="text-center max-w-md">
+                  <div className="mb-4">
+                    <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Markets Available</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {displayMatchData.title !== 'Match not found' 
+                      ? 'Betting markets are not available for this match at the moment. Please check back later.'
+                      : 'Match data could not be loaded. Please verify the match ID and try again.'}
+                  </p>
+                  <button
+                    onClick={refetch}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#00A66E] text-white rounded-lg hover:bg-[#00C97A] transition-colors text-sm font-medium"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -1407,112 +1289,60 @@ export default function LiveMatchDetailPage() {
             
             {/* Live Video Stream - Only show when toggle is ON */}
             {liveToggle && (
-              <div className="relative bg-white flex-shrink-0" style={{ 
+              <div className="relative bg-gray-900 flex-shrink-0 flex items-center justify-center" style={{ 
                 minHeight: isMobile ? '250px' : '400px', 
                 aspectRatio: isMobile ? '16/9' : 'auto'
               }}>
-                <iframe
-                  key={`stream-${numericMatchId}-${liveToggle}`}
-                  src={streamUrl}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media; fullscreen"
-                  allowFullScreen
-                  title="Live Match Stream"
-                  onError={() => {
-                    console.error('[Stream] Failed to load stream:', streamUrl)
-                  }}
-                />
-              
-              {/* Video Overlay - Score and Match Info */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 text-white">
-                {/* Current Score Bar */}
-                <div className="flex items-center justify-between mb-1 sm:mb-2 text-xs sm:text-sm font-semibold">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <span className="truncate max-w-[80px] sm:max-w-none">
-                      {(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}
-                    </span>
-                    <span>{matchData?.teama?.scores || matchData?.team1_scores || '0-0'}</span>
-                    <span className="text-xs font-normal text-gray-300">{matchData?.teama?.overs || '0'}</span>
-                  </div>
-                  <div className="text-xs text-gray-300 truncate max-w-[80px] sm:max-w-none">
-                    {(matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
-                  </div>
-                  <div className="hidden sm:block text-xs text-gray-300">
-                    {(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()} LEAD BY {(matchData?.lead_runs || matchData?.lead || '0')} RUNS
-                  </div>
-                </div>
-                
-                {/* Match Info Bar */}
-                <div className="flex items-center justify-between text-xs text-gray-300 mb-1 sm:mb-2">
-                  <span>DAY {matchData?.day || '1'} SESSION {matchData?.session || '1'}</span>
-                  <span className="hidden sm:inline">SPEED {matchData?.speed || '0'} km/h</span>
-                </div>
-                
-                {/* Player Scores */}
-                {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
-                  <div className="flex items-center gap-2 sm:gap-4 text-xs mb-1 sm:mb-2">
-                    {matchData.current_batsmen.slice(0, 2).map((player: any, idx: number) => (
-                      <div key={idx} className="flex items-center gap-1">
-                        <span className="font-semibold truncate max-w-[60px] sm:max-w-none">
-                          {player.name || `Player ${idx + 1}`}
-                        </span>
-                        <span>{player.runs || '0'}</span>
-                        <span className="text-gray-400">({player.balls || '0'})</span>
+                {!streamLoadError ? (
+                  <>
+                    <iframe
+                      key={`stream-${numericMatchId}-${liveToggle}`}
+                      src={streamUrl}
+                      className="w-full h-full border-0 absolute inset-0"
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      title="Live Match Stream"
+                      onLoad={() => {
+                        console.log('[Stream] Stream iframe loaded successfully')
+                        setStreamLoadError(false)
+                      }}
+                      onError={() => {
+                        console.error('[Stream] Failed to load stream:', streamUrl)
+                        setStreamLoadError(true)
+                      }}
+                    />
+                    {/* Loading overlay - shown initially */}
+                    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-10 pointer-events-none opacity-0 transition-opacity duration-300" id="stream-loading-overlay-desktop">
+                      <div className="text-center text-white px-4">
+                        <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 opacity-50" />
+                        <p className="text-sm opacity-75">Loading stream...</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* This Over */}
-                {matchData?.this_over && Array.isArray(matchData.this_over) && matchData.this_over.length > 0 && (
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className="text-gray-400 mr-1">THIS OVER:</span>
-                    {matchData.this_over.map((ball: any, idx: number) => (
-                      <span
-                        key={idx}
-                        className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center font-medium ${
-                          ball === 0 ? 'bg-gray-700 text-gray-300' :
-                          ball === 4 || ball === 6 ? 'bg-yellow-500 text-gray-900' :
-                          'bg-green-600 text-white'
-                        }`}
+                    </div>
+                  </>
+                ) : (
+                  /* Error state when stream fails to load */
+                  <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-10">
+                    <div className="text-center text-white px-4">
+                      <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm font-medium mb-2">Stream Unavailable</p>
+                      <p className="text-xs opacity-75 mb-4">The live stream is not available at this time.</p>
+                      <button
+                        onClick={() => {
+                          setStreamLoadError(false)
+                          // Force iframe reload by toggling
+                          setLiveToggle(false)
+                          setTimeout(() => setLiveToggle(true), 100)
+                        }}
+                        className="px-4 py-2 bg-[#00A66E] hover:bg-[#00C97A] text-white rounded-lg text-xs font-medium transition-colors"
                       >
-                        {ball}
-                      </span>
-                    ))}
+                        Retry
+                      </button>
+                    </div>
                   </div>
                 )}
-                
-                {/* Video Controls */}
-                <div className="flex items-center justify-end gap-2 mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-white/20">
-                  <button
-                    onClick={() => {
-                      // Toggle audio/mute
-                    }}
-                    className="p-1 hover:bg-white/20 rounded"
-                    title="Toggle Audio"
-                  >
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L4.935 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.935l3.448-3.793a1 1 0 011.617.793zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Close video
-                    }}
-                    className="p-1 hover:bg-white/20 rounded"
-                    title="Close Video"
-                  >
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-                
-              {/* Stream Branding (Top Right) */}
-              <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-semibold">
-                CANAL+ SPORT 360
-              </div>
+         
             </div>
             )}
 

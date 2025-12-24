@@ -164,24 +164,25 @@ const MatchRow = memo(({ match }: { match: any }) => {
     ? match.iplay === false 
     : match.status === 1
   
-  const handleMatchClick = useCallback(() => {
-    if (isLive) {
-      // Use gmid first (from new API), then match_id, then id
-      const matchId = match.gmid ?? match.match_id ?? match.id
-      if (matchId) {
-        // Set flag to auto-open TV when navigating from main page
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('fromMainPage', 'true')
-        }
-        router.push(`/live/${matchId}`)
-      }
-    }
-  }, [isLive, match, router])
+  // Check if match has valid ID for navigation (declare once, use in both places)
+  const matchId = match.gmid ?? match.match_id ?? match.id
+  const canNavigate = !!matchId
   
+  const handleMatchClick = useCallback(() => {
+    // Allow navigation for both live and upcoming matches
+    if (matchId) {
+      // Set flag to auto-open TV when navigating from main page (only for live matches)
+      if (isLive && typeof window !== 'undefined') {
+        sessionStorage.setItem('fromMainPage', 'true')
+      }
+      router.push(`/live/${matchId}`)
+    }
+  }, [isLive, matchId, router])
+
   return (
     <div 
-      className={`p-4 hover:bg-gray-50 ${isLive ? 'cursor-pointer' : ''}`}
-      onClick={handleMatchClick}
+      className={`p-4 hover:bg-gray-50 ${canNavigate ? 'cursor-pointer' : ''}`}
+      onClick={canNavigate ? handleMatchClick : undefined}
     >
       <div className="flex items-center justify-between">
         {/* Match Details */}
