@@ -19,6 +19,7 @@ import {
   CalendarDays,
   RefreshCw,
   Radio,
+  Video,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -26,10 +27,11 @@ import { Sidebar } from "@/components/sidebar"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser, setCredentials } from "@/app/store/slices/authSlice"
-import { useLoginMutation, useChangePasswordMutation, useSuperAdminSelfTopupMutation } from "@/app/services/Api"
+import { useLoginMutation, useChangePasswordMutation, useSuperAdminSelfTopupMutation, useUpdateSiteVideoMutation, useGetSiteVideoQuery } from "@/app/services/Api"
 import Cookies from "js-cookie"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import SelfTopupModal from "@/components/modal/SelfTopupModal"
+import VideoUploadModal from "@/components/modal/VideoUploadModal"
 import { toast } from "sonner"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
@@ -100,6 +102,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isSelfTopupModalOpen, setIsSelfTopupModalOpen] = useState(false)
+  const [isVideoUploadModalOpen, setIsVideoUploadModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -292,6 +295,9 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     return roleNavigationItems[role] || roleNavigationItems.CLIENT
   }, [userInfo.role])
   const isSuperAdmin = userInfo.role === "SUPER_ADMIN"
+  
+  // Fetch site video only for super admin
+  const { data: siteVideoData } = useGetSiteVideoQuery(undefined, { skip: !isSuperAdmin })
 
   // Function to manually refresh user balance
   const refreshUserBalance = async () => {
@@ -306,8 +312,8 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
       // The balance should be updated from deposit/withdraw API responses
       // If backend doesn't return updated user in deposit/withdraw response,
       // the user needs to logout and login again to get fresh balance
-      console.log("Balance refresh: Current balance in Redux:", authUser?.balance)
-      console.log("Balance refresh: To get updated balance, please ensure deposit/withdraw API returns updated parent user data")
+      // console.log("Balance refresh: Current balance in Redux:", authUser?.balance)
+      // console.log("Balance refresh: To get updated balance, please ensure deposit/withdraw API returns updated parent user data")
       
       // If you have a token-based refresh endpoint, you could call it here
       // For now, we rely on deposit/withdraw responses to update the balance
@@ -422,6 +428,9 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     }
   }
 
+  // Video upload is now handled directly in VideoUploadModal component
+  // No need for separate handler
+
   const handleLogout = () => {
     try {
       Cookies.remove("token")
@@ -467,13 +476,23 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
               </div>
             </div>
             {isSuperAdmin && (
-              <button
-                onClick={() => setIsSelfTopupModalOpen(true)}
-                className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors"
-                title="Top up super admin balance"
-              >
-                Top Up
-              </button>
+              <>
+                <button
+                  onClick={() => setIsSelfTopupModalOpen(true)}
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors"
+                  title="Top up super admin balance"
+                >
+                  Top Up
+                </button>
+                <button
+                  onClick={() => setIsVideoUploadModalOpen(true)}
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors flex items-center gap-1"
+                  title="Upload site video"
+                >
+                  <Video className="w-3 h-3" />
+                  <span className="hidden sm:inline">Video</span>
+                </button>
+              </>
             )}
 
             <div className="relative" ref={menuRef}>
@@ -691,12 +710,19 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
       />
 
       {isSuperAdmin && (
-        <SelfTopupModal
-          isOpen={isSelfTopupModalOpen}
-          onClose={() => setIsSelfTopupModalOpen(false)}
-          onSubmit={handleSelfTopupSubmit}
-          isSubmitting={isSelfTopupLoading}
-        />
+        <>
+          <SelfTopupModal
+            isOpen={isSelfTopupModalOpen}
+            onClose={() => setIsSelfTopupModalOpen(false)}
+            onSubmit={handleSelfTopupSubmit}
+            isSubmitting={isSelfTopupLoading}
+          />
+          <VideoUploadModal
+            isOpen={isVideoUploadModalOpen}
+            onClose={() => setIsVideoUploadModalOpen(false)}
+            currentVideoUrl={siteVideoData?.videoUrl}
+          />
+        </>
       )}
     </div>
   )

@@ -4,7 +4,7 @@ import { BASE_URL } from './ApiEndpoints';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || BASE_URL || '',
-    prepareHeaders: async (headers, { getState }) => {
+    prepareHeaders: async (headers, { getState, endpoint }) => {
         try {
             let token = (getState() as any).auth?.token;
             // Only use js-cookie on client
@@ -15,7 +15,6 @@ const baseQuery = fetchBaseQuery({
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
                 headers.set('accept', 'application/json');
-                headers.set('Content-Type', 'application/json');
             } else {
                 headers.set('authorization', '');
             }
@@ -23,6 +22,24 @@ const baseQuery = fetchBaseQuery({
             headers.set('authorization', '');
         }
         return headers;
+    },
+    // Custom fetch function to handle FormData properly
+    fetchFn: async (input, init) => {
+        // If body is FormData, don't set Content-Type (browser will set it with boundary)
+        if (init?.body instanceof FormData) {
+            const headers = new Headers(init.headers)
+            headers.delete('Content-Type')
+            return fetch(input, { ...init, headers })
+        }
+        // For JSON, set Content-Type
+        if (init?.body && typeof init.body === 'string') {
+            const headers = new Headers(init.headers)
+            if (!headers.has('Content-Type')) {
+                headers.set('Content-Type', 'application/json')
+            }
+            return fetch(input, { ...init, headers })
+        }
+        return fetch(input, init)
     }
 });
 
@@ -42,8 +59,17 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
 export const SplitApiSettings = createApi({
     reducerPath: "api",
-    // refetchOnMountOrArgChange: true,
     baseQuery: baseQueryWithReauth,
     endpoints: () => ({}),
-    tagTypes: ['User', 'Wallet', 'Settlement', 'AdminMatches']
+    tagTypes: ['User', 'Wallet', 'Settlement', 'AdminMatches', 'SiteVideo'],
+    // Performance: Keep unused data for 5 minutes (default is 60s)
+    // This reduces refetches for data that's still valid
+    keepUnusedDataFor: 300,
+    // Performance: Only refetch on mount if data is stale (>5min) or args changed
+    // Prevents unnecessary refetches when navigating back to a page
+    refetchOnMountOrArgChange: false,
+    // Performance: Don't refetch on reconnect unless data is stale
+    refetchOnReconnect: false,
+    // Performance: Don't refetch on window focus unless data is stale
+    refetchOnFocus: false,
 });

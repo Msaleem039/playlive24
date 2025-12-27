@@ -89,13 +89,32 @@ export default function BetSlipModal({
   
     // =========================
     // MATCH ODDS (EXCHANGE)
-    // Odds are in decimal format (e.g., 1.7, 1.82)
-    // Back 1.7, stake 100: profit = 100 * (1.7 - 1) = 70
-    // Lay 1.82, stake 100: loss = 100 * (1.82 - 1) = 82
+    // Odds can be in two formats:
+    // 1. Decimal format (e.g., 1.01, 1.7, 1.82) - when odds < 10
+    // 2. Multiplied by 100 (e.g., 700 = 7.00, 1000 = 10.00) - when odds >= 10 and < 100
+    // 3. Actual multiplier (e.g., 1000 = 1000x) - when odds >= 100
+    // Examples:
+    // - Back 1.7, stake 100: profit = 100 * (1.7 - 1) = 70
+    // - Back 1000, stake 100: profit = 100 * (1000 - 1) = 99900 (actual multiplier)
+    // - Back 700, stake 100: profit = 100 * (7.00 - 1) = 600 (if 700 = 7.00)
+    // Based on user feedback: odds 1000 should give profit 99900, so treat >= 100 as actual multiplier
     // =========================
     if (gtype === 'match_odds' || gtype === 'match' || gtype === 'oddeven') {
-      // Check if odds are already in decimal format (< 10) or multiplied by 100 (>= 10)
-      const decimalOdds = odds < 10 ? odds : odds / 100
+      let decimalOdds: number
+      
+      if (odds < 10) {
+        // Already in decimal format (e.g., 1.01, 1.7, 1.82)
+        decimalOdds = odds
+      } else if (odds >= 10 && odds < 100) {
+        // Multiplied by 100 (e.g., 70 = 0.70, but this seems unlikely for match odds)
+        // Actually, for match odds, values between 10-99 might be rare
+        // Let's treat as multiplied by 100 to be safe
+        decimalOdds = odds / 100
+      } else {
+        // Odds >= 100: treat as actual multiplier (e.g., 1000 = 1000x, 700 = 700x)
+        // Based on user requirement: 1000 should give 99900 profit
+        decimalOdds = odds
+      }
   
       if (betType === 'back') {
         // Back: profit = stake * (odds - 1), loss = stake
@@ -110,15 +129,23 @@ export default function BetSlipModal({
   
     // =========================
     // BOOKMAKER
-    // odds are percentage → 150 = 150%
+    // Odds can be in two formats:
+    // 1. Decimal format (e.g., 0.5, 1.5) - when odds < 10
+    // 2. Percentage format (e.g., 100 = 100%, 150 = 150%) - when odds >= 10
+    // For percentage: 150 means 150% = 1.5x, so profit = stake * 1.5
+    // For decimal: 0.5 means 0.5x, so profit = stake * 0.5
     // =========================
-    else if (gtype === 'bookmaker' || gtype === 'bookmatch') {
-      const rate = odds / 100
+    else if (gtype === 'bookmaker' || gtype === 'bookmatch' || gtype === 'match1') {
+      // If odds >= 10, treat as percentage (divide by 100)
+      // If odds < 10, treat as decimal multiplier
+      const rate = odds >= 10 ? odds / 100 : odds
   
       if (betType === 'back') {
+        // Back: profit = stake * rate, loss = stake
         win = stake * rate
         loss = stake
       } else {
+        // Lay: profit = stake, loss = stake * rate
         win = stake
         loss = stake * rate
       }

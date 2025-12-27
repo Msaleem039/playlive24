@@ -114,12 +114,16 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['User'],
+      // Performance: Keep user data longer (changes infrequently)
+      keepUnusedDataFor: 600,
     }),
     getDashboardData: builder.query({
       query: () => ({
         url: API_END_POINTS.getDashboardData,
         method: "GET",
       }),
+      // Performance: Dashboard data changes frequently, keep for shorter time
+      keepUnusedDataFor: 60,
     }),
     getWallet: builder.query({
       query: () => ({
@@ -127,6 +131,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Wallet'] as any,
+      // Performance: Wallet data should be fresh, but cache briefly
+      keepUnusedDataFor: 30,
     }),
 
     /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
@@ -136,6 +142,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
+      // Performance: Reports are historical data, cache longer
+      keepUnusedDataFor: 300,
     }),
     getSettlementHistory: builder.query({
       query: (params: { startDate?: string; endDate?: string; limit?: number; offset?: number }) => {
@@ -150,6 +158,8 @@ export const api = SplitApiSettings.injectEndpoints({
         }
       },
       providesTags: ['Settlement'] as any,
+      // Performance: History is historical data, cache longer
+      keepUnusedDataFor: 300,
     }),
     getPendingSettlements: builder.query({
       query: () => ({
@@ -157,6 +167,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
+      // Performance: Pending settlements change frequently, keep cache short
+      keepUnusedDataFor: 30,
     }),
 
     getPendingSettlementsByMatch: builder.query({
@@ -165,6 +177,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
+      // Performance: Match-specific pending settlements change frequently
+      keepUnusedDataFor: 30,
     }),
 
     getSettlementDetails: builder.query({
@@ -173,6 +187,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
+      // Performance: Settlement details are relatively static once created
+      keepUnusedDataFor: 300,
     }),
 
     getSettlementBets: builder.query({
@@ -189,6 +205,8 @@ export const api = SplitApiSettings.injectEndpoints({
         }
       },
       providesTags: ['Settlement'] as any,
+      // Performance: Bet data changes frequently, keep cache short
+      keepUnusedDataFor: 30,
     }),
 
     getMyPendingBets: builder.query({
@@ -197,6 +215,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['Settlement'] as any,
+      // Performance: User's pending bets change frequently, keep cache short
+      keepUnusedDataFor: 15,
     }),
 
     /////////////////////////////<===SETTLEMENT MUTATIONS===>//////////////////////////////
@@ -218,17 +238,8 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['Settlement'] as any,
     }),
 
-    settleFancy: builder.mutation({
-      query: (data: { eventId: string; selectionId: string; decisionRun?: number; isCancel: boolean; marketId?: string }) => ({
-        url: API_END_POINTS.settleFancy,
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ['Settlement'] as any,
-    }),
-
     settleMatchOdds: builder.mutation({
-      query: (data: { eventId: string; marketId: string; winnerSelectionId: string; betId?: string | number }) => ({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string; betIds?: string[] }) => ({
         url: API_END_POINTS.settleMatchOdds,
         method: "POST",
         body: data,
@@ -236,8 +247,17 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['Settlement'] as any,
     }),
 
+    settleFancy: builder.mutation({
+      query: (data: { eventId: string; selectionId: string; decisionRun?: number; isCancel: boolean; marketId?: string; betIds?: string[] }) => ({
+        url: API_END_POINTS.settleFancy,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
     settleBookmaker: builder.mutation({
-      query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string; betIds?: string[] }) => ({
         url: API_END_POINTS.settleBookmaker,
         method: "POST",
         body: data,
@@ -246,7 +266,7 @@ export const api = SplitApiSettings.injectEndpoints({
     }),
 
     rollbackSettlement: builder.mutation({
-      query: (data: { settlementId: string }) => ({
+      query: (data: { settlementId: string; betIds?: string[] }) => ({
         url: API_END_POINTS.rollbackSettlement,
         method: "POST",
         body: data,
@@ -261,6 +281,8 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
       providesTags: ['AdminMatches'] as any,
+      // Performance: Admin matches list changes infrequently, cache longer
+      keepUnusedDataFor: 180,
     }),
 
     toggleMatchVisibility: builder.mutation({
@@ -270,6 +292,40 @@ export const api = SplitApiSettings.injectEndpoints({
         body: { isEnabled },
       }),
       invalidatesTags: ['AdminMatches'] as any,
+    }),
+
+    /////////////////////////////<===SITE VIDEO===>//////////////////////////////
+    getSiteVideo: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getSiteVideo,
+        method: "GET",
+      }),
+      // Performance: Site video config changes infrequently, cache longer
+      keepUnusedDataFor: 600,
+      providesTags: ['SiteVideo'] as any,
+    }),
+
+    updateSiteVideo: builder.mutation({
+      query: (data: { videoUrl?: string; file?: File }) => {
+        // If file is provided, use FormData
+        if (data.file) {
+          const formData = new FormData()
+          // Backend expects field name to be "videoUrl" (as shown in Postman)
+          formData.append("videoUrl", data.file)
+          return {
+            url: API_END_POINTS.updateSiteVideo,
+            method: "POST",
+            body: formData,
+          }
+        }
+        // Otherwise, use JSON with videoUrl
+        return {
+          url: API_END_POINTS.updateSiteVideo,
+          method: "POST",
+          body: { videoUrl: data.videoUrl },
+        }
+      },
+      invalidatesTags: ['SiteVideo'] as any,
     }),
   }),
 });
@@ -311,5 +367,9 @@ export const {
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     useGetAdminMatchesQuery,
     useToggleMatchVisibilityMutation,
+
+    /////////////////////////////<===SITE VIDEO===>//////////////////////////////
+    useGetSiteVideoQuery,
+    useUpdateSiteVideoMutation,
     
 } = api;

@@ -60,11 +60,10 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
       return
     }
 
-    // If settling a specific bet, warn that it will settle all bets in the market
-    // unless the backend supports betId parameter
+    // If settling a specific bet, include betIds in the payload
     const betId = selectedBet?.id
     const confirmMessage = betId 
-      ? `This will settle Match Odds bet ID: ${betId}\n\nNote: If the backend doesn't support single bet settlement, ALL bets in this market will be settled.\n\nContinue?`
+      ? `This will settle Match Odds bet ID: ${betId}\n\nOnly this specific bet will be settled.\n\nContinue?`
       : `This will settle ALL Match Odds bets for this market.\n\nFancy and Bookmaker bets will NOT be affected.\n\nContinue?`
     
     if (!confirm(confirmMessage)) {
@@ -72,17 +71,16 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
     }
 
     try {
-      // Include betId if available - backend may support it for single bet settlement
+      // Build payload with betIds array
       const payload: any = {
         eventId: eventId.trim(),
         marketId: marketId.trim(),
         winnerSelectionId: winnerSelectionId.trim()
       }
       
-      // Add betId if we have a specific bet selected
+      // Add betIds array if we have a specific bet selected
       if (betId) {
-        payload.betId = betId
-        payload.bet_id = betId // Try both formats
+        payload.betIds = [String(betId)]
       }
       
       // Log the payload for debugging
@@ -190,10 +188,9 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
             <h3 className="font-semibold text-lg mb-4">Settlement Details</h3>
             
             {selectedBet && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800 font-medium">
-                  ⚠️ <strong>Important:</strong> This will attempt to settle bet ID <strong>{selectedBet.id}</strong>. 
-                  If the backend doesn't support single bet settlement, <strong>ALL match odds bets in this market will be settled</strong>.
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 font-medium">
+                  ℹ️ <strong>Info:</strong> This will settle bet ID <strong>{selectedBet.id}</strong> using the betIds parameter.
                 </p>
               </div>
             )}

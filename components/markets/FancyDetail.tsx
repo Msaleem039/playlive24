@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Pin } from 'lucide-react'
 import type { BettingMarket } from '@/app/live/[matchId]/types'
 
@@ -24,7 +25,8 @@ interface FancyDetailProps {
 const YES_COLUMNS = 1
 const NO_COLUMNS = 1
 
-export default function FancyDetail({
+// Performance: Memoize component to prevent unnecessary re-renders
+const FancyDetail = memo(function FancyDetail({
   market,
   marketIndex,
   blinkingOdds,
@@ -172,5 +174,9 @@ export default function FancyDetail({
       </div>
     </div>
   )
-}
+})
+
+FancyDetail.displayName = 'FancyDetail'
+
+export default FancyDetail
 

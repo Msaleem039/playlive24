@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Pin, RefreshCw } from 'lucide-react'
 import type { BettingMarket } from '@/app/live/[matchId]/types'
 
@@ -24,7 +25,8 @@ interface MatchOddsProps {
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
 
-export default function MatchOdds({
+// Performance: Memoize component to prevent unnecessary re-renders
+const MatchOdds = memo(function MatchOdds({
   market,
   marketIndex,
   blinkingOdds,
@@ -178,5 +180,9 @@ export default function MatchOdds({
       </div>
     </div>
   )
-}
+})
+
+MatchOdds.displayName = 'MatchOdds'
+
+export default MatchOdds
 

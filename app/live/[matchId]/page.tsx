@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { RefreshCw, Tv } from 'lucide-react'
-import { useGetCricketMatchDetailQuery, useGetCricketMatchPrivateQuery, useGetCricketMatchMarketsQuery, useGetCricketMatchOddsQuery, useGetCricketBookmakerFancyQuery } from '@/app/services/CricketApi'
+import { useGetCricketMatchMarketsQuery, useGetCricketMatchOddsQuery, useGetCricketBookmakerFancyQuery, useGetCricketScorecardQuery } from '@/app/services/CricketApi'
+import LiveScorecard from '@/components/scorecard/LiveScorecard'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
@@ -49,7 +50,6 @@ export default function LiveMatchDetailPage() {
   const [isTablet, setIsTablet] = useState(false)
   
   // State for iframe loading errors
-  const [scorecardLoadError, setScorecardLoadError] = useState(false)
   const [streamLoadError, setStreamLoadError] = useState(false)
   
   // TV toggle - check if coming from main page, otherwise default to false
@@ -98,7 +98,18 @@ export default function LiveMatchDetailPage() {
   const LAY_COLUMNS = 1
 
   // Pending settlements/bets for logged-in user across matches
-  const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(undefined)
+  // Performance: Use RTK Query polling instead of manual setInterval
+  const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(
+    undefined,
+    {
+      // Performance: Skip if no user logged in
+      skip: !authUser,
+      // Performance: Use RTK Query polling instead of manual interval (more efficient)
+      pollingInterval: 30000, // Poll every 30 seconds
+      // Performance: Only refetch on mount if data is stale (>15s)
+      refetchOnMountOrArgChange: true,
+    }
+  )
 
   const userPendingBets = useMemo(() => {
     if (!myPendingBetsData) return []
@@ -183,20 +194,8 @@ export default function LiveMatchDetailPage() {
   }
 
 
-  // Refetch pending bets on mount and periodically
-  useEffect(() => {
-    if (authUser) {
-      // Initial refetch
-      refetchPendingBets()
-      
-      // Set up periodic refetch every 30 seconds
-      const interval = setInterval(() => {
-        refetchPendingBets()
-      }, 30000)
-
-      return () => clearInterval(interval)
-    }
-  }, [authUser, refetchPendingBets])
+  // Performance: Removed manual polling - now using RTK Query pollingInterval
+  // This is more efficient as RTK Query handles deduplication and cleanup automatically
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -224,9 +223,14 @@ export default function LiveMatchDetailPage() {
   }, [matchId])
 
   // Fetch markets for the event
+  // Performance: Use selectFromResult to prevent unnecessary re-renders
   const { data: marketsData, isLoading: isLoadingMarkets, error: marketsError, refetch: refetchMarkets } = useGetCricketMatchMarketsQuery(
     { eventId },
-    { skip: !eventId }
+    { 
+      skip: !eventId,
+      // Performance: Only refetch if data is stale (>2min) or args changed
+      refetchOnMountOrArgChange: true,
+    }
   )
 
   // Extract marketIds from markets response
@@ -236,46 +240,52 @@ export default function LiveMatchDetailPage() {
   }, [marketsData])
 
   // Fetch odds for all markets - uses direct API polling (backend cronjob updates odds)
+  // Performance: Use selectFromResult to only re-render when odds actually change
   const { data: oddsData, isLoading: isLoadingOdds, error: oddsError, refetch: refetchOdds } = useGetCricketMatchOddsQuery(
     { marketIds },
     { 
       skip: marketIds.length === 0,
-      // Enable polling to get updated odds from backend cronjob
-      pollingInterval: 5000, // Poll every 5 seconds
+      // Performance: Poll every 5 seconds for live odds updates
+      pollingInterval: 5000,
+      // Performance: Only refetch on mount if data is stale (>10s)
+      refetchOnMountOrArgChange: true,
     }
   )
 
-  // Fetch match details using the detail endpoint (for header info - legacy)
-  const { data: matchDetailData, isLoading: isLoadingDetail, error: detailError, refetch: refetchDetail } = useGetCricketMatchDetailQuery(
-    { sid: 4, gmid: numericMatchId! },
-    { skip: !numericMatchId }
-  )
-
-  // Fetch match private data (for all markets - odds, fancy, etc. - legacy fallback)
-  const { data: matchPrivateData, isLoading: isLoadingPrivate, error: privateError, refetch: refetchPrivate } = useGetCricketMatchPrivateQuery(
-    { sid: 4, gmid: numericMatchId! },
-    { skip: !numericMatchId }
-  )
 
   // Fetch bookmaker and fancy markets by eventId
+  // Performance: Polling enabled for live updates
   const { data: bookmakerFancyData, isLoading: isLoadingBookmakerFancy, error: bookmakerFancyError, refetch: refetchBookmakerFancy } = useGetCricketBookmakerFancyQuery(
     { eventId },
     { 
       skip: !eventId,
-      // Enable polling to get updated fancy/bookmaker markets
-      pollingInterval: 5000, // Poll every 5 seconds
+      // Performance: Poll every 5 seconds for live market updates
+      pollingInterval: 5000,
+      // Performance: Only refetch on mount if data is stale (>10s)
+      refetchOnMountOrArgChange: true,
     }
   )
 
-  const isLoading = isLoadingMarkets || isLoadingOdds || isLoadingDetail || isLoadingPrivate || isLoadingBookmakerFancy
-  const error = marketsError || oddsError || detailError || privateError || bookmakerFancyError
+  // Fetch scorecard data by eventId
+  // Performance: Polling enabled for live scorecard updates
+  const { data: scorecardData, isLoading: isLoadingScorecard, error: scorecardError } = useGetCricketScorecardQuery(
+    { eventId },
+    {
+      skip: !eventId,
+      // Performance: Poll every 5 seconds for live scorecard updates
+      pollingInterval: 5000,
+      // Performance: Only refetch on mount if data is stale (>15s)
+      refetchOnMountOrArgChange: true,
+    }
+  )
+
+  const isLoading = isLoadingMarkets || isLoadingOdds || isLoadingBookmakerFancy
+  const error = marketsError || oddsError || bookmakerFancyError
 
   // Combined refetch function
   const refetch = () => {
     refetchMarkets()
     refetchOdds()
-    refetchDetail()
-    refetchPrivate()
     refetchBookmakerFancy()
   }
 
@@ -295,22 +305,8 @@ export default function LiveMatchDetailPage() {
       }
     }
     
-    // Fallback to legacy detail response
-    if (!matchDetailData) return null
-    
-    // Handle response structure
-    let match: any = null
-    
-    if (Array.isArray(matchDetailData) && matchDetailData.length > 0) {
-      match = matchDetailData[0]
-    } else if (matchDetailData?.success && matchDetailData?.data) {
-      if (Array.isArray(matchDetailData.data) && matchDetailData.data.length > 0) {
-        match = matchDetailData.data[0]
-      }
-    }
-    
-    return match
-  }, [marketsData, matchDetailData])
+    return null
+  }, [marketsData])
 
   // Extract all markets - use new markets API with odds from direct API polling
   // Also merge bookmaker-fancy markets from the dedicated endpoint
@@ -391,21 +387,6 @@ export default function LiveMatchDetailPage() {
       }
     }
     
-    // Final fallback to API data from private endpoint
-    if (markets.length === 0 && matchPrivateData) {
-      // Handle API response structure
-      if (Array.isArray(matchPrivateData)) {
-        markets = matchPrivateData
-      } else if (matchPrivateData?.success && Array.isArray(matchPrivateData.data)) {
-        markets = matchPrivateData.data
-      }
-      
-      console.log('[MatchDetail] Using legacy API markets:', {
-        matchId: numericMatchId,
-        marketsFound: markets.length,
-        markets: markets.map((m: any) => ({ gmid: m.gmid, mid: m.mid, mname: m.mname, gtype: m.gtype }))
-      })
-    }
     
     // Filter out markets with "2nd" in mname, "Tied Match", "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", and "Match Odds Including Tie" markets (case-insensitive)
     const filteredMarkets = markets.filter((market: any) => {
@@ -444,7 +425,7 @@ export default function LiveMatchDetailPage() {
     })
     
     return filteredMarkets
-  }, [marketsData, oddsData, matchPrivateData, bookmakerFancyData, numericMatchId, eventId, marketIds])
+  }, [marketsData, oddsData, bookmakerFancyData, numericMatchId, eventId, marketIds])
 
   // Transform API data to component format
   const transformedMatchData = useMemo(() => {
@@ -510,33 +491,19 @@ export default function LiveMatchDetailPage() {
     return `https://btocapi.tresting.com/embedN2?eventId=${currentEventId}`
   }, [currentEventId, matchData, marketsData])
 
-  // Live Score URL - using new tresting.com API
-  // Only show scorecard if we have a valid eventId from markets API (not fallback)
-  const liveScoreUrl = useMemo(() => {
-    // Prioritize eventId from markets data (most reliable)
-    let validEventId: string | null = null
-    
-    if (marketsData && Array.isArray(marketsData) && marketsData.length > 0) {
-      validEventId = marketsData[0].event.id
-      console.log('[Scorecard] Using eventId from markets data:', validEventId)
-    } else if (matchData?.eventId) {
-      validEventId = matchData.eventId
-      console.log('[Scorecard] Using eventId from matchData:', validEventId)
-    } else {
-      // Don't use fallback matchId - only show if we have real eventId
-      console.log('[Scorecard] No valid eventId found, skipping scorecard')
-      return null
+  // Extract scorecard data from API response
+  const scorecard = useMemo(() => {
+    if (!scorecardData) return null
+    // Handle API response structure: { message, code, error, data }
+    if (scorecardData?.data && !scorecardData.error) {
+      return scorecardData.data
     }
-    
-    if (!validEventId || validEventId === 'null' || validEventId === 'undefined' || validEventId.trim() === '') {
-      console.log('[Scorecard] Invalid eventId value:', validEventId)
-      return null
+    // Fallback if data is directly in response
+    if (scorecardData?.batsman || scorecardData?.team1) {
+      return scorecardData
     }
-    
-    // const url = `https://score.tresting.com/socket-iframe-7/crickexpo/${validEventId.trim()}`
-    // console.log('[Scorecard] Generated URL:', url)
-    // return url
-  }, [marketsData, matchData])
+    return null
+  }, [scorecardData])
 
   // Transform betting markets from new API or legacy API response
   const bettingMarkets: BettingMarket[] = useMemo(() => {
@@ -678,7 +645,8 @@ export default function LiveMatchDetailPage() {
             team: section.nat || 'Unknown',
             selectionId: section.sid,
             back: normalizedBackOdds,
-            lay: normalizedLayOdds
+            lay: normalizedLayOdds,
+            gstatus: section.gstatus // Add row-level gstatus
           })
         })
 
@@ -697,7 +665,10 @@ export default function LiveMatchDetailPage() {
             marketId: marketEntry.mid,
             marketIdString: marketEntry.mid ? marketEntry.mid.toString() : undefined, // Convert mid to string for API calls
             gscode,
-            gstatus
+            gstatus,
+            status: marketEntry.status, // Market status (OPEN, SUSPENDED, etc.)
+            isSuspended: marketEntry.isSuspended, // Market suspension flag
+            visible: marketEntry.visible // Market visibility flag
           })
         }
       }
@@ -947,49 +918,27 @@ export default function LiveMatchDetailPage() {
       {/* Main Content Area - Responsive Grid Layout */}
       <div className={`${isClient ? 'min-h-[calc(100vh-108px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass()}`}>
         {/* Left Panel - Betting Markets (with integrated scorecard) */}
-        <div className={`flex flex-col bg-white ${getLeftPanelClass()}`} style={{ gap: 0 }}>
+        <div className={`flex flex-col bg-white ${getLeftPanelClass()} px-2 sm:px-0`} style={{ gap: 0 }}>
           {/* Betting Markets Section - Scorecard integrated as first item */}
           <div className="relative" style={{ margin: 0, padding: 0, gap: 0 }}>
-            {/* Live Score iframe - First item in markets section */}
-            {liveScoreUrl && !scorecardLoadError && (
-              <div 
-                className="bg-gray-50 overflow-hidden relative border-b border-gray-200" 
-                style={{ 
-                  margin: 0, 
-                  marginBottom: 0,
-                  padding: 0, 
-                  lineHeight: 0,
-                  fontSize: 0,
-                }}
-              >
-                <iframe
-                  key={`live-score-${currentEventId || numericMatchId}`}
-                  src={liveScoreUrl}
-                  className="w-full border-0"
-                  style={{ 
-                    height: isMobile ? '380px' : '480px', 
-                    margin: 0, 
-                    padding: 0, 
-                    display: 'block',
-                    border: 'none',
-                    overflow: 'hidden',
-                    verticalAlign: 'top',
-                    backgroundColor: '#f9fafb'
-                  }}
-                  allow="autoplay; encrypted-media"
-                  scrolling="no"
-                  frameBorder="0"
-                  title="Live Score Details"
-                  onLoad={() => {
-                    console.log('[LiveScore] Scorecard iframe loaded successfully:', liveScoreUrl)
-                    setScorecardLoadError(false)
-                  }}
-                  onError={() => {
-                    console.error('[LiveScore] Failed to load live score iframe:', liveScoreUrl)
-                    setScorecardLoadError(true)
-                  }}
-                />
-              </div>
+            {/* Live Scorecard Component - First item in markets section */}
+            {currentEventId && (
+              <LiveScorecard
+                data={scorecard}
+                isLoading={isLoadingScorecard}
+                isMobile={isMobile}
+                matchDateTime={matchData ? (() => {
+                  const dateTime = new Date(matchData.stime)
+                  const day = dateTime.getDate()
+                  const month = dateTime.toLocaleDateString('en-US', { month: 'short' })
+                  const hours = dateTime.getHours()
+                  const minutes = dateTime.getMinutes()
+                  const ampm = hours >= 12 ? 'pm' : 'am'
+                  const displayHours = hours % 12 || 12
+                  const displayMinutes = minutes.toString().padStart(2, '0')
+                  return `${day} ${month} ${displayHours}:${displayMinutes} ${ampm}`
+                })() : null}
+              />
             )}
 
             {/* TV Section - Show below scorecard on sm/md screens, hidden on lg+ (where it's in right panel) */}
@@ -1077,20 +1026,15 @@ export default function LiveMatchDetailPage() {
                     {/* Current Score Bar */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-1 sm:mb-2 text-xs sm:text-sm font-semibold gap-1">
                       <div className="flex items-center gap-1 sm:gap-2">
-                        <span className="truncate">{(matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}</span>
-                        <span>{matchData?.teama?.scores || matchData?.team1_scores || '0-0'}</span>
-                        <span className="text-[10px] sm:text-xs font-normal text-gray-300">{matchData?.teama?.overs || '0'}</span>
+                        <span className="truncate">{(scorecard?.team1?.shortName || matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}</span>
+                        <span>{scorecard?.team1?.score || '0-0'}</span>
+                        <span className="text-[5px] sm:text-xs font-normal text-gray-300">{scorecard?.team1?.overs || '0'}</span>
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-300 truncate">
-                        {(matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
+                      <div className="text-[5px] sm:text-xs text-gray-300 truncate">
+                        {(scorecard?.team2?.shortName || matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
                       </div>
                     </div>
-                    
-                    {/* Match Info Bar */}
-                    {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[10px] sm:text-xs text-gray-300 mb-1 sm:mb-2 gap-1">
-                      <span>DAY {matchData?.day || '1'} SESSION {matchData?.session || '1'}</span>
-                      <span>SPEED {matchData?.speed || '0'} km/h</span>
-                    </div> */}
+                
                     
                     {/* Player Scores */}
                     {/* {matchData?.current_batsmen && Array.isArray(matchData.current_batsmen) && matchData.current_batsmen.length > 0 && (
@@ -1105,27 +1049,7 @@ export default function LiveMatchDetailPage() {
                       </div>
                     )} */}
                     
-                    {/* This Over */}
-                    {/* {matchData?.this_over && Array.isArray(matchData.this_over) && matchData.this_over.length > 0 && (
-                      <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                        <span className="text-gray-400 mr-1">THIS OVER:</span>
-                        <div className="flex gap-0.5 sm:gap-1">
-                          {matchData.this_over.map((ball: any, idx: number) => (
-                            <span
-                              key={idx}
-                              className={`w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center font-medium text-[10px] sm:text-xs ${
-                                ball === 0 ? 'bg-gray-700 text-gray-300' :
-                                ball === 4 || ball === 6 ? 'bg-yellow-500 text-gray-900' :
-                                'bg-green-600 text-white'
-                              }`}
-                            >
-                              {ball}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )} */}
-                    
+           
                     {/* Video Controls */}
                     <div className="flex items-center justify-end gap-2 mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-white/20">
                       <button

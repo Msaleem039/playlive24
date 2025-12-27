@@ -429,22 +429,17 @@ const InPlayTab = memo(() => {
   }, [currentMatches])
 
   const SPORT_CATEGORIES = [
-    { id: "watch-live", name: "Watch Live", icon: Play, count: 0, color: "purple", isLive: false, redirectTo: "/live" },
-    { id: "all-games", name: "All Games", icon: Gamepad2, count: liveCounts.all, color: "gray", isLive: liveCounts.all > 0, redirectTo: "/live" },
-    { id: "cricket", name: "Cricket", icon: Trophy, count: liveCounts.cricket, color: "red", isLive: liveCounts.cricket > 0, redirectTo: "/live?sport=cricket" },
-    { id: "soccer", name: "Soccer", icon: Target, count: liveCounts.soccer, color: "black", isLive: liveCounts.soccer > 0, redirectTo: "/live?sport=soccer" },
-    { id: "tennis", name: "Tennis", icon: Zap, count: liveCounts.tennis, color: "yellow", isLive: liveCounts.tennis > 0, redirectTo: "/live?sport=tennis" },
+    { id: "watch-live", name: "Watch Live", icon: Play, count: 0, color: "purple", isLive: false },
+    { id: "all-games", name: "All Games", icon: Gamepad2, count: liveCounts.all, color: "gray", isLive: liveCounts.all > 0 },
+    { id: "cricket", name: "Cricket", icon: Trophy, count: liveCounts.cricket, color: "red", isLive: liveCounts.cricket > 0 },
+    { id: "soccer", name: "Soccer", icon: Target, count: liveCounts.soccer, color: "black", isLive: liveCounts.soccer > 0 },
+    { id: "tennis", name: "Tennis", icon: Zap, count: liveCounts.tennis, color: "yellow", isLive: liveCounts.tennis > 0 },
   ]
 
   // Memoized category selection handler
   const handleCategorySelect = useCallback((categoryId: string) => {
-    const category = SPORT_CATEGORIES.find(cat => cat.id === categoryId)
-    if (category?.redirectTo) {
-      router.push(category.redirectTo)
-    } else {
-      setSelectedCategory(categoryId)
-    }
-  }, [router])
+    setSelectedCategory(categoryId)
+  }, [])
 
   // Memoized matches for current category - sorted with live matches first
   const matches = useMemo(() => {

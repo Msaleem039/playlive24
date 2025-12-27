@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -36,9 +36,8 @@ export const API_END_POINTS = {
     cricketMatches: `${BASE_URL}/cricketid/aggregator/cricket`,
     cricketMatchMarkets: `${BASE_URL}/cricketid/markets`,
     cricketMatchOdds: `${BASE_URL}/cricketid/odds`,
-    cricketMatchDetail: BASE_URL + "/cricketid/match/detail",
-    cricketMatchPrivate: BASE_URL + "/cricketid/match/private",
     cricketBookmakerFancy: `${BASE_URL}/cricketid/bookmaker-fancy`,
+    cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventId`,
     getAllSports: `${BASE_URL}/cricketid/sports`,
     // loginUser: BASE_URL + "api/auth/login",
     getUser: `${BASE_URL}/auth/subordinates`,
@@ -73,5 +72,9 @@ export const API_END_POINTS = {
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     getAdminMatches: `${BASE_URL}/admin/matches`,
     toggleMatchVisibility: `${BASE_URL}/admin/matches/:eventId`,
+
+    /////////////////////////////<===SITE VIDEO===>//////////////////////////////
+    getSiteVideo: `${BASE_URL}/site-video`,
+    updateSiteVideo: `${BASE_URL}/site-video`,
  
 }

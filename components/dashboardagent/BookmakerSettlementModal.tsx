@@ -58,11 +58,22 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
     }
 
     try {
-      await settleBookmaker({
+      const betId = selectedBet?.id
+      const payload: any = {
         eventId: eventId.trim(),
         marketId: marketId.trim(),
         winnerSelectionId: winnerSelectionId.trim()
-      }).unwrap()
+      }
+      
+      // Add betIds array if we have a specific bet selected
+      if (betId) {
+        payload.betIds = [String(betId)]
+      }
+      
+      console.log('[Bookmaker Settlement] Payload:', payload)
+      console.log('[Bookmaker Settlement] Selected Bet:', selectedBet)
+      
+      await settleBookmaker(payload).unwrap()
       toast.success("Bookmaker bets settled successfully")
       onSettle()
       onClose()

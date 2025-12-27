@@ -49,7 +49,8 @@ export default function CricketTab() {
   const matches = (isConnected && liveMatches.length > 0) ? liveMatches : apiMatches
 
   // Filter and sort by iplay field: live matches (iplay === true) first, then upcoming (iplay === false)
-  const liveMatchesList = matches.filter((m: any) => {
+  // Performance: Memoize filtered lists to prevent unnecessary recalculations
+  const liveMatchesList = useMemo(() => matches.filter((m: any) => {
     // Use iplay field directly from API response
     if (typeof m?.iplay === 'boolean') {
       return m.iplay === true
@@ -64,9 +65,9 @@ export default function CricketTab() {
       m?.game_state === 3 ||
       m?.match_status === 'live'
     )
-  })
+  }), [matches])
 
-  const upcomingMatchesList = matches.filter((m: any) => {
+  const upcomingMatchesList = useMemo(() => matches.filter((m: any) => {
     // Use iplay field directly from API response
     if (typeof m?.iplay === 'boolean') {
       return m.iplay === false
@@ -84,15 +85,19 @@ export default function CricketTab() {
     const completedKeywords = ['completed', 'finished', 'result']
     const isCompleted = completedKeywords.some(k => statusText.includes(k))
     return !isLive && !isCompleted
-  })
+  }), [matches])
 
   // Sort: Live matches first (iplay === true), then upcoming (iplay === false)
   // Live matches are already filtered, so we just combine them
-  const filteredMatches = [...liveMatchesList, ...upcomingMatchesList]
-console.log("filteredMatches",filteredMatches)
+  // Performance: Memoize filtered matches to prevent unnecessary recalculations
+  const filteredMatches = useMemo(() => {
+    return [...liveMatchesList, ...upcomingMatchesList]
+  }, [liveMatchesList, upcomingMatchesList])
+  
   // Counts for header badge
-  const liveCount = liveMatchesList.length
-  const upcomingCount = upcomingMatchesList.length
+  // Performance: Memoize counts to prevent unnecessary recalculations
+  const liveCount = useMemo(() => liveMatchesList.length, [liveMatchesList.length])
+  const upcomingCount = useMemo(() => upcomingMatchesList.length, [upcomingMatchesList.length])
 
   // Extract and format odds from match markets
   const matchesWithOdds = useMemo(() => {
@@ -335,13 +340,10 @@ console.log("filteredMatches",filteredMatches)
           <span className="text-[0.75rem]">Cricket</span>
           {/* Live Count with Signal Icon */}
           {liveCount > 0 && (
-            <button 
-              onClick={() => router.push('/live?sport=cricket')}
-              className="flex items-center gap-1 bg-red-500 hover:bg-red-600 px-2 py-1 rounded-full text-xs font-bold transition-colors"
-            >
+            <div className="flex items-center gap-1 bg-red-500 px-2 py-1 rounded-full text-xs font-bold">
               <Radio className="w-3 h-3" />
               <span>{liveCount}</span>
-            </button>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2">
