@@ -70,40 +70,15 @@ export function SettlementResultsScreen() {
       return
     }
     
-    // Collect betIds from the result
-    const betIds: string[] = []
-    if (result.betId) {
-      betIds.push(String(result.betId))
-    } else if (result.id) {
-      betIds.push(String(result.id))
-    }
-    // If result has multiple bets (array), collect all bet IDs
-    if (result.bets && Array.isArray(result.bets)) {
-      result.bets.forEach((bet: any) => {
-        if (bet.id && !betIds.includes(String(bet.id))) {
-          betIds.push(String(bet.id))
-        }
-      })
-    }
-    
-    const payload: any = { settlementId }
-    if (betIds.length > 0) {
-      payload.betIds = betIds
-    }
-    
-    const confirmMessage = betIds.length > 0
-      ? `Are you sure you want to rollback this settlement?\n\nSettlement ID: ${settlementId}\nBet IDs: ${betIds.join(', ')}`
-      : `Are you sure you want to rollback this settlement?\n\nSettlement ID: ${settlementId}`
-    
-    if (!confirm(confirmMessage)) {
+    if (!confirm(`Are you sure you want to rollback this settlement?\n\nSettlement ID: ${settlementId}`)) {
       return
     }
     
     try {
-      console.log('[Rollback Settlement] Payload:', payload)
+      console.log('[Rollback Settlement] Payload:', { settlementId })
       console.log('[Rollback Settlement] Result data:', result)
       
-      await rollbackSettlement(payload).unwrap()
+      await rollbackSettlement({ settlementId }).unwrap()
       toast.success("Settlement rolled back successfully")
       
       // Refetch data to get updated results

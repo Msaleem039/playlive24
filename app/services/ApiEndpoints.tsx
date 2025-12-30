@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -76,5 +76,8 @@ export const API_END_POINTS = {
     /////////////////////////////<===SITE VIDEO===>//////////////////////////////
     getSiteVideo: `${BASE_URL}/site-video`,
     updateSiteVideo: `${BASE_URL}/site-video`,
+
+    /////////////////////////////<===POSITIONS===>//////////////////////////////
+    getMatchPositions: `${BASE_URL}/positions/match/:matchId`,
  
 }

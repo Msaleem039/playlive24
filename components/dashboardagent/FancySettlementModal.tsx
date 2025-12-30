@@ -60,24 +60,13 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
     }
 
     try {
-      const betId = selectedBet?.id
-      const payload: any = {
+      await settleFancy({
         eventId: eventId.trim(),
         selectionId: selectionId.trim(),
         decisionRun: isCancel ? undefined : Number(decisionRun),
         isCancel,
         marketId: marketId.trim() || undefined
-      }
-      
-      // Add betIds array if we have a specific bet selected
-      if (betId) {
-        payload.betIds = [String(betId)]
-      }
-      
-      console.log('[Fancy Settlement] Payload:', payload)
-      console.log('[Fancy Settlement] Selected Bet:', selectedBet)
-      
-      await settleFancy(payload).unwrap()
+      }).unwrap()
       toast.success(isCancel ? "Fancy bets cancelled successfully" : "Fancy bets settled successfully")
       onSettle()
       onClose()

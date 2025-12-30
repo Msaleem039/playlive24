@@ -27,6 +27,7 @@ interface BetSlipModalProps {
   onBetPlaced?: () => void
   isMobile?: boolean
   eventId?: string | null
+  onStakeOddsChange?: (stake: string, odds: string) => void
 }
 
 export default function BetSlipModal({
@@ -38,12 +39,20 @@ export default function BetSlipModal({
   authUser,
   onBetPlaced,
   isMobile = false,
-  eventId = null
+  eventId = null,
+  onStakeOddsChange
 }: BetSlipModalProps) {
   const [stake, setStake] = useState<string>('')
   const [odds, setOdds] = useState<string>('')
   const [placeBet, { isLoading: isPlacingBet }] = usePlaceBetMutation()
   const onCloseRef = useRef(onClose)
+
+  // Notify parent when stake or odds change
+  useEffect(() => {
+    if (onStakeOddsChange && selectedBet) {
+      onStakeOddsChange(stake, odds || selectedBet.odds)
+    }
+  }, [stake, odds, selectedBet, onStakeOddsChange])
 
   // Keep onClose ref updated
   useEffect(() => {
@@ -264,23 +273,23 @@ export default function BetSlipModal({
       : 'in_play'
 
     // Log for debugging
-    console.log('Bet placement - Payload data:', {
-      user_id: String(userId),
-      match_id: String(matchId ?? ''),
-      selection_id: selectedBet.selectionId,
-      bet_type: betType,
-      bet_rate: betRate,
-      betvalue: betStake,
-      marketId: marketIdValue,
-      eventId: eventIdValue,
-      bet_name: selectedBet.team,
-      market_name: selectedBet.market,
-      market_type: marketType,
-      win_amount: winAmount,
-      loss_amount: lossAmount,
-      gtype: selectedBet.marketGType || 'match_odds',
-      selectedBet
-    })
+    // console.log('Bet placement - Payload data:', {
+    //   user_id: String(userId),
+    //   match_id: String(matchId ?? ''),
+    //   selection_id: selectedBet.selectionId,
+    //   bet_type: betType,
+    //   bet_rate: betRate,
+    //   betvalue: betStake,
+    //   marketId: marketIdValue,
+    //   eventId: eventIdValue,
+    //   bet_name: selectedBet.team,
+    //   market_name: selectedBet.market,
+    //   market_type: marketType,
+    //   win_amount: winAmount,
+    //   loss_amount: lossAmount,
+    //   gtype: selectedBet.marketGType || 'match_odds',
+    //   selectedBet
+    // })
 
     // API payload format - includes both new fields (marketId, eventId) and legacy fields
     const payload = {

@@ -61,7 +61,14 @@ export const useCricketLiveUpdates = ({
     socket.on("connect_error", (err: Error) => {
       const errorMessage = err?.message || err?.toString() || "Connection failed"
       console.error("⛔ Connection error:", errorMessage)
-      setError(errorMessage)
+      
+      // Handle "Invalid namespace" error specifically
+      if (errorMessage.includes("Invalid namespace") || errorMessage.includes("namespace")) {
+        console.warn("⚠️ Namespace error detected. The server may not support the '/entitysport' namespace.")
+        setError("WebSocket namespace error: The server may not support this namespace. Please check server configuration.")
+      } else {
+        setError(errorMessage)
+      }
       setIsConnecting(false)
     })
 

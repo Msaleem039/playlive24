@@ -110,6 +110,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   const [login] = useLoginMutation()
   const [changePassword] = useChangePasswordMutation()
   const [superAdminSelfTopup, { isLoading: isSelfTopupLoading }] = useSuperAdminSelfTopupMutation()
+  const [updateSiteVideo, { isLoading: isVideoUploadLoading }] = useUpdateSiteVideoMutation()
 
   // WebSocket for live cricket updates
   const {
@@ -428,8 +429,24 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     }
   }
 
-  // Video upload is now handled directly in VideoUploadModal component
-  // No need for separate handler
+  const handleVideoUpload = async (data: { videoUrl: string }) => {
+    try {
+      await updateSiteVideo(data).unwrap()
+      toast.success("Video uploaded successfully")
+      setIsVideoUploadModalOpen(false)
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to upload video. Please try again."
+      toast.error("Video upload failed", {
+        description: errorMessage,
+      })
+      throw error
+    }
+  }
 
   const handleLogout = () => {
     try {
@@ -720,6 +737,8 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
           <VideoUploadModal
             isOpen={isVideoUploadModalOpen}
             onClose={() => setIsVideoUploadModalOpen(false)}
+            onSubmit={handleVideoUpload}
+            isSubmitting={isVideoUploadLoading}
             currentVideoUrl={siteVideoData?.videoUrl}
           />
         </>

@@ -164,25 +164,24 @@ const MatchRow = memo(({ match }: { match: any }) => {
     ? match.iplay === false 
     : match.status === 1
   
-  // Check if match has valid ID for navigation (declare once, use in both places)
-  const matchId = match.gmid ?? match.match_id ?? match.id
-  const canNavigate = !!matchId
-  
   const handleMatchClick = useCallback(() => {
-    // Allow navigation for both live and upcoming matches
-    if (matchId) {
-      // Set flag to auto-open TV when navigating from main page (only for live matches)
-      if (isLive && typeof window !== 'undefined') {
-        sessionStorage.setItem('fromMainPage', 'true')
+    if (isLive) {
+      // Use gmid first (from new API), then match_id, then id
+      const matchId = match.gmid ?? match.match_id ?? match.id
+      if (matchId) {
+        // Set flag to auto-open TV when navigating from main page
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('fromMainPage', 'true')
+        }
+        router.push(`/live/${matchId}`)
       }
-      router.push(`/live/${matchId}`)
     }
-  }, [isLive, matchId, router])
-
+  }, [isLive, match, router])
+  
   return (
     <div 
-      className={`p-4 hover:bg-gray-50 ${canNavigate ? 'cursor-pointer' : ''}`}
-      onClick={canNavigate ? handleMatchClick : undefined}
+      className={`p-4 hover:bg-gray-50 ${isLive ? 'cursor-pointer' : ''}`}
+      onClick={handleMatchClick}
     >
       <div className="flex items-center justify-between">
         {/* Match Details */}
@@ -429,17 +428,22 @@ const InPlayTab = memo(() => {
   }, [currentMatches])
 
   const SPORT_CATEGORIES = [
-    { id: "watch-live", name: "Watch Live", icon: Play, count: 0, color: "purple", isLive: false },
-    { id: "all-games", name: "All Games", icon: Gamepad2, count: liveCounts.all, color: "gray", isLive: liveCounts.all > 0 },
-    { id: "cricket", name: "Cricket", icon: Trophy, count: liveCounts.cricket, color: "red", isLive: liveCounts.cricket > 0 },
-    { id: "soccer", name: "Soccer", icon: Target, count: liveCounts.soccer, color: "black", isLive: liveCounts.soccer > 0 },
-    { id: "tennis", name: "Tennis", icon: Zap, count: liveCounts.tennis, color: "yellow", isLive: liveCounts.tennis > 0 },
+    { id: "watch-live", name: "Watch Live", icon: Play, count: 0, color: "purple", isLive: false, redirectTo: "/live" },
+    { id: "all-games", name: "All Games", icon: Gamepad2, count: liveCounts.all, color: "gray", isLive: liveCounts.all > 0, redirectTo: "/live" },
+    { id: "cricket", name: "Cricket", icon: Trophy, count: liveCounts.cricket, color: "red", isLive: liveCounts.cricket > 0, redirectTo: "/live?sport=cricket" },
+    { id: "soccer", name: "Soccer", icon: Target, count: liveCounts.soccer, color: "black", isLive: liveCounts.soccer > 0, redirectTo: "/live?sport=soccer" },
+    { id: "tennis", name: "Tennis", icon: Zap, count: liveCounts.tennis, color: "yellow", isLive: liveCounts.tennis > 0, redirectTo: "/live?sport=tennis" },
   ]
 
   // Memoized category selection handler
   const handleCategorySelect = useCallback((categoryId: string) => {
-    setSelectedCategory(categoryId)
-  }, [])
+    const category = SPORT_CATEGORIES.find(cat => cat.id === categoryId)
+    if (category?.redirectTo) {
+      router.push(category.redirectTo)
+    } else {
+      setSelectedCategory(categoryId)
+    }
+  }, [router])
 
   // Memoized matches for current category - sorted with live matches first
   const matches = useMemo(() => {

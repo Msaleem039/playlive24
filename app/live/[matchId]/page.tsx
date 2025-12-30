@@ -8,7 +8,7 @@ import LiveScorecard from '@/components/scorecard/LiveScorecard'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
-import { useGetMyPendingBetsQuery } from '@/app/services/Api'
+import { useGetMyPendingBetsQuery, useGetMatchPositionsQuery } from '@/app/services/Api'
 import BetSlipModal from '@/components/modal/BetSlipModal'
 import MatchOdds from '@/components/markets/MatchOdds'
 import FancyDetail from '@/components/markets/FancyDetail'
@@ -98,17 +98,12 @@ export default function LiveMatchDetailPage() {
   const LAY_COLUMNS = 1
 
   // Pending settlements/bets for logged-in user across matches
-  // Performance: Use RTK Query polling instead of manual setInterval
-  const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(
-    undefined,
-    {
-      // Performance: Skip if no user logged in
-      skip: !authUser,
-      // Performance: Use RTK Query polling instead of manual interval (more efficient)
-      pollingInterval: 30000, // Poll every 30 seconds
-      // Performance: Only refetch on mount if data is stale (>15s)
-      refetchOnMountOrArgChange: true,
-    }
+  const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(undefined)
+
+  // Fetch match positions for profit/loss calculation
+  const { data: positionsData, isLoading: isLoadingPositions, refetch: refetchPositions } = useGetMatchPositionsQuery(
+    matchId || '',
+    { skip: !matchId || !authUser }
   )
 
   const userPendingBets = useMemo(() => {
@@ -194,8 +189,20 @@ export default function LiveMatchDetailPage() {
   }
 
 
-  // Performance: Removed manual polling - now using RTK Query pollingInterval
-  // This is more efficient as RTK Query handles deduplication and cleanup automatically
+  // Refetch pending bets on mount and periodically
+  useEffect(() => {
+    if (authUser) {
+      // Initial refetch
+      refetchPendingBets()
+      
+      // Set up periodic refetch every 30 seconds
+      const interval = setInterval(() => {
+        refetchPendingBets()
+      }, 30000)
+
+      return () => clearInterval(interval)
+    }
+  }, [authUser, refetchPendingBets])
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -223,14 +230,9 @@ export default function LiveMatchDetailPage() {
   }, [matchId])
 
   // Fetch markets for the event
-  // Performance: Use selectFromResult to prevent unnecessary re-renders
   const { data: marketsData, isLoading: isLoadingMarkets, error: marketsError, refetch: refetchMarkets } = useGetCricketMatchMarketsQuery(
     { eventId },
-    { 
-      skip: !eventId,
-      // Performance: Only refetch if data is stale (>2min) or args changed
-      refetchOnMountOrArgChange: true,
-    }
+    { skip: !eventId }
   )
 
   // Extract marketIds from markets response
@@ -240,42 +242,33 @@ export default function LiveMatchDetailPage() {
   }, [marketsData])
 
   // Fetch odds for all markets - uses direct API polling (backend cronjob updates odds)
-  // Performance: Use selectFromResult to only re-render when odds actually change
   const { data: oddsData, isLoading: isLoadingOdds, error: oddsError, refetch: refetchOdds } = useGetCricketMatchOddsQuery(
     { marketIds },
     { 
       skip: marketIds.length === 0,
-      // Performance: Poll every 5 seconds for live odds updates
-      pollingInterval: 5000,
-      // Performance: Only refetch on mount if data is stale (>10s)
-      refetchOnMountOrArgChange: true,
+      // Enable polling to get updated odds from backend cronjob
+      pollingInterval: 5000, // Poll every 5 seconds
     }
   )
 
 
   // Fetch bookmaker and fancy markets by eventId
-  // Performance: Polling enabled for live updates
   const { data: bookmakerFancyData, isLoading: isLoadingBookmakerFancy, error: bookmakerFancyError, refetch: refetchBookmakerFancy } = useGetCricketBookmakerFancyQuery(
     { eventId },
     { 
       skip: !eventId,
-      // Performance: Poll every 5 seconds for live market updates
-      pollingInterval: 5000,
-      // Performance: Only refetch on mount if data is stale (>10s)
-      refetchOnMountOrArgChange: true,
+      // Enable polling to get updated fancy/bookmaker markets
+      pollingInterval: 5000, // Poll every 5 seconds
     }
   )
 
   // Fetch scorecard data by eventId
-  // Performance: Polling enabled for live scorecard updates
   const { data: scorecardData, isLoading: isLoadingScorecard, error: scorecardError } = useGetCricketScorecardQuery(
     { eventId },
     {
       skip: !eventId,
-      // Performance: Poll every 5 seconds for live scorecard updates
-      pollingInterval: 5000,
-      // Performance: Only refetch on mount if data is stale (>15s)
-      refetchOnMountOrArgChange: true,
+      // Enable polling to get updated scorecard data
+      pollingInterval: 5000, // Poll every 5 seconds
     }
   )
 
@@ -645,8 +638,7 @@ export default function LiveMatchDetailPage() {
             team: section.nat || 'Unknown',
             selectionId: section.sid,
             back: normalizedBackOdds,
-            lay: normalizedLayOdds,
-            gstatus: section.gstatus // Add row-level gstatus
+            lay: normalizedLayOdds
           })
         })
 
@@ -665,10 +657,7 @@ export default function LiveMatchDetailPage() {
             marketId: marketEntry.mid,
             marketIdString: marketEntry.mid ? marketEntry.mid.toString() : undefined, // Convert mid to string for API calls
             gscode,
-            gstatus,
-            status: marketEntry.status, // Market status (OPEN, SUSPENDED, etc.)
-            isSuspended: marketEntry.isSuspended, // Market suspension flag
-            visible: marketEntry.visible // Market visibility flag
+            gstatus
           })
         }
       }
@@ -714,6 +703,68 @@ export default function LiveMatchDetailPage() {
 
     return sortedMarkets
   }, [allMarkets])
+
+  // Calculate profit/loss from positions API - ONLY for match odds markets
+  const positionsProfitLoss = useMemo(() => {
+    if (!positionsData || !Array.isArray(positionsData) || positionsData.length === 0) {
+      return {}
+    }
+
+    const profitLossMap: Record<number, Record<number, number>> = {}
+
+    bettingMarkets.forEach((market, marketIndex) => {
+      // Only calculate profit/loss for match odds markets - STRICT check by name only
+      const marketName = (market.name || '').toUpperCase().trim()
+      const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
+      
+      // Skip if not match odds market
+      if (!isMatchOdds) {
+        return
+      }
+
+      const marketProfitLoss: Record<number, number> = {}
+
+      // Initialize all runners to 0
+      market.rows.forEach(runner => {
+        if (runner.selectionId) {
+          marketProfitLoss[runner.selectionId] = 0
+        }
+      })
+
+      // Process each position
+      positionsData.forEach((position: any) => {
+        const positionSelectionId = position.selectionId
+        const pnlIfWin = Number(position.pnlIfWin || 0)
+        const pnlIfLose = Number(position.pnlIfLose || 0)
+
+        // For each runner in the market, calculate what happens if that runner wins
+        market.rows.forEach(marketRunner => {
+          if (!marketRunner.selectionId) return
+
+          const runnerId = marketRunner.selectionId
+          const positionId = positionSelectionId
+          const isPositionRunner = 
+            runnerId === positionId || 
+            String(runnerId) === String(positionId) ||
+            Number(runnerId) === Number(positionId)
+
+          if (isPositionRunner) {
+            // If this runner wins, add pnlIfWin (profit)
+            marketProfitLoss[runnerId] = (marketProfitLoss[runnerId] || 0) + pnlIfWin
+          } else {
+            // If another runner wins, add pnlIfLose (loss for this position)
+            marketProfitLoss[runnerId] = (marketProfitLoss[runnerId] || 0) + pnlIfLose
+          }
+        })
+      })
+
+      if (Object.keys(marketProfitLoss).length > 0) {
+        profitLossMap[marketIndex] = marketProfitLoss
+      }
+    })
+
+    return profitLossMap
+  }, [positionsData, bettingMarkets])
 
   // Detect odds changes and trigger blink animation
   useEffect(() => {
@@ -1088,9 +1139,10 @@ export default function LiveMatchDetailPage() {
             {displayMarkets.length > 0 ? (
               displayMarkets.map((market, marketIndex) => {
                 // Determine if this is a match odds market or fancy market
-                const marketName = (market.name || '').toUpperCase()
+                const marketName = (market.name || '').toUpperCase().trim()
                 const marketType = (market.gtype || '').toLowerCase()
-                const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS' || (marketType === 'match' && marketName !== 'TIED MATCH')
+                // STRICT check: Only "MATCH_ODDS" or "MATCH ODDS" by name, not by type
+                const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
                 const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
                 
                 const handleBetSelect = (bet: {
@@ -1108,8 +1160,10 @@ export default function LiveMatchDetailPage() {
                   setBetSlipOpen(true)
                 }
 
-                // Use MatchOdds component for match odds markets
+                // Use MatchOdds component for match odds markets ONLY
                 if (isMatchOdds) {
+                  // Only pass profitLoss for match odds markets
+                  const matchOddsProfitLoss = positionsProfitLoss[marketIndex] || {}
                   return (
                     <MatchOdds
                       key={marketIndex}
@@ -1119,6 +1173,7 @@ export default function LiveMatchDetailPage() {
                       isMobile={isMobile}
                       onBetSelect={handleBetSelect}
                       onRefresh={refetch}
+                      profitLoss={matchOddsProfitLoss}
                     />
                   )
                 }
@@ -1137,7 +1192,8 @@ export default function LiveMatchDetailPage() {
                   )
                 }
 
-                // Fallback to MatchOdds for other markets (bookmaker, etc.)
+                // Fallback to MatchOdds for other markets (bookmaker, 1st Innings, Completed, etc.)
+                // Explicitly pass empty profitLoss to ensure no profit/loss is displayed
                 return (
                   <MatchOdds
                     key={marketIndex}
@@ -1147,6 +1203,7 @@ export default function LiveMatchDetailPage() {
                     isMobile={isMobile}
                     onBetSelect={handleBetSelect}
                     onRefresh={market.name === 'MATCH_ODDS' ? refetch : undefined}
+                    profitLoss={{}}
                   />
                 )
               })
@@ -1289,7 +1346,10 @@ export default function LiveMatchDetailPage() {
         onClear={() => setSelectedBet(null)}
         matchId={numericMatchId}
         authUser={authUser}
-        onBetPlaced={refetchPendingBets}
+        onBetPlaced={() => {
+          refetchPendingBets()
+          refetchPositions()
+        }}
         isMobile={isMobile}
         eventId={currentEventId}
       />

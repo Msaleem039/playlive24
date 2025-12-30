@@ -49,8 +49,7 @@ export default function CricketTab() {
   const matches = (isConnected && liveMatches.length > 0) ? liveMatches : apiMatches
 
   // Filter and sort by iplay field: live matches (iplay === true) first, then upcoming (iplay === false)
-  // Performance: Memoize filtered lists to prevent unnecessary recalculations
-  const liveMatchesList = useMemo(() => matches.filter((m: any) => {
+  const liveMatchesList = matches.filter((m: any) => {
     // Use iplay field directly from API response
     if (typeof m?.iplay === 'boolean') {
       return m.iplay === true
@@ -65,9 +64,9 @@ export default function CricketTab() {
       m?.game_state === 3 ||
       m?.match_status === 'live'
     )
-  }), [matches])
+  })
 
-  const upcomingMatchesList = useMemo(() => matches.filter((m: any) => {
+  const upcomingMatchesList = matches.filter((m: any) => {
     // Use iplay field directly from API response
     if (typeof m?.iplay === 'boolean') {
       return m.iplay === false
@@ -85,19 +84,15 @@ export default function CricketTab() {
     const completedKeywords = ['completed', 'finished', 'result']
     const isCompleted = completedKeywords.some(k => statusText.includes(k))
     return !isLive && !isCompleted
-  }), [matches])
+  })
 
   // Sort: Live matches first (iplay === true), then upcoming (iplay === false)
   // Live matches are already filtered, so we just combine them
-  // Performance: Memoize filtered matches to prevent unnecessary recalculations
-  const filteredMatches = useMemo(() => {
-    return [...liveMatchesList, ...upcomingMatchesList]
-  }, [liveMatchesList, upcomingMatchesList])
-  
+  const filteredMatches = [...liveMatchesList, ...upcomingMatchesList]
+console.log("filteredMatches",filteredMatches)
   // Counts for header badge
-  // Performance: Memoize counts to prevent unnecessary recalculations
-  const liveCount = useMemo(() => liveMatchesList.length, [liveMatchesList.length])
-  const upcomingCount = useMemo(() => upcomingMatchesList.length, [upcomingMatchesList.length])
+  const liveCount = liveMatchesList.length
+  const upcomingCount = upcomingMatchesList.length
 
   // Extract and format odds from match markets
   const matchesWithOdds = useMemo(() => {
@@ -340,10 +335,13 @@ export default function CricketTab() {
           <span className="text-[0.75rem]">Cricket</span>
           {/* Live Count with Signal Icon */}
           {liveCount > 0 && (
-            <div className="flex items-center gap-1 bg-red-500 px-2 py-1 rounded-full text-xs font-bold">
+            <button 
+              onClick={() => router.push('/live?sport=cricket')}
+              className="flex items-center gap-1 bg-red-500 hover:bg-red-600 px-2 py-1 rounded-full text-xs font-bold transition-colors"
+            >
               <Radio className="w-3 h-3" />
               <span>{liveCount}</span>
-            </div>
+            </button>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -414,11 +412,8 @@ export default function CricketTab() {
               const total1Odds = match.formattedOdds?.total1 || '-'
               const total2Odds = match.formattedOdds?.total2 || '-'
 
-              // Check if match has valid ID (declare once, use everywhere)
-              const matchId = match.gmid ?? match.match_id ?? match.id ?? index
-              const canNavigate = !!matchId
-
               // Create unique keys for each odd type
+              const matchId = match.gmid ?? match.match_id ?? match.id ?? index
               const oddKeys = {
                 team1: `match-${matchId}-team1`,
                 team2: `match-${matchId}-team2`,
@@ -445,23 +440,26 @@ export default function CricketTab() {
                   })()
 
               const handleMatchClick = () => {
-                // Allow navigation for both live and upcoming matches
-                if (matchId) {
-                  // Set flag to auto-open TV when navigating from main page (only for live matches)
-                  if (isLive && typeof window !== 'undefined') {
-                    sessionStorage.setItem('fromMainPage', 'true')
+                if (isLive) {
+                  // Use gmid first (from new API), then match_id, then id
+                  const matchId = match.gmid ?? match.match_id ?? match.id
+                  if (matchId) {
+                    // Set flag to auto-open TV when navigating from main page
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.setItem('fromMainPage', 'true')
+                    }
+                    router.push(`/live/${matchId}`)
                   }
-                  router.push(`/live/${matchId}`)
                 }
               }
 
               return (
                 <div 
                   key={match.gmid ?? match.match_id ?? match.id ?? index} 
-                  onClick={canNavigate ? handleMatchClick : undefined}
+                  onClick={isLive ? handleMatchClick : undefined}
                   className={`grid grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 py-2 hover:bg-gray-50 items-center ${
                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  } ${canNavigate ? 'cursor-pointer' : ''}`}
+                  } ${isLive ? 'cursor-pointer' : ''}`}
                   style={{ minHeight: '60px' }}
                 >
                   {/* Match Details (left) with TV + time + teams */}

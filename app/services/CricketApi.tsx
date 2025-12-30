@@ -14,14 +14,6 @@ export const cricketApi = createApi({
     },
   }),
   tagTypes: ['CricketCompetitions', 'CricketMatches', 'Sports'],
-  // Performance: Keep unused data for 2 minutes (cricket data changes frequently)
-  keepUnusedDataFor: 120,
-  // Performance: Only refetch on mount if data is stale or args changed
-  refetchOnMountOrArgChange: false,
-  // Performance: Don't refetch on reconnect unless data is stale
-  refetchOnReconnect: false,
-  // Performance: Don't refetch on window focus unless data is stale
-  refetchOnFocus: false,
   endpoints: (builder) => ({
     // Get cricket competitions (what the API actually returns)
     getCricketCompetitions: builder.query<CricketCompetitionsResponse, void>({
@@ -66,8 +58,6 @@ export const cricketApi = createApi({
         };
       },
       providesTags: ['CricketMatches'],
-      // Performance: Markets don't change frequently, cache for 2 minutes
-      keepUnusedDataFor: 120,
     }),
     
     // Get cricket match odds by marketIds - uses direct API polling (backend has cronjob)
@@ -130,9 +120,6 @@ export const cricketApi = createApi({
         }
       },
       providesTags: ['CricketMatches'],
-      // Performance: Odds change frequently, keep cache short (10s)
-      // Component will use pollingInterval for updates
-      keepUnusedDataFor: 10,
     }),
     
     // Get bookmaker and fancy markets by eventId
@@ -147,9 +134,6 @@ export const cricketApi = createApi({
         };
       },
       providesTags: ['CricketMatches'],
-      // Performance: Bookmaker/fancy markets change frequently, keep cache short (10s)
-      // Component will use pollingInterval for updates
-      keepUnusedDataFor: 10,
     }),
     
     // Get all sports
@@ -161,17 +145,18 @@ export const cricketApi = createApi({
       providesTags: ['Sports'],
     }),
     
-    // Get cricket match scorecard by eventId
+    // Get cricket scorecard by eventId
     getCricketScorecard: builder.query<any, { eventId: string | number }>({
       query: ({ eventId }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('eventId', eventId.toString());
+        
         return {
-          url: `${API_END_POINTS.cricketScorecard}?eventId=${eventId}`,
+          url: `${API_END_POINTS.cricketScorecard}?${searchParams.toString()}`,
           method: 'GET',
         };
       },
       providesTags: ['CricketMatches'],
-      // Performance: Scorecard updates frequently during live matches, cache briefly
-      keepUnusedDataFor: 15,
     }),
   }),
 });

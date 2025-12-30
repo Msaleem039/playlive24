@@ -9,7 +9,6 @@ export interface MarketRow {
   back: BettingOption[]
   lay: BettingOption[]
   selectionId?: number
-  gstatus?: string // Row-level game status (ACTIVE, SUSPENDED, etc.)
 }
 
 export interface BettingMarket {
@@ -22,9 +21,6 @@ export interface BettingMarket {
   marketIdString?: string // Store the full marketId string for API calls
   gscode?: number // Game status code
   gstatus?: string // Game status (ACTIVE, SUSPENDED, etc.)
-  status?: string // Market status (OPEN, SUSPENDED, etc.)
-  isSuspended?: boolean // Market suspension flag
-  visible?: boolean // Market visibility flag
 }
 
 export interface BetHistoryItem {

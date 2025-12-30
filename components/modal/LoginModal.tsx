@@ -119,8 +119,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         toast.success("Login Successful", {
           description: `Welcome back, ${result.user?.username || result.user?.email || 'User'}!`
         })
-
-        // Redirect after successful login
+        
+        // Redirect based on user role using Next.js router for smooth navigation
         const resolvedRole = resolveRole(result.user.role)
         const normalizedRole = typeof resolvedRole === 'string'
           ? resolvedRole.toUpperCase().replace(/[-\s]+/g, "_")
@@ -138,9 +138,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         }
         
         console.log("Redirecting to:", redirectPath)
+        
+        // Use router.push for client-side navigation (no full page reload)
+        // Small delay ensures cookies are set before navigation
         setTimeout(() => {
           router.push(redirectPath)
-        }, 100)
+        }, 50)
       } else {
         console.error("Invalid response structure:", result)
         setError("Invalid response from server")
@@ -175,8 +178,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         toast.success("Login Successful", {
           description: `Welcome back, ${err.data.user?.username || err.data.user?.email || 'User'}!`
         })
-
-        // Redirect after successful login
+        
+        // Redirect based on user role using Next.js router for smooth navigation
         const resolvedRole = resolveRole(err.data.user.role)
         const normalizedRole = typeof resolvedRole === 'string'
           ? resolvedRole.toUpperCase().replace(/[-\s]+/g, "_")
@@ -184,19 +187,18 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
         
         let redirectPath = "/dashboard"
         
-        // Direct role-based redirects
+        // For SUPER_ADMIN, redirect to selection page
         if (normalizedRole === UserRole.SUPER_ADMIN) {
           redirectPath = "/super-admin/select"
-        } else if (normalizedRole === UserRole.SETTLEMENT_ADMIN) {
-          redirectPath = "/adminpanel/settlement-admin"
         } else {
           redirectPath = getDashboardPath(err.data.user.role)
         }
         
-        console.log("Redirecting to:", redirectPath)
+        // Use router.push for client-side navigation (no full page reload)
         setTimeout(() => {
           router.push(redirectPath)
-        }, 100)
+          router.refresh() // Force Next.js to revalidate and read cookies
+        }, 50)
       } else {
         const errorMsg = err.data?.message || err.message || "Login failed. Please try again."
         setError(errorMsg)

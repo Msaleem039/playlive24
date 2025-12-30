@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { X, RefreshCw, CheckCircle, Play, Activity } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
-import { useSettleMatchOddsMutation } from "@/app/services/Api"
+import { useSettleMatchOddsMutation ,useDeleteBetMutation} from "@/app/services/Api"
 import { toast } from "sonner"
 
 interface MatchOddsSettlementModalProps {
@@ -16,6 +16,7 @@ interface MatchOddsSettlementModalProps {
 
 export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: MatchOddsSettlementModalProps) {
   const [settleMatchOdds, { isLoading }] = useSettleMatchOddsMutation()
+  const [deleteBet, { isLoading: isDeleting }] = useDeleteBetMutation()
   
   const selectedBet = match?.selectedBet
   const settlementId = selectedBet?.settlementId || ""
@@ -54,16 +55,37 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
     }
   }, [isOpen, match])
 
+  const handleDelete = async () => {
+    if (!selectedBet?.id) {
+      toast.error("No bet selected for deletion")
+      return
+    }
+    
+    if (!confirm(`Are you sure you want to delete bet ID: ${selectedBet.id}? This action cannot be undone.`)) {
+      return
+    }
+    
+    try {
+      await deleteBet({ betId: selectedBet.id }).unwrap()
+      toast.success("Bet deleted successfully")
+      onSettle() // Refresh the settlement list
+      onClose()
+    } catch (error: any) {
+      console.error('[Delete Bet] Error:', error)
+      toast.error(error?.data?.error || error?.data?.message || "Failed to delete bet")
+    }
+  }
+
   const handleSettle = async () => {
     if (!eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()) {
       toast.error("Event ID, Market ID, and Winner Selection ID are required")
       return
     }
-
-    // If settling a specific bet, include betIds in the payload
+    // If settling a specific bet, warn that it will settle all bets in the market
+    // unless the backend supports betId parameter
     const betId = selectedBet?.id
     const confirmMessage = betId 
-      ? `This will settle Match Odds bet ID: ${betId}\n\nOnly this specific bet will be settled.\n\nContinue?`
+      ? `This will settle Match Odds bet ID: ${betId}\n\nNote: If the backend doesn't support single bet settlement, ALL bets in this market will be settled.\n\nContinue?`
       : `This will settle ALL Match Odds bets for this market.\n\nFancy and Bookmaker bets will NOT be affected.\n\nContinue?`
     
     if (!confirm(confirmMessage)) {
@@ -71,22 +93,23 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
     }
 
     try {
-      // Build payload with betIds array
+      // Include betId if available - backend may support it for single bet settlement
       const payload: any = {
         eventId: eventId.trim(),
         marketId: marketId.trim(),
         winnerSelectionId: winnerSelectionId.trim()
       }
       
-      // Add betIds array if we have a specific bet selected
+      // Add betId if we have a specific bet selected
       if (betId) {
-        payload.betIds = [String(betId)]
+        payload.betId = betId
+        payload.bet_id = betId // Try both formats
       }
       
       // Log the payload for debugging
-      console.log('[Match Odds Settlement] Payload:', payload)
-      console.log('[Match Odds Settlement] Selected Bet:', selectedBet)
-      console.log('[Match Odds Settlement] Match:', match)
+      // console.log('[Match Odds Settlement] Payload:', payload)
+      // console.log('[Match Odds Settlement] Selected Bet:', selectedBet)
+      // console.log('[Match Odds Settlement] Match:', match)
       
       await settleMatchOdds(payload).unwrap()
       toast.success(betId 
@@ -186,14 +209,15 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
           {/* Settlement Details */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <h3 className="font-semibold text-lg mb-4">Settlement Details</h3>
-            
+{/*             
             {selectedBet && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800 font-medium">
-                  ℹ️ <strong>Info:</strong> This will settle bet ID <strong>{selectedBet.id}</strong> using the betIds parameter.
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800 font-medium">
+                  ⚠️ <strong>Important:</strong> This will attempt to settle bet ID <strong>{selectedBet.id}</strong>. 
+                  If the backend doesn't support single bet settlement, <strong>ALL match odds bets in this market will be settled</strong>.
                 </p>
               </div>
-            )}
+            )} */}
             
             <div className="space-y-4">
               <div>
@@ -242,31 +266,51 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-          <Button
-            onClick={onClose}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2.5 rounded-lg"
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSettle}
-            disabled={isLoading || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-            className="px-6 py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
-                Settling...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2 inline" />
-                Settle Bets
-              </>
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center gap-3">
+          <div>
+            {selectedBet && (
+              <Button
+                onClick={handleDelete}
+                disabled={isDeleting || isLoading}
+                className="px-4 py-2.5 rounded-lg text-white font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Bet"
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={onClose}
+              className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2.5 rounded-lg"
+              disabled={isLoading || isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSettle}
+              disabled={isLoading || isDeleting || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
+              className="px-6 py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
+                  Settling...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2 inline" />
+                  Settle Bets
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
