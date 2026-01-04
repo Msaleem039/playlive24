@@ -26,9 +26,6 @@ const SportsHeader = memo(({ sport }: { sport: string }) => (
         <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
           F
         </button>
-        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
-          F
-        </button>
       </div>
     </div>
   </div>

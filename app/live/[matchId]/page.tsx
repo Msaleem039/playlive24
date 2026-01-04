@@ -333,7 +333,6 @@ export default function LiveMatchDetailPage() {
         pollingActive: marketIds.length > 0,
         markets: combinedMarkets.map((m: any) => ({ 
           marketId: m.marketId, 
-          marketName: m.marketName, 
           hasOdds: !!m.odds,
           isLive: m.odds?.inplay || false
         }))
@@ -381,11 +380,19 @@ export default function LiveMatchDetailPage() {
     }
     
     
-    // Filter out markets with "2nd" in mname, "Tied Match", "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", and "Match Odds Including Tie" markets (case-insensitive)
+    // Filter out markets with "2nd" in mname, "Tied Match", "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", "Match Odds Including Tie", "Completed Match", "Super Over", "Line" markets, "Over Total" markets (case-insensitive)
     const filteredMarkets = markets.filter((market: any) => {
       const mname = (market.mname || market.marketName || '').toLowerCase().trim()
       // Exclude markets with "2nd" in the name
       if (mname.includes('2nd')) {
+        return false
+      }
+      // Exclude markets with "Line" in the name (e.g., "1st Innings 6 Overs Line", "2nd Innings 15 Overs Line")
+      if (mname.includes('line')) {
+        return false
+      }
+      // Exclude markets with "Over Total" in the name (e.g., "1st Innings 6 Over Total")
+      if (mname.includes('over total')) {
         return false
       }
       // Exclude "Tied Match" markets (exact match or contains "tied match" as a phrase)
@@ -400,12 +407,20 @@ export default function LiveMatchDetailPage() {
       if (mname.includes('bookmaker big bash cup')) {
         return false
       }
-      // Exclude "Match Odds Including Tie" markets
-      if (mname === 'match odds including tie' || mname.includes('match odds including tie')) {
+      // Exclude "Match Odds Including Tie" markets (including variations like "Match Odds (Inc. Tie)")
+      if (mname === 'match odds including tie' || mname.includes('match odds including tie') || mname.includes('match odds (inc. tie)')) {
         return false
       }
       // Exclude "Match Odds" markets (with space)
       if (mname === 'match odds') {
+        return false
+      }
+      // Exclude "Completed Match" markets
+      if (mname === 'completed match' || mname.includes('completed match')) {
+        return false
+      }
+      // Exclude "Super Over" markets
+      if (mname === 'super over' || mname.includes('super over')) {
         return false
       }
       // Exclude match-type markets that are not MATCH_ODDS

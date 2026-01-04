@@ -69,7 +69,7 @@ export default function SuperAdminSelectClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Admin Panel Option */}
             <Link
-              href="/adminpanel"
+              href="/adminpanel/settlement-admin"
               className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-200"
             >
               <div className="bg-black text-white px-4 py-2">

@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { X, RefreshCw, CheckCircle, Play, Activity } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
-import { useSettleMatchOddsMutation ,useDeleteBetMutation} from "@/app/services/Api"
+import { useSettleMatchOddsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
 interface MatchOddsSettlementModalProps {
@@ -16,105 +16,148 @@ interface MatchOddsSettlementModalProps {
 
 export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: MatchOddsSettlementModalProps) {
   const [settleMatchOdds, { isLoading }] = useSettleMatchOddsMutation()
-  const [deleteBet, { isLoading: isDeleting }] = useDeleteBetMutation()
   
-  const selectedBet = match?.selectedBet
-  const settlementId = selectedBet?.settlementId || ""
-  
-  // Extract marketId and selectionId from settlementId (format: "matchId_marketId" or "matchId_selectionId")
-  const extractIdsFromSettlementId = (settlementId: string) => {
-    if (!settlementId || !settlementId.includes("_")) return { marketId: "", selectionId: "" }
-    const parts = settlementId.split("_")
-    return {
-      marketId: parts[1] || "",
-      selectionId: parts[1] || ""
+  // Extract marketId from first bet's settlementId (format: "matchId_marketId")
+  const extractMarketId = () => {
+    const bets = match?.matchOdds?.bets || []
+    if (bets.length > 0 && bets[0].settlementId) {
+      const parts = bets[0].settlementId.split("_")
+      return parts[1] || ""
     }
+    return ""
   }
 
   const [eventId, setEventId] = useState(match?.eventId || "")
   const [marketId, setMarketId] = useState("")
   const [winnerSelectionId, setWinnerSelectionId] = useState("")
 
+  // Get runners from match data - ensure we get all runners
+  const runners = useMemo(() => {
+    // Try multiple paths to get runners data
+    let matchRunners: any[] = []
+    
+    // First try: match.matchOdds.runners (primary source)
+    if (match?.matchOdds?.runners && Array.isArray(match.matchOdds.runners)) {
+      matchRunners = [...match.matchOdds.runners] // Create a copy
+    } 
+    // Second try: match.runners (fallback)
+    else if (match?.runners && Array.isArray(match.runners)) {
+      matchRunners = [...match.runners] // Create a copy
+    }
+    
+    // Debug: Log to see what we're getting
+    if (isOpen) {
+      console.log('[MatchOddsSettlementModal] ===== RUNNERS DEBUG START =====')
+      console.log('[MatchOddsSettlementModal] Full match object:', JSON.parse(JSON.stringify(match)))
+      console.log('[MatchOddsSettlementModal] match.matchOdds:', match?.matchOdds)
+      console.log('[MatchOddsSettlementModal] match.matchOdds?.runners:', match?.matchOdds?.runners)
+      console.log('[MatchOddsSettlementModal] match.matchOdds?.runners type:', typeof match?.matchOdds?.runners)
+      console.log('[MatchOddsSettlementModal] match.matchOdds?.runners isArray:', Array.isArray(match?.matchOdds?.runners))
+      console.log('[MatchOddsSettlementModal] Raw matchRunners length:', matchRunners.length)
+      console.log('[MatchOddsSettlementModal] Raw matchRunners:', JSON.parse(JSON.stringify(matchRunners)))
+      matchRunners.forEach((r, i) => {
+        console.log(`[MatchOddsSettlementModal] Runner ${i}:`, {
+          raw: r,
+          selectionId: r?.selectionId,
+          selectionIdType: typeof r?.selectionId,
+          name: r?.name,
+          runnerName: r?.runnerName,
+          keys: r ? Object.keys(r) : 'null'
+        })
+      })
+    }
+    
+    // Return all valid runners - be very permissive with validation
+    // Only filter out truly invalid entries (null, undefined, or missing selectionId entirely)
+    const validRunners = matchRunners.filter((runner: any, index: number) => {
+      // Very permissive check: just ensure runner exists and has some form of selectionId
+      const hasSelectionId = runner != null && 
+                            runner !== undefined &&
+                            (runner.selectionId !== null && runner.selectionId !== undefined)
+      
+      if (!hasSelectionId && isOpen) {
+        console.warn(`[MatchOddsSettlementModal] ❌ Invalid runner filtered out at index ${index}:`, {
+          runner,
+          selectionId: runner?.selectionId,
+          selectionIdType: typeof runner?.selectionId,
+          isNull: runner?.selectionId === null,
+          isUndefined: runner?.selectionId === undefined
+        })
+      }
+      if (isOpen && hasSelectionId) {
+        console.log(`[MatchOddsSettlementModal] ✅ Valid runner at index ${index}:`, {
+          selectionId: runner.selectionId,
+          selectionIdType: typeof runner.selectionId,
+          name: runner.name || runner.runnerName || 'No name',
+          fullRunner: runner
+        })
+      }
+      return hasSelectionId
+    })
+    
+    // Deduplicate by selectionId (keep first occurrence)
+    // Convert all selectionIds to strings for consistent comparison
+    const seenSelectionIds = new Set<string>()
+    const uniqueRunners = validRunners.filter((runner: any) => {
+      const selectionId = String(runner.selectionId)
+      if (seenSelectionIds.has(selectionId)) {
+        if (isOpen) {
+          console.warn(`[MatchOddsSettlementModal] 🔄 Duplicate runner filtered out (selectionId: ${selectionId}):`, runner)
+        }
+        return false
+      }
+      seenSelectionIds.add(selectionId)
+      return true
+    })
+    
+    if (isOpen) {
+      console.log('[MatchOddsSettlementModal] Valid runners count (before dedup):', validRunners.length)
+      console.log('[MatchOddsSettlementModal] Unique runners count (after dedup):', uniqueRunners.length)
+      console.log('[MatchOddsSettlementModal] Final unique runners:', uniqueRunners.map((r, i) => 
+        `${i + 1}. ${r.name || r.runnerName || 'Unknown'} (ID: ${r.selectionId})`
+      ))
+      console.log('[MatchOddsSettlementModal] ===== RUNNERS DEBUG END =====')
+    }
+    
+    return uniqueRunners
+  }, [match?.matchOdds?.runners, match?.runners, match, isOpen])
+
   useEffect(() => {
     if (isOpen && match) {
-      const bet = match?.selectedBet
-      const settlementId = bet?.settlementId || ""
-      const extracted = extractIdsFromSettlementId(settlementId)
-      
       setEventId(match.eventId || "")
-      if (bet) {
-        // Use bet's own marketId and selectionId if available, otherwise extract from settlementId
-        setMarketId(bet.marketId || bet.market_id || extracted.marketId)
-        // For winnerSelectionId, use the bet's selectionId (the team/option this bet is on)
-        // This identifies which selection won, which determines if this specific bet wins
-        setWinnerSelectionId(bet.selectionId || bet.selection_id || extracted.selectionId)
+      setMarketId(extractMarketId())
+      // Set default to first runner's selectionId if available
+      if (runners.length > 0 && runners[0].selectionId) {
+        setWinnerSelectionId(String(runners[0].selectionId))
       } else {
-        setMarketId("")
         setWinnerSelectionId("")
       }
     }
-  }, [isOpen, match])
-
-  const handleDelete = async () => {
-    if (!selectedBet?.id) {
-      toast.error("No bet selected for deletion")
-      return
-    }
-    
-    if (!confirm(`Are you sure you want to delete bet ID: ${selectedBet.id}? This action cannot be undone.`)) {
-      return
-    }
-    
-    try {
-      await deleteBet({ betId: selectedBet.id }).unwrap()
-      toast.success("Bet deleted successfully")
-      onSettle() // Refresh the settlement list
-      onClose()
-    } catch (error: any) {
-      console.error('[Delete Bet] Error:', error)
-      toast.error(error?.data?.error || error?.data?.message || "Failed to delete bet")
-    }
-  }
+  }, [isOpen, match, runners])
 
   const handleSettle = async () => {
     if (!eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()) {
-      toast.error("Event ID, Market ID, and Winner Selection ID are required")
+      toast.error("Event ID, Market ID, and Winner Selection are required")
       return
     }
-    // If settling a specific bet, warn that it will settle all bets in the market
-    // unless the backend supports betId parameter
-    const betId = selectedBet?.id
-    const confirmMessage = betId 
-      ? `This will settle Match Odds bet ID: ${betId}\n\nNote: If the backend doesn't support single bet settlement, ALL bets in this market will be settled.\n\nContinue?`
-      : `This will settle ALL Match Odds bets for this market.\n\nFancy and Bookmaker bets will NOT be affected.\n\nContinue?`
+    
+    const betCount = match?.matchOdds?.count || 0
+    const totalAmount = match?.matchOdds?.totalAmount || 0
+    const confirmMessage = `This will settle ALL ${betCount} Match Odds bet(s) for this market (Total: Rs${totalAmount.toLocaleString()}).\n\nFancy and Bookmaker bets will NOT be affected.\n\nContinue?`
     
     if (!confirm(confirmMessage)) {
       return
     }
 
     try {
-      // Include betId if available - backend may support it for single bet settlement
-      const payload: any = {
+      const payload = {
         eventId: eventId.trim(),
         marketId: marketId.trim(),
         winnerSelectionId: winnerSelectionId.trim()
       }
       
-      // Add betId if we have a specific bet selected
-      if (betId) {
-        payload.betId = betId
-        payload.bet_id = betId // Try both formats
-      }
-      
-      // Log the payload for debugging
-      // console.log('[Match Odds Settlement] Payload:', payload)
-      // console.log('[Match Odds Settlement] Selected Bet:', selectedBet)
-      // console.log('[Match Odds Settlement] Match:', match)
-      
       await settleMatchOdds(payload).unwrap()
-      toast.success(betId 
-        ? `Match odds bet ${betId} settled successfully.` 
-        : "Match odds bets settled successfully. Fancy and Bookmaker bets remain unsettled.")
+      toast.success(`Match odds bets settled successfully. ${betCount} bet(s) processed.`)
       onSettle()
       onClose()
     } catch (error: any) {
@@ -137,13 +180,8 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
               <Play className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">
-                Settle Match Odds {match?.selectedBet ? "Bet" : "Bets"}
-              </h2>
-              <p className="text-sm text-white/80">{match?.matchTitle || match?.homeTeam || "Match"}</p>
-              {match?.selectedBet && (
-                <p className="text-xs text-white/60 mt-1">Bet ID: {match.selectedBet.id}</p>
-              )}
+              <h2 className="text-xl font-bold">Settle Match Odds</h2>
+              <p className="text-sm text-white/80">{match?.matchTitle || `${match?.homeTeam || ""} vs ${match?.awayTeam || ""}` || "Match"}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
@@ -153,57 +191,30 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {/* Bet/Market Information */}
+          {/* Market Information */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-200">
             <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#00A66E]" />
-              {match?.selectedBet ? "Bet Information" : "Market Information"}
+              Market Summary
             </h3>
-            {match?.selectedBet ? (
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Bet ID:</span>
-                  <span className="ml-2 font-mono font-semibold">{match.selectedBet.id || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{match.selectedBet.amount?.toLocaleString() || 0}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Odds:</span>
-                  <span className="ml-2 font-semibold">{match.selectedBet.odds || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Bet Type:</span>
-                  <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
-                    match.selectedBet.betType === "BACK" ? "bg-green-100 text-green-800" :
-                    match.selectedBet.betType === "LAY" ? "bg-red-100 text-red-800" :
-                    "bg-gray-100 text-gray-800"
-                  }`}>
-                    {match.selectedBet.betType || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Bet Name:</span>
-                  <span className="ml-2 font-semibold">{match.selectedBet.betName || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Settlement ID:</span>
-                  <span className="ml-2 font-mono text-xs">{match.selectedBet.settlementId || "N/A"}</span>
-                </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Bets Count:</span>
+                <span className="ml-2 font-semibold">{marketData?.count || 0}</span>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Bets Count:</span>
-                  <span className="ml-2 font-semibold">{marketData?.count || 0}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Total Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
-                </div>
+              <div>
+                <span className="text-gray-600">Total Amount:</span>
+                <span className="ml-2 font-semibold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
               </div>
-            )}
+              <div>
+                <span className="text-gray-600">Match ID:</span>
+                <span className="ml-2 font-mono text-xs">{match?.matchId || "N/A"}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Event ID:</span>
+                <span className="ml-2 font-mono text-xs">{match?.eventId || "N/A"}</span>
+              </div>
+            </div>
           </div>
 
           {/* Settlement Details */}
@@ -250,67 +261,93 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Winner Selection ID <span className="text-red-500">*</span>
+                  Winner Selection <span className="text-red-500">*</span>
+                  {runners && runners.length > 0 && (
+                    <span className="ml-2 text-xs text-gray-500 font-normal">({runners.length} options available)</span>
+                  )}
                 </label>
-                <Input
-                  type="text"
-                  value={winnerSelectionId}
-                  onChange={(e) => setWinnerSelectionId(e.target.value)}
-                  placeholder="Enter winner selection ID"
-                  className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
-                  required
-                />
+                {runners && runners.length > 0 ? (
+                  <div className="relative">
+                    <select
+                      value={winnerSelectionId}
+                      onChange={(e) => setWinnerSelectionId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A66E] focus:border-[#00A66E] bg-white text-sm text-gray-900 appearance-none cursor-pointer"
+                      required
+                      style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5em 1.5em',
+                        paddingRight: '2.5rem'
+                      }}
+                    >
+                      <option value="" disabled>-- Select winner --</option>
+                      {runners.map((runner: any, index: number) => {
+                        if (!runner || !runner.selectionId) {
+                          console.warn(`[MatchOddsSettlementModal] Skipping invalid runner at index ${index}:`, runner)
+                          return null
+                        }
+                        const displayName = runner.name || runner.runnerName || `Selection ${runner.selectionId}`
+                        const selectionId = String(runner.selectionId)
+                        console.log(`[MatchOddsSettlementModal] Rendering option ${index + 1}:`, { displayName, selectionId })
+                        return (
+                          <option 
+                            key={`runner-opt-${runner.selectionId}-${index}`} 
+                            value={selectionId}
+                          >
+                            {displayName} (ID: {runner.selectionId})
+                          </option>
+                        )
+                      })}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {runners.length} runner{runners.length !== 1 ? 's' : ''} available
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <Input
+                      type="text"
+                      value={winnerSelectionId}
+                      onChange={(e) => setWinnerSelectionId(e.target.value)}
+                      placeholder="Enter winner selection ID"
+                      className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">No runners available. Please enter selection ID manually.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center gap-3">
-          <div>
-            {selectedBet && (
-              <Button
-                onClick={handleDelete}
-                disabled={isDeleting || isLoading}
-                className="px-4 py-2.5 rounded-lg text-white font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete Bet"
-                )}
-              </Button>
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end items-center gap-3">
+          <Button
+            onClick={onClose}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2.5 rounded-lg"
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSettle}
+            disabled={isLoading || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
+            className="px-6 py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
+                Settling...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2 inline" />
+                Settle All Bets
+              </>
             )}
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={onClose}
-              className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2.5 rounded-lg"
-              disabled={isLoading || isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSettle}
-              disabled={isLoading || isDeleting || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-              className="px-6 py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
-                  Settling...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4 mr-2 inline" />
-                  Settle Bets
-                </>
-              )}
-            </Button>
-          </div>
+          </Button>
         </div>
       </div>
     </div>

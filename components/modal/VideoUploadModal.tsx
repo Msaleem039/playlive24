@@ -7,6 +7,7 @@ import { Input } from "@/components/input"
 import { Button } from "@/components/utils/button"
 import { useUpdateSiteVideoMutation } from "@/app/services/Api"
 import { toast } from "sonner"
+import Cookies from "js-cookie"
 
 interface VideoUploadModalProps {
   isOpen: boolean
@@ -25,10 +26,11 @@ export default function VideoUploadModal({
   const [videoUrl, setVideoUrl] = useState(currentVideoUrl || "")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  // Use RTK Query mutation for both file and URL upload
-  const [updateSiteVideo, { isLoading: isUploading }] = useUpdateSiteVideoMutation()
+  // Use RTK Query mutation only for URL upload
+  const [updateSiteVideo] = useUpdateSiteVideoMutation()
 
   const resetState = () => {
     setVideoUrl(currentVideoUrl || "")
@@ -73,11 +75,58 @@ export default function VideoUploadModal({
           return
         }
 
-        // Upload file directly via RTK Query
-        await updateSiteVideo({ file: selectedFile }).unwrap()
+        setIsUploading(true)
+        setError(null)
+
+        // Create FormData for file upload
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+
+        // Upload file directly using fetch
+        const token = Cookies.get('token')
+        const response = await fetch('http://localhost:3000/site-video/upload', {
+          method: 'POST',
+          headers: {
+            'authorization': token ? `Bearer ${token}` : '',
+          },
+          // Don't set Content-Type - browser will set it automatically with boundary for FormData
+          body: formData,
+        })
+
+        if (!response.ok) {
+          // Handle specific status codes
+          if (response.status === 413) {
+            const errorMsg = 'File size is too large. The server has a size limit. Please try a smaller file.'
+            setError(errorMsg)
+            toast.error("File too large", {
+              description: errorMsg,
+            })
+            setIsUploading(false)
+            return
+          }
+
+          // Try to get error message from response
+          let errorData
+          try {
+            errorData = await response.json()
+          } catch {
+            errorData = { message: `Server error: ${response.status} ${response.statusText}` }
+          }
+
+          const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.status} ${response.statusText}`
+          setError(errorMessage)
+          toast.error("Video upload failed", {
+            description: errorMessage,
+          })
+          setIsUploading(false)
+          return
+        }
+
+        // Success
         toast.success("Video uploaded successfully")
         resetState()
         onClose()
+        setIsUploading(false)
       } else {
         if (!videoUrl.trim()) {
           setError("Please enter a video URL")
@@ -92,13 +141,16 @@ export default function VideoUploadModal({
           return
         }
 
+        setIsUploading(true)
         // Upload URL directly via RTK Query
         await updateSiteVideo({ videoUrl: videoUrl.trim() }).unwrap()
         toast.success("Video URL updated successfully")
         resetState()
         onClose()
+        setIsUploading(false)
       }
     } catch (error: any) {
+      setIsUploading(false)
       const errorMessage = 
         error?.data?.message || 
         error?.data?.error || 

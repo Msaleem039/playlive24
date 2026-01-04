@@ -158,6 +158,27 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['Settlement'] as any,
     }),
+    getPendingMarkets: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getPendingMarkets,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+    getPendingFancyMarkets: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getPendingFancyMarkets,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
+    getPendingBookmakerMarkets: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getPendingBookmakerMarkets,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
 
     getPendingSettlementsByMatch: builder.query({
       query: (matchId: string | number) => ({
@@ -289,7 +310,7 @@ export const api = SplitApiSettings.injectEndpoints({
     updateSiteVideo: builder.mutation({
       query: (data) => ({
         url: API_END_POINTS.updateSiteVideo,
-        method: "PUT",
+        method: "POST",
         body: data,
       }),
     }),
@@ -324,6 +345,9 @@ export const {
 
     /////////////////////////////<===SETTLEMENT QUERIES===>//////////////////////////////
     useGetPendingSettlementsQuery,
+    useGetPendingMarketsQuery,
+    useGetPendingFancyMarketsQuery,
+    useGetPendingBookmakerMarketsQuery,
     useGetPendingSettlementsByMatchQuery,
     useGetSettlementDetailsQuery,
     useGetSettlementBetsQuery,

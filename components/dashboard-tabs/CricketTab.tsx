@@ -440,26 +440,24 @@ console.log("filteredMatches",filteredMatches)
                   })()
 
               const handleMatchClick = () => {
-                if (isLive) {
-                  // Use gmid first (from new API), then match_id, then id
-                  const matchId = match.gmid ?? match.match_id ?? match.id
-                  if (matchId) {
-                    // Set flag to auto-open TV when navigating from main page
-                    if (typeof window !== 'undefined') {
-                      sessionStorage.setItem('fromMainPage', 'true')
-                    }
-                    router.push(`/live/${matchId}`)
+                // Use gmid first (from new API), then match_id, then id
+                const matchId = match.gmid ?? match.match_id ?? match.id
+                if (matchId) {
+                  // Set flag to auto-open TV when navigating from main page (only for live matches)
+                  if (typeof window !== 'undefined' && isLive) {
+                    sessionStorage.setItem('fromMainPage', 'true')
                   }
+                  router.push(`/live/${matchId}`)
                 }
               }
 
               return (
                 <div 
                   key={match.gmid ?? match.match_id ?? match.id ?? index} 
-                  onClick={isLive ? handleMatchClick : undefined}
-                  className={`grid grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 py-2 hover:bg-gray-50 items-center ${
+                  onClick={handleMatchClick}
+                  className={`grid grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 py-2 hover:bg-gray-50 items-center cursor-pointer ${
                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  } ${isLive ? 'cursor-pointer' : ''}`}
+                  }`}
                   style={{ minHeight: '60px' }}
                 >
                   {/* Match Details (left) with TV + time + teams */}

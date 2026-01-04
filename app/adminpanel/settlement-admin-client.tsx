@@ -12,6 +12,8 @@ export default function SettlementAdminPanelClient() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isSettlementAdmin = userRole === 'SETTLEMENT_ADMIN'
+  const isSuperAdmin = userRole === 'SUPER_ADMIN'
+  const canAccess = isSettlementAdmin || isSuperAdmin
 
   useEffect(() => {
     // Client-side role check
@@ -20,15 +22,15 @@ export default function SettlementAdminPanelClient() {
       return
     }
 
-    // Only SETTLEMENT_ADMIN role can access
-    if (!isSettlementAdmin) {
+    // SETTLEMENT_ADMIN and SUPER_ADMIN roles can access
+    if (!canAccess) {
       router.push('/dashboard')
       return
     }
-  }, [authUser, isSettlementAdmin, router])
+  }, [authUser, canAccess, router])
 
   // Show loader while checking auth
-  if (!authUser || !isSettlementAdmin) {
+  if (!authUser || !canAccess) {
     return <Loader />
   }
 

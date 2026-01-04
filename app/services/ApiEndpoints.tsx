@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -55,6 +55,9 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===SETTLEMENT===>//////////////////////////////
     getPendingSettlements: `${BASE_URL}/admin/settlement/pending`,
+    getPendingMarkets: `${BASE_URL}/admin/settlement/pending/markets`,
+    getPendingFancyMarkets: `${BASE_URL}/admin/settlement/pending/fancy-markets`,
+    getPendingBookmakerMarkets: `${BASE_URL}/admin/settlement/pending/bookmaker-markets`,
     getPendingSettlementsByMatch: `${BASE_URL}/settlement/pending/match/:matchId`,
     getSettlementDetails: `${BASE_URL}/settlement/details`,
     getSettlementBets: `${BASE_URL}/settlement/bets`,

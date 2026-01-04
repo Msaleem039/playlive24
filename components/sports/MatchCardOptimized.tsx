@@ -2,7 +2,7 @@
 import { memo } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Tv, Trophy, Users, MapPin, Pin, Star, Sparkles } from "lucide-react"
+import { Tv } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
 
 interface MatchCardOptimizedProps {
@@ -52,10 +52,9 @@ const MatchCardOptimized = memo(({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors px-4 cursor-pointer"
+      className="border-b border-gray-200 py-2 hover:bg-gray-50 transition-colors px-4 cursor-pointer"
     >
-      <div className="flex items-center justify-between">
-        
+      <div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-sm text-gray-600 font-medium">
@@ -74,7 +73,7 @@ const MatchCardOptimized = memo(({
             )}
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium text-gray-800 truncate">
               {match?.title}
             </span>
@@ -128,86 +127,9 @@ const MatchCardOptimized = memo(({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Trophy className="w-3 h-3" />
-              <span>{match?.competition?.name || "--"}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span>{match?.venue?.name || "--"}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              <span>{match?.format_str || "--"}</span>
-            </div>
-          </div>
-
           {match?.result && (
             <div className="text-sm text-[#00A66E] font-medium mt-2">
               {match?.result}
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar Info with Action Buttons */}
-        <div className="flex flex-col items-end gap-2 ml-4">
-          <div className="flex items-center gap-1">
-            {onPin && matchId && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onPin(matchId)
-                }}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                title="Pin match"
-              >
-                <Pin className="w-4 h-4 text-gray-500" />
-              </button>
-            )}
-            {onBookmark && matchId && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onBookmark(matchId)
-                }}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                title="Bookmark match"
-              >
-                <Star className="w-4 h-4 text-gray-500" />
-              </button>
-            )}
-            {onFantasy && matchId && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onFantasy(matchId)
-                }}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                title="Fantasy match"
-              >
-                <Sparkles className="w-4 h-4 text-gray-500" />
-              </button>
-            )}
-          </div>
-          
-          <div className="text-xs text-gray-500">ID: {match?.match_id}</div>
-          <div className="text-xs text-gray-500">{match?.format_str}</div>
-
-          {(typeof match?.iplay === 'boolean' ? match.iplay === true : match?.status === 1 || match?.status === 3 || match?.status === 5) && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-600 font-medium">Live</span>
-            </div>
-          )}
-
-          {match?.commentary === 1 && (
-            <div className="flex items-center gap-1 text-blue-600">
-              <Tv className="w-3 h-3" />
-              <span className="text-xs">Commentary</span>
             </div>
           )}
         </div>

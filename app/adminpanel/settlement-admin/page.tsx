@@ -10,9 +10,9 @@ export default async function SettlementAdminPage() {
     redirect('/login')
   }
 
-  // Check role - only SETTLEMENT_ADMIN can access
+  // Check role - SETTLEMENT_ADMIN and SUPER_ADMIN can access
   const role = session.user.role?.toUpperCase().replace(/[-\s]+/g, '_')
-  if (role !== 'SETTLEMENT_ADMIN') {
+  if (role !== 'SETTLEMENT_ADMIN' && role !== 'SUPER_ADMIN') {
     redirect('/dashboard')
   }
 

@@ -164,23 +164,28 @@ export default function BetSlipModal({
     // FANCY (RUN / POINT MARKET)
     // Use 'size' field (percentage) for calculation, not 'odds' field
     // size represents the market rate percentage (e.g., 100, 90, 120)
+    // odds represents the line (e.g., 65 runs, 26 balls) - DO NOT use for P/L calculation
     // If size is 100 and bet value is 100: profit = 100, loss = 100
     // If size is 120 and bet value is 100: profit = 120 (120% of 100), loss = 100
     // =========================
     else if (gtype === 'fancy' || gtype === 'fancy1' || gtype === 'fancy2') {
-      // For fancy markets, we need to get the size from selectedBet
-      // If size is not provided, fallback to odds (for backward compatibility)
-      // But ideally size should be passed from the bet selection
-      const marketRate = (selectedBet?.size ?? parseFloat(odds.toString())) || 100
-  
-      if (betType === 'back') {
-        // Back: profit = stake * (marketRate / 100), loss = stake
-        win = (stake * marketRate) / 100
-        loss = stake
+      // Strict Fancy Rate Rule: Only use size, never fallback to odds
+      // If size is missing or invalid, set win/loss to 0
+      if (!selectedBet?.size || selectedBet.size <= 0) {
+        win = 0
+        loss = 0
       } else {
-        // Lay: profit = stake, loss = stake * (marketRate / 100)
-        win = stake
-        loss = (stake * marketRate) / 100
+        const rate = selectedBet.size
+  
+        if (betType === 'back') {
+          // Back: profit = stake * (rate / 100), loss = stake
+          win = (stake * rate) / 100
+          loss = stake
+        } else {
+          // Lay: profit = stake, loss = stake * (rate / 100)
+          win = stake
+          loss = (stake * rate) / 100
+        }
       }
     }
   
