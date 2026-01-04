@@ -84,7 +84,7 @@ export default function VideoUploadModal({
 
         // Upload file directly using fetch
         const token = Cookies.get('token')
-        const response = await fetch('http://localhost:3000/site-video/upload', {
+        const response = await fetch('https://api.playlive24.com/site-video/upload', {
           method: 'POST',
           headers: {
             'authorization': token ? `Bearer ${token}` : '',
