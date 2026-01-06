@@ -12,6 +12,7 @@ import { useGetMyPendingBetsQuery, useGetMatchPositionsQuery } from '@/app/servi
 import BetSlipModal from '@/components/modal/BetSlipModal'
 import MatchOdds from '@/components/markets/MatchOdds'
 import FancyDetail from '@/components/markets/FancyDetail'
+import { calculatePositions, type Bet } from '@/lib/utils/positionCalculations'
 import type {
   BettingOption,
   MarketRow,
@@ -97,6 +98,9 @@ export default function LiveMatchDetailPage() {
   const BACK_COLUMNS = 1
   const LAY_COLUMNS = 1
 
+  // Optimistic state for pending bets (positions are recalculated automatically)
+  const [optimisticBets, setOptimisticBets] = useState<Bet[]>([])
+
   // Pending settlements/bets for logged-in user across matches
   const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(undefined)
 
@@ -162,24 +166,38 @@ export default function LiveMatchDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {userPendingBets.map((bet: any, idx: number) => (
-                  <tr key={bet.id || idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-2">
-                      <div className="font-semibold text-gray-900 truncate">
-                        {bet.betName || 'Bet'}
-                      </div>
-                      <div className="text-[10px] text-gray-600 truncate mt-0.5">
-                        {bet.marketName || bet.gtype || 'MATCH'}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-center text-gray-900 font-medium">
-                      Rs {(bet.amount || bet.betValue || 0).toLocaleString()}
-                    </td>
-                    <td className="px-3 py-2 text-center text-gray-900 font-medium">
-                      {bet.odds ?? bet.betRate ?? '--'}
-                    </td>
-                  </tr>
-                ))}
+                {userPendingBets.map((bet: any, idx: number) => {
+                  // Determine bet type (can be 'BACK', 'LAY', 'back', or 'lay')
+                  const betType = (bet.betType ?? bet.bet_type ?? '').toLowerCase()
+                  const isLay = betType === 'lay'
+                  const isBack = betType === 'back'
+                  
+                  // Set background color based on bet type
+                  const bgColor = isLay ? '#FCCEE8' : isBack ? '#BEDBFF' : 'transparent'
+                  
+                  return (
+                    <tr 
+                      key={bet.id || idx} 
+                      className="border-b border-gray-100 transition-colors"
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      <td className="px-3 py-2">
+                        <div className="font-semibold text-gray-900 truncate">
+                          {bet.betName || 'Bet'}
+                        </div>
+                        <div className="text-[10px] text-gray-600 truncate mt-0.5">
+                          {bet.marketName || bet.gtype || 'MATCH'}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center text-gray-900 font-medium">
+                        Rs {(bet.amount || bet.betValue || 0).toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-center text-gray-900 font-medium">
+                        {bet.odds ?? bet.betRate ?? '--'}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}
@@ -719,6 +737,114 @@ export default function LiveMatchDetailPage() {
     return sortedMarkets
   }, [allMarkets])
 
+  // Extract all selection IDs from betting markets for position calculation
+  const allSelections = useMemo(() => {
+    const selections: string[] = []
+    bettingMarkets.forEach((market) => {
+      market.rows.forEach((row) => {
+        if (row.selectionId) {
+          const selectionIdStr = String(row.selectionId)
+          if (!selections.includes(selectionIdStr)) {
+            selections.push(selectionIdStr)
+          }
+        }
+      })
+    })
+    return selections
+  }, [bettingMarkets])
+
+  // Convert bet from BetSlipModal format to calculatePositions Bet format
+  const convertBetToPositionFormat = (
+    bet: {
+      selectionId?: number
+      type: 'back' | 'lay'
+      odds: string
+      stake?: string
+      betvalue?: number
+    }
+  ): Bet | null => {
+    if (!bet.selectionId) return null
+
+    const stake = bet.betvalue || parseFloat(bet.stake || '0')
+    const odds = parseFloat(bet.odds || '0')
+
+    if (isNaN(stake) || stake <= 0 || isNaN(odds) || odds <= 0) {
+      return null
+    }
+
+    return {
+      selectionId: String(bet.selectionId),
+      betType: bet.type.toUpperCase() as 'BACK' | 'LAY',
+      odds,
+      stake
+    }
+  }
+
+  // Convert userPendingBets to Bet format for position calculation
+  const pendingBetsForCalculation = useMemo(() => {
+    const bets: Bet[] = []
+    
+    // Convert API pending bets to Bet format
+    userPendingBets.forEach((bet: any) => {
+      const selectionId = bet.selectionId ?? bet.selection_id
+      const betType = bet.betType ?? bet.bet_type
+      const odds = bet.betRate ?? bet.odds ?? bet.bet_rate
+      const stake = bet.betValue ?? bet.betvalue ?? bet.amount
+
+      if (selectionId && betType && odds && stake) {
+        bets.push({
+          selectionId: String(selectionId),
+          betType: betType.toUpperCase() as 'BACK' | 'LAY',
+          odds: Number(odds),
+          stake: Number(stake)
+        })
+      }
+    })
+
+    // Add optimistic bets
+    return [...bets, ...optimisticBets]
+  }, [userPendingBets, optimisticBets])
+
+  // Calculate positions using both API data and optimistic bets
+  // This will automatically recalculate when optimisticBets changes
+  const calculatedPositions = useMemo(() => {
+    if (allSelections.length === 0 || pendingBetsForCalculation.length === 0) {
+      return {}
+    }
+    return calculatePositions(allSelections, pendingBetsForCalculation)
+  }, [allSelections, pendingBetsForCalculation])
+
+  // onPlaceBetClick function for optimistic updates
+  const onPlaceBetClick = (newBet: {
+    selectionId?: number
+    type: 'back' | 'lay'
+    odds: string
+    stake?: string
+    betvalue?: number
+  }) => {
+    // 1️⃣ Convert to Bet format
+    const convertedBet = convertBetToPositionFormat(newBet)
+    if (!convertedBet) {
+      console.warn('Failed to convert bet for optimistic update')
+      return
+    }
+
+    // 2️⃣ Optimistically add bet
+    // This will trigger recalculation via pendingBetsForCalculation -> calculatedPositions
+    setOptimisticBets((prev) => [...prev, convertedBet])
+  }
+
+  // Clear optimistic state when API data is refetched
+  useEffect(() => {
+    if (myPendingBetsData && optimisticBets.length > 0) {
+      // Clear optimistic bets after a short delay to allow API to catch up
+      const timer = setTimeout(() => {
+        setOptimisticBets([])
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [myPendingBetsData, optimisticBets.length])
+
   // Calculate profit/loss from positions API - ONLY for match odds markets
   const positionsProfitLoss = useMemo(() => {
     if (!positionsData || !Array.isArray(positionsData) || positionsData.length === 0) {
@@ -1188,7 +1314,7 @@ export default function LiveMatchDetailPage() {
                       isMobile={isMobile}
                       onBetSelect={handleBetSelect}
                       onRefresh={refetch}
-                      profitLoss={matchOddsProfitLoss}
+              
                     />
                   )
                 }
@@ -1218,7 +1344,7 @@ export default function LiveMatchDetailPage() {
                     isMobile={isMobile}
                     onBetSelect={handleBetSelect}
                     onRefresh={market.name === 'MATCH_ODDS' ? refetch : undefined}
-                    profitLoss={{}}
+                
                   />
                 )
               })
@@ -1361,7 +1487,9 @@ export default function LiveMatchDetailPage() {
         onClear={() => setSelectedBet(null)}
         matchId={numericMatchId}
         authUser={authUser}
-        onBetPlaced={() => {
+        onPlaceBetClick={onPlaceBetClick}
+        onBetPlaced={(betData) => {
+          // Refetch from backend to sync after successful bet placement
           refetchPendingBets()
           refetchPositions()
         }}

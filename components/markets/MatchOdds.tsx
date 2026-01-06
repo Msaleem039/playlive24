@@ -19,7 +19,6 @@ interface MatchOddsProps {
     marketGType?: string
   }) => void
   onRefresh?: () => void
-  profitLoss?: Record<number, number>
 }
 
 const BACK_COLUMNS = 1
@@ -31,8 +30,7 @@ export default function MatchOdds({
   blinkingOdds,
   isMobile,
   onBetSelect,
-  onRefresh,
-  profitLoss = {}
+  onRefresh
 }: MatchOddsProps) {
   return (
     <div 
@@ -98,33 +96,10 @@ export default function MatchOdds({
             </tr>
           </thead>
           <tbody>
-            {market.rows.map((row, rowIndex) => {
-              // Only show profit/loss for Match Odds markets - STRICT check by name only
-              const marketName = (market.name || '').toUpperCase().trim()
-              const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
-              
-              // Only calculate and show profit/loss if this is strictly a Match Odds market
-              const profitLossValue = isMatchOdds && row.selectionId ? (profitLoss[row.selectionId] || 0) : 0
-              const isProfit = profitLossValue > 0
-              const isLoss = profitLossValue < 0
-              const hasValue = isMatchOdds && Math.abs(profitLossValue) > 0.01 // Only show if match odds and value is greater than 0.01
-              
-              return (
+            {market.rows.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900">
-                  <div className="flex flex-col">
-                    <span className="truncate">{row.team}</span>
-                    {hasValue && (
-                      <span className={`text-[10px] font-semibold mt-0.5 ${
-                        isProfit ? 'text-green-600' : isLoss ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {isProfit ? '+' : ''}{profitLossValue.toLocaleString('en-US', { 
-                          minimumFractionDigits: 2, 
-                          maximumFractionDigits: 2 
-                        })}
-                      </span>
-                    )}
-                  </div>
+                <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900 truncate">
+                  {row.team}
                 </td>
                 {/* Back Odds */}
                 {row.back.map((option, optIndex) => {
@@ -197,7 +172,7 @@ export default function MatchOdds({
                   )
                 })}
               </tr>
-            )})}
+            ))}
           </tbody>
         </table>
       </div>

@@ -24,7 +24,8 @@ interface BetSlipModalProps {
   onClear: () => void
   matchId: number | null
   authUser: any
-  onBetPlaced?: () => void
+  onBetPlaced?: (betData?: { odds: string; stake: string; betvalue: number }) => void
+  onPlaceBetClick?: (bet: { selectionId?: number; type: 'back' | 'lay'; odds: string; stake?: string; betvalue?: number }) => void
   isMobile?: boolean
   eventId?: string | null
   onStakeOddsChange?: (stake: string, odds: string) => void
@@ -38,6 +39,7 @@ export default function BetSlipModal({
   matchId,
   authUser,
   onBetPlaced,
+  onPlaceBetClick,
   isMobile = false,
   eventId = null,
   onStakeOddsChange
@@ -108,33 +110,29 @@ export default function BetSlipModal({
     // - Back 700, stake 100: profit = 100 * (7.00 - 1) = 600 (if 700 = 7.00)
     // Based on user feedback: odds 1000 should give profit 99900, so treat >= 100 as actual multiplier
     // =========================
-    if (gtype === 'match_odds' || gtype === 'match' || gtype === 'oddeven') {
+    if (gtype === 'match' || gtype === 'match_odds' || gtype === 'oddeven') {
       let decimalOdds: number
-      
-      if (odds < 10) {
-        // Already in decimal format (e.g., 1.01, 1.7, 1.82)
+    
+      if (odds >= 100) {
+        // Multiplier odds (BOOKMAKER-style, even if gtype says match)
         decimalOdds = odds
-      } else if (odds >= 10 && odds < 100) {
-        // Multiplied by 100 (e.g., 70 = 0.70, but this seems unlikely for match odds)
-        // Actually, for match odds, values between 10-99 might be rare
-        // Let's treat as multiplied by 100 to be safe
-        decimalOdds = odds / 100
+      } else if (odds >= 10) {
+        // Exchange odds sent as odds × 10
+        decimalOdds = odds / 10
       } else {
-        // Odds >= 100: treat as actual multiplier (e.g., 1000 = 1000x, 700 = 700x)
-        // Based on user requirement: 1000 should give 99900 profit
+        // True decimal odds
         decimalOdds = odds
       }
-  
+    
       if (betType === 'back') {
-        // Back: profit = stake * (odds - 1), loss = stake
         win = stake * (decimalOdds - 1)
         loss = stake
       } else {
-        // Lay: profit = stake, loss = stake * (odds - 1)
         win = stake
         loss = stake * (decimalOdds - 1)
       }
     }
+    
   
     // =========================
     // BOOKMAKER
@@ -317,6 +315,21 @@ export default function BetSlipModal({
 
     console.log('Placing bet with payload:', payload)
 
+    // Store optimistic bet for potential rollback
+    let optimisticBet: { selectionId?: number; type: 'back' | 'lay'; odds: string; stake?: string; betvalue?: number } | null = null
+
+    // Optimistic update: update UI immediately before API call
+    if (onPlaceBetClick && selectedBet) {
+      optimisticBet = {
+        selectionId: selectedBet.selectionId,
+        type: selectedBet.type,
+        odds: betRate.toString(),
+        stake: stake,
+        betvalue: betStake
+      }
+      onPlaceBetClick(optimisticBet)
+    }
+
     try {
       const data = await placeBet(payload).unwrap()
       console.log('Bet placed successfully:', data)
@@ -326,10 +339,18 @@ export default function BetSlipModal({
       onClear()
       // Call callback to refetch pending bets
       if (onBetPlaced) {
-        onBetPlaced()
+        onBetPlaced({
+          odds: betRate.toString(),
+          stake: stake,
+          betvalue: betStake
+        })
       }
     } catch (error: any) {
       console.error('Error placing bet:', error)
+      
+      // Rollback optimistic update on error
+      // Note: The parent component should handle rollback via refetch
+      // The optimistic state will be cleared when API data is refetched
       
       // Show specific error message from backend
       const errorMessage = 

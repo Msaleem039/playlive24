@@ -2,10 +2,8 @@
 
 import { useState, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Video, Upload, FileVideo, Link as LinkIcon } from "lucide-react"
-import { Input } from "@/components/input"
+import { X, Video, Upload, FileVideo } from "lucide-react"
 import { Button } from "@/components/utils/button"
-import { useUpdateSiteVideoMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 import Cookies from "js-cookie"
 
@@ -15,25 +13,17 @@ interface VideoUploadModalProps {
   currentVideoUrl?: string
 }
 
-type UploadMethod = "url" | "file"
-
 export default function VideoUploadModal({
   isOpen,
   onClose,
   currentVideoUrl,
 }: VideoUploadModalProps) {
-  const [uploadMethod, setUploadMethod] = useState<UploadMethod>("file")
-  const [videoUrl, setVideoUrl] = useState(currentVideoUrl || "")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // Use RTK Query mutation only for URL upload
-  const [updateSiteVideo] = useUpdateSiteVideoMutation()
 
   const resetState = () => {
-    setVideoUrl(currentVideoUrl || "")
     setSelectedFile(null)
     setError(null)
     if (fileInputRef.current) {
@@ -68,95 +58,67 @@ export default function VideoUploadModal({
     event.preventDefault()
     setError(null)
 
+    if (!selectedFile) {
+      setError("Please select a video file")
+      return
+    }
+
+    setIsUploading(true)
+    setError(null)
+
     try {
-      if (uploadMethod === "file") {
-        if (!selectedFile) {
-          setError("Please select a video file")
-          return
-        }
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('file', selectedFile)
 
-        setIsUploading(true)
-        setError(null)
+      // Upload file directly using fetch
+      const token = Cookies.get('token')
+      const response = await fetch('http://localhost:3000/site-video/upload', {
+        method: 'POST',
+        headers: {
+          'authorization': token ? `Bearer ${token}` : '',
+        },
+        // Don't set Content-Type - browser will set it automatically with boundary for FormData
+        body: formData,
+      })
 
-        // Create FormData for file upload
-        const formData = new FormData()
-        formData.append('file', selectedFile)
-
-        // Upload file directly using fetch
-        const token = Cookies.get('token')
-        const response = await fetch('https://api.playlive24.com/site-video/upload', {
-          method: 'POST',
-          headers: {
-            'authorization': token ? `Bearer ${token}` : '',
-          },
-          // Don't set Content-Type - browser will set it automatically with boundary for FormData
-          body: formData,
-        })
-
-        if (!response.ok) {
-          // Handle specific status codes
-          if (response.status === 413) {
-            const errorMsg = 'File size is too large. The server has a size limit. Please try a smaller file.'
-            setError(errorMsg)
-            toast.error("File too large", {
-              description: errorMsg,
-            })
-            setIsUploading(false)
-            return
-          }
-
-          // Try to get error message from response
-          let errorData
-          try {
-            errorData = await response.json()
-          } catch {
-            errorData = { message: `Server error: ${response.status} ${response.statusText}` }
-          }
-
-          const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.status} ${response.statusText}`
-          setError(errorMessage)
-          toast.error("Video upload failed", {
-            description: errorMessage,
+      if (!response.ok) {
+        // Handle specific status codes
+        if (response.status === 413) {
+          const errorMsg = 'File size is too large. The server has a size limit. Please try a smaller file.'
+          setError(errorMsg)
+          toast.error("File too large", {
+            description: errorMsg,
           })
           setIsUploading(false)
           return
         }
 
-        // Success
-        toast.success("Video uploaded successfully")
-        resetState()
-        onClose()
-        setIsUploading(false)
-      } else {
-        if (!videoUrl.trim()) {
-          setError("Please enter a video URL")
-          return
-        }
-
-        // Basic URL validation
+        // Try to get error message from response
+        let errorData
         try {
-          new URL(videoUrl)
+          errorData = await response.json()
         } catch {
-          setError("Please enter a valid URL")
-          return
+          errorData = { message: `Server error: ${response.status} ${response.statusText}` }
         }
 
-        setIsUploading(true)
-        // Upload URL directly via RTK Query
-        await updateSiteVideo({ videoUrl: videoUrl.trim() }).unwrap()
-        toast.success("Video URL updated successfully")
-        resetState()
-        onClose()
+        const errorMessage = errorData.message || errorData.error || `Upload failed: ${response.status} ${response.statusText}`
+        setError(errorMessage)
+        toast.error("Video upload failed", {
+          description: errorMessage,
+        })
         setIsUploading(false)
+        return
       }
+
+      // Success
+      toast.success("Video uploaded successfully")
+      resetState()
+      onClose()
+      setIsUploading(false)
     } catch (error: any) {
       setIsUploading(false)
-      const errorMessage = 
-        error?.data?.message || 
-        error?.data?.error || 
-        error?.error?.data?.message || 
-        error?.message || 
-        "Failed to upload video. Please try again."
+      const errorMessage = error?.message || "Failed to upload video. Please try again."
       setError(errorMessage)
       toast.error("Video upload failed", {
         description: errorMessage,
@@ -207,121 +169,51 @@ export default function VideoUploadModal({
                 </div>
               )}
 
-              {/* Upload Method Toggle */}
-              <div className="px-6 pt-4 pb-3">
-                <div className="flex gap-2 border-b border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUploadMethod("file")
-                      setError(null)
-                    }}
-                    className={`px-4 py-2 text-sm font-semibold transition-colors border-b-2 ${
-                      uploadMethod === "file"
-                        ? "border-[#00A66E] text-[#00A66E]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileVideo className="w-4 h-4" />
-                      Upload File
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUploadMethod("url")
-                      setError(null)
-                    }}
-                    className={`px-4 py-2 text-sm font-semibold transition-colors border-b-2 ${
-                      uploadMethod === "url"
-                        ? "border-[#00A66E] text-[#00A66E]"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4" />
-                      Video URL
-                    </div>
-                  </button>
-                </div>
-              </div>
-
               {/* File Upload Section */}
-              {uploadMethod === "file" && (
-                <div className="px-6 py-4 border-b border-dashed border-gray-200">
-                  <label className="text-sm font-semibold text-gray-800 mb-2 block flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-[#00A66E]" />
-                    Select Video File
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="video/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="video-file-input"
-                      disabled={isUploading}
-                    />
-                    <label
-                      htmlFor="video-file-input"
-                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">Click to upload</span> or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500">MP4, WebM, MOV (MAX. 500MB)</p>
-                      </div>
-                    </label>
-                    {selectedFile && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <FileVideo className="w-4 h-4 text-[#00A66E]" />
-                            <span className="text-sm font-medium text-gray-700 truncate">
-                              {selectedFile.name}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* URL Input Section */}
-              {uploadMethod === "url" && (
-                <div className="px-6 py-4 border-b border-dashed border-gray-200">
-                  <label className="text-sm font-semibold text-gray-800 mb-2 block flex items-center gap-2">
-                    <LinkIcon className="w-4 h-4 text-[#00A66E]" />
-                    Video URL
-                  </label>
-                  <Input
-                    type="url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://example.com/video.mp4"
-                    className="w-full"
+              <div className="px-6 py-4">
+                <label className="text-sm font-semibold text-gray-800 mb-2 block flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-[#00A66E]" />
+                  Select Video File
+                </label>
+                <div className="mt-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="video-file-input"
                     disabled={isUploading}
                   />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Enter the full URL of the video file (e.g., .mp4, .webm, etc.)
-                  </p>
+                  <label
+                    htmlFor="video-file-input"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">MP4, WebM, MOV (MAX. 500MB)</p>
+                    </div>
+                  </label>
+                  {selectedFile && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileVideo className="w-4 h-4 text-[#00A66E]" />
+                          <span className="text-sm font-medium text-gray-700 truncate">
+                            {selectedFile.name}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {/* {currentVideoUrl && (
-                <div className="px-6 py-4 border-b border-dashed border-gray-200 bg-gray-50">
-                  <label className="text-sm font-semibold text-gray-800 mb-2 block">Current Video</label>
-                  <div className="text-xs text-gray-600 break-all">{currentVideoUrl}</div>
-                </div>
-              )} */}
+              </div>
 
               <div className="px-6 py-4 flex justify-end gap-3">
                 <Button
@@ -347,4 +239,3 @@ export default function VideoUploadModal({
     </AnimatePresence>
   )
 }
-

@@ -323,6 +323,14 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['Positions'] as any,
     }),
+
+    /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
+    getBetAggregation: builder.query({
+      query: (userId: string) => ({
+        url: `${API_END_POINTS.getBetAggregation}?userId=${userId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -373,5 +381,8 @@ export const {
 
     /////////////////////////////<===POSITIONS QUERIES===>//////////////////////////////
     useGetMatchPositionsQuery,
+
+    /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
+    useGetBetAggregationQuery,
     
 } = api;
