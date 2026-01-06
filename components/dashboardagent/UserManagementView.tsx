@@ -200,13 +200,13 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   }
 
   const handleChangePasswordSubmit = async (data: {
-    currentPassword: string
-    newPassword: string
+    password: string
+    confirmPassword: string
   }) => {
     try {
       await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
       }).unwrap()
       toast.success("Password updated successfully")
     } catch (error: any) {

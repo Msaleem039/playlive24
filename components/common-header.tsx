@@ -405,13 +405,13 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   }, [isUserMenuOpen])
 
   const handleChangePassword = async (data: {
-    currentPassword: string
-    newPassword: string
+    password: string
+    confirmPassword: string
   }) => {
     try {
       await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
       }).unwrap()
       toast.success("Password updated successfully")
       setIsChangePasswordModalOpen(false)
@@ -737,8 +737,6 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
           <VideoUploadModal
             isOpen={isVideoUploadModalOpen}
             onClose={() => setIsVideoUploadModalOpen(false)}
-            onSubmit={handleVideoUpload}
-            isSubmitting={isVideoUploadLoading}
             currentVideoUrl={siteVideoData?.videoUrl}
           />
         </>
