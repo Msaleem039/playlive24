@@ -1,6 +1,6 @@
 //export const BASE_URL = 'https://api.playlive24.com'
-export const BASE_URL = 'http://localhost:3000'
-//export const BASE_URL = 'https://72.61.140.55'
+//export const BASE_URL = 'http://localhost:3000'
+export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
