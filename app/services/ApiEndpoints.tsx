@@ -61,6 +61,7 @@ export const API_END_POINTS = {
     getPendingSettlementsByMatch: `${BASE_URL}/settlement/pending/match/:matchId`,
     getSettlementDetails: `${BASE_URL}/settlement/details`,
     getSettlementBets: `${BASE_URL}/settlement/bets`,
+    getUserBets: `${BASE_URL}/admin/settlement/bets/user/:userId`,
     getMyPendingBets: `${BASE_URL}/settlement/bets/me/pending`,
     manualSettlement: `${BASE_URL}/settlement/manual/session-bet`,
     getallsettlementreport: `${BASE_URL}/settlement/results`,
@@ -82,5 +83,8 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===POSITIONS===>//////////////////////////////
     getMatchPositions: `${BASE_URL}/positions/match/:matchId`,
+
+    /////////////////////////////<===ACCOUNT STATEMENT===>//////////////////////////////
+    getAccountStatement: `${BASE_URL}/client/account-statement`,
  
 }

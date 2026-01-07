@@ -33,7 +33,7 @@ export default function ClientBetHistoryPage() {
           onSelectTab={handleTabChange} 
         />
       )}
-      <div className={isClient ? "pt-[108px]" : ""}>
+      <div className={isClient ? "" : ""}>
         <BetHistoryView />
       </div>
     </div>

@@ -24,7 +24,7 @@ interface BetSlipModalProps {
   onClear: () => void
   matchId: number | null
   authUser: any
-  onBetPlaced?: (betData?: { odds: string; stake: string; betvalue: number }) => void
+  onBetPlaced?: (betData?: { odds: string; stake: string; betvalue: number; positions?: Record<string, number> }) => void
   onPlaceBetClick?: (bet: { selectionId?: number; type: 'back' | 'lay'; odds: string; stake?: string; betvalue?: number }) => void
   isMobile?: boolean
   eventId?: string | null
@@ -337,12 +337,21 @@ export default function BetSlipModal({
       onClose()
       setStake('')
       onClear()
-      // Call callback to refetch pending bets
+      // Call callback to refetch pending bets and pass positions if available
       if (onBetPlaced) {
+        // Extract positions from response if available
+        let positions: Record<string, number> | undefined = undefined
+        if (data && typeof data === 'object' && 'positions' in data && data.positions) {
+          positions = data.positions as Record<string, number>
+        } else if (data && typeof data === 'object' && 'success' in data && data.success && 'positions' in data) {
+          positions = (data as any).positions
+        }
+        
         onBetPlaced({
           odds: betRate.toString(),
           stake: stake,
-          betvalue: betStake
+          betvalue: betStake,
+          positions
         })
       }
     } catch (error: any) {

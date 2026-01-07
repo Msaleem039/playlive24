@@ -19,6 +19,7 @@ interface MatchOddsProps {
     marketGType?: string
   }) => void
   onRefresh?: () => void
+  positions?: Record<string, number>
 }
 
 const BACK_COLUMNS = 1
@@ -30,7 +31,8 @@ export default function MatchOdds({
   blinkingOdds,
   isMobile,
   onBetSelect,
-  onRefresh
+  onRefresh,
+  positions
 }: MatchOddsProps) {
   return (
     <div 
@@ -96,10 +98,24 @@ export default function MatchOdds({
             </tr>
           </thead>
           <tbody>
-            {market.rows.map((row, rowIndex) => (
+            {market.rows.map((row, rowIndex) => {
+              // Get position for this team/runner
+              const selectionIdStr = row.selectionId ? String(row.selectionId) : ''
+              const pnl = positions && selectionIdStr ? (positions[selectionIdStr] || 0) : null
+              
+              return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900 truncate">
-                  {row.team}
+                <td className="px-0.5 py-0.5">
+                  <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
+                    {row.team}
+                  </div>
+                  {pnl !== null && pnl !== 0 && (
+                    <div className={`text-[10px] font-semibold mt-0.5 ${
+                      pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {pnl >= 0 ? `+${pnl.toFixed(2)}` : pnl.toFixed(2)}
+                    </div>
+                  )}
                 </td>
                 {/* Back Odds */}
                 {row.back.map((option, optIndex) => {
@@ -172,7 +188,8 @@ export default function MatchOdds({
                   )
                 })}
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>

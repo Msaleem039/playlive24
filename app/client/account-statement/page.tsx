@@ -33,7 +33,7 @@ export default function ClientAccountStatementPage() {
           onSelectTab={handleTabChange} 
         />
       )}
-      <div className={isClient ? "pt-[108px]" : ""}>
+      <div className={isClient ? "" : ""}>
         <AccountStatementView />
       </div>
     </div>

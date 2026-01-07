@@ -1,51 +1,78 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar, Download } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Calendar, Download, Loader2 } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
+import { useGetAccountStatementQuery } from "@/app/services/Api"
 
 export function AccountStatementView() {
-  const [fromDate, setFromDate] = useState("04/10/2025")
-  const [toDate, setToDate] = useState("11/10/2025")
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
   const [type, setType] = useState("All")
 
-  const accountData = [
+  // Fetch account statement
+  const { data: accountData, isLoading, error, refetch } = useGetAccountStatementQuery(
     {
-      srNo: "1",
-      description: "Closing Balance",
-      credit: "",
-      debit: "",
-      commission: "0.00",
-      points: "20,000.00",
-      date: "",
-      reference: ""
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
+      type: type !== "All" ? type : undefined
     },
-    {
-      srNo: "2",
-      description: "Cash Deposit [Settlement]",
-      credit: "15,000.00",
-      debit: "0.00",
-      commission: "0.00",
-      points: "5,000.00",
-      date: "08-10-2025 10:20:27 am",
-      reference: "Parent"
+    { skip: false }
+  )
+
+  // Extract data from response
+  const statementData = useMemo(() => {
+    if (!accountData) return null
+    return {
+      openingBalance: accountData.openingBalance || 0,
+      closingBalance: accountData.closingBalance || 0,
+      total: accountData.total || 0,
+      transactions: accountData.transactions || []
     }
-  ]
+  }, [accountData])
+
+  // Filter transactions by type
+  const filteredTransactions = useMemo(() => {
+    if (!statementData) return []
+    if (type === "All") return statementData.transactions
+    return statementData.transactions.filter((t: any) => 
+      t.type?.toUpperCase() === type.toUpperCase()
+    )
+  }, [statementData, type])
 
   const handleLoad = () => {
-    console.log("Load clicked", { fromDate, toDate, type })
+    refetch()
+  }
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const formatCurrency = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined || value === '') return ''
+    const numValue = typeof value === 'string' ? parseFloat(value) : value
+    if (isNaN(numValue)) return ''
+    return numValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-[#00A66E] text-white px-4 py-3">
-        <h1 className="text-lg font-bold">Account Statement</h1>
+      <div className="bg-black text-white px-4 py-1">
+        <h1 className="text-base font-normal">Account Statement</h1>
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white p-4 sm:p-6 shadow-sm">
+      <div className="bg-white p-4 sm:p-6 shadow-sm border-b">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           {/* From Date */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -107,97 +134,124 @@ export function AccountStatementView() {
         </div>
       </div>
 
+      {/* Balance Summary */}
+      {statementData && (
+        <div className="bg-gray-50 px-4 py-3 border-b flex gap-6 text-sm">
+          <div>
+            <span className="text-gray-600 font-medium">Opening Balance: </span>
+            <span className="font-bold text-gray-900">Rs {formatCurrency(statementData.openingBalance)}</span>
+          </div>
+          <div>
+            <span className="text-gray-600 font-medium">Closing Balance: </span>
+            <span className="font-bold text-gray-900">Rs {formatCurrency(statementData.closingBalance)}</span>
+          </div>
+        </div>
+      )}
+
       {/* Data Table */}
-      <div className="bg-white mx-4 sm:mx-6 shadow-sm rounded-lg overflow-hidden">
+      <div className="bg-white mx-0 sm:mx-0 shadow-sm rounded-none overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Sr No.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Discription
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                  Description
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Credit
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Debit
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Commission
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Points
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                  Balance
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Reference
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                  Type
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {accountData.map((row, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row.srNo}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row.description}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600">
-                    {row.credit}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600">
-                    {row.debit}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600">
-                    {row.commission}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600">
-                    {row.points}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row.date}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row.reference}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#00A66E]" />
+                    <p className="text-gray-500 mt-2">Loading account statement...</p>
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-red-500">
+                    Error loading account statement. Please try again.
+                  </td>
+                </tr>
+              ) : !statementData || filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                    No transactions found
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((transaction: any, index: number) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                      {index + 1}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                      {transaction.description || 'N/A'}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-green-600">
+                      {transaction.credit > 0 ? `Rs ${formatCurrency(transaction.credit)}` : ''}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-red-600">
+                      {transaction.debit > 0 ? `Rs ${formatCurrency(transaction.debit)}` : ''}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                      {transaction.commission > 0 ? `Rs ${formatCurrency(transaction.commission)}` : 'Rs 0.00'}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900 font-medium">
+                      Rs {formatCurrency(transaction.balance)}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                      {formatDate(transaction.date)}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        transaction.type === 'TOPUP' 
+                          ? 'bg-green-100 text-green-800'
+                          : transaction.type === 'WITHDRAW'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {transaction.type || 'N/A'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold text-gray-700">Total Counts: 1</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Items per page:</span>
-              <select className="border border-gray-300 rounded px-2 py-1 text-sm">
-                <option value={25}>25</option>
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
+        {/* Summary */}
+        {statementData && (
+          <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-bold text-gray-700">
+                Total Transactions: {statementData.total}
+              </span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 text-sm">
-              &lt;&lt; Pre
-            </Button>
-            <Button className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-3 py-1 text-sm">
-              1
-            </Button>
-            <Button className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 text-sm">
-              Next &gt;&gt;
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

@@ -212,6 +212,19 @@ export const api = SplitApiSettings.injectEndpoints({
       providesTags: ['Settlement'] as any,
     }),
 
+    getUserBets: builder.query({
+      query: (params: { userId: string; limit?: number; offset?: number }) => {
+        const queryParams = new URLSearchParams()
+        if (params.limit) queryParams.append('limit', params.limit.toString())
+        if (params.offset) queryParams.append('offset', params.offset.toString())
+        return {
+          url: `${API_END_POINTS.getUserBets.replace(':userId', params.userId)}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+          method: "GET",
+        }
+      },
+      providesTags: ['Settlement'] as any,
+    }),
+
     getMyPendingBets: builder.query({
       query: () => ({
         url: API_END_POINTS.getMyPendingBets,
@@ -324,6 +337,21 @@ export const api = SplitApiSettings.injectEndpoints({
       providesTags: ['Positions'] as any,
     }),
 
+    /////////////////////////////<===ACCOUNT STATEMENT QUERIES===>//////////////////////////////
+    getAccountStatement: builder.query({
+      query: (params?: { fromDate?: string; toDate?: string; type?: string }) => {
+        const queryParams = new URLSearchParams()
+        if (params?.fromDate) queryParams.append('fromDate', params.fromDate)
+        if (params?.toDate) queryParams.append('toDate', params.toDate)
+        if (params?.type) queryParams.append('type', params.type)
+        return {
+          url: `${API_END_POINTS.getAccountStatement}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+          method: "GET",
+        }
+      },
+      providesTags: ['AccountStatement'] as any,
+    }),
+
     /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
     getBetAggregation: builder.query({
       query: (userId: string) => ({
@@ -359,6 +387,7 @@ export const {
     useGetPendingSettlementsByMatchQuery,
     useGetSettlementDetailsQuery,
     useGetSettlementBetsQuery,
+    useGetUserBetsQuery,
     useGetMyPendingBetsQuery,
     useGetAllSettlementReportQuery,
     useGetSettlementHistoryQuery,
@@ -381,6 +410,9 @@ export const {
 
     /////////////////////////////<===POSITIONS QUERIES===>//////////////////////////////
     useGetMatchPositionsQuery,
+
+    /////////////////////////////<===ACCOUNT STATEMENT QUERIES===>//////////////////////////////
+    useGetAccountStatementQuery,
 
     /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
     useGetBetAggregationQuery,
