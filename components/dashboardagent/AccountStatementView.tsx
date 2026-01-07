@@ -65,7 +65,7 @@ export function AccountStatementView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 -mt-0">
       {/* Header */}
       <div className="bg-black text-white px-4 py-1">
         <h1 className="text-base font-normal">Account Statement</h1>

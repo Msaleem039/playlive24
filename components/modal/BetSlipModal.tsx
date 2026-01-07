@@ -386,83 +386,104 @@ export default function BetSlipModal({
     onClear()
   }
 
+  // Handle quick stake button click with increment on repeat clicks
+  const handleQuickStake = (amount: number) => {
+    const currentStake = parseFloat(stake) || 0
+    if (currentStake === amount) {
+      // If already set to this amount, increment by it
+      setStake((currentStake + amount).toString())
+    } else {
+      // Otherwise, set to the amount
+      setStake(amount.toString())
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/50">
       <div className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0" onClick={(e) => e.stopPropagation()}>
         <div
-          className="bg-pink-50 border-t border-gray-200 flex flex-col rounded-t-lg sm:rounded-lg overflow-hidden shadow-xl"
+          className="bg-white border border-gray-300 flex flex-col rounded-t-lg sm:rounded-lg overflow-hidden shadow-2xl"
           style={{ maxHeight: isMobile ? '360px' : '420px' }}
         >
-          <div className="bg-gray-800 text-white px-3 sm:px-4 py-2 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[#334443] to-[#1a2a28] text-white px-3 sm:px-4 py-2.5 flex items-center justify-between">
             <span className="text-sm font-semibold">Bet Slip</span>
             <span className="text-xs text-gray-300 cursor-pointer hover:text-white">Edit Stakes</span>
           </div>
 
-          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto">
+          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gray-50">
             <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold text-gray-700">
-              <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center sm:text-left">Bet for</div>
-              <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Odds</div>
-              <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">Stake</div>
-              <div className="bg-gray-200 px-1 sm:px-2 py-1 rounded text-center">P/L</div>
+              <div className="bg-[#e8f5e9] px-1 sm:px-2 py-1 rounded text-center sm:text-left">Bet for</div>
+              <div className="bg-[#e3f2fd] px-1 sm:px-2 py-1 rounded text-center">Odds</div>
+              <div className="bg-[#fff3e0] px-1 sm:px-2 py-1 rounded text-center">Stake</div>
+              <div className="bg-[#f3e5f5] px-1 sm:px-2 py-1 rounded text-center">P/L</div>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center">
-              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate text-center sm:text-left">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white rounded-lg p-2 border border-gray-200">
+              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate text-center sm:text-left px-1">
                 {selectedBet.team}
               </div>
-              <div className="flex items-center gap-1">
+              
+              {/* Odds input */}
+              <div>
                 <input
                   type="text"
                   value={odds}
                   onChange={(e) => setOdds(e.target.value)}
-                  className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-[#00A66E]"
                 />
-                <div className="flex flex-col">
-                  <button className="text-xs">▲</button>
-                  <button className="text-xs">▼</button>
-                </div>
               </div>
+              
+              {/* Stake input */}
               <div>
                 <input
                   type="text"
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
-                  placeholder="Stake"
-                  className="w-full px-1 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded"
+                  placeholder="0"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-[#00A66E]"
                 />
               </div>
-              <div className="text-xs sm:text-sm text-gray-700 text-center">{plText}</div>
+              
+              <div className="text-xs sm:text-sm text-gray-700 text-center px-1">{plText}</div>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 sm:gap-2">
-              {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => setStake(amount.toString())}
-                  className="bg-pink-500 hover:bg-pink-600 text-white px-1 sm:px-3 py-1 sm:py-2 rounded text-xs sm:text-sm font-medium"
-                >
-                  {isMobile && amount >= 1000 ? `${amount / 1000}k` : amount.toLocaleString()}
-                </button>
-              ))}
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+              {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount) => {
+                const currentStake = parseFloat(stake) || 0
+                const isActive = currentStake === amount || (currentStake >= amount && currentStake < amount * 2)
+                return (
+                  <button
+                    key={amount}
+                    onClick={() => handleQuickStake(amount)}
+                    className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-all ${
+                      isActive
+                        ? 'bg-[#00A66E] hover:bg-[#008a5a] text-white shadow-md'
+                        : 'bg-[#6366f1] hover:bg-[#4f46e5] text-white hover:shadow-md'
+                    }`}
+                  >
+                    {isMobile && amount >= 1000 ? `${amount / 1000}k` : amount.toLocaleString()}
+                  </button>
+                )
+              })}
             </div>
 
-            <div className="flex gap-1 sm:gap-2 pt-2">
+            <div className="flex gap-1.5 sm:gap-2 pt-2">
               <button
                 onClick={onClose}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-colors"
               >
                 Close
               </button>
               <button
                 onClick={handleClear}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-colors"
               >
                 Clear
               </button>
               <button
                 onClick={handlePlaceBet}
                 disabled={isPlacingBet}
-                className="flex-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPlacingBet ? 'Submitting...' : 'Submit'}
               </button>

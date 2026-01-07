@@ -486,10 +486,10 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
             </motion.div>
           </div>
           <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-            <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#00A66E] text-black px-1.5 xs:px-2 sm:px-2.5 md:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-full shadow-sm min-w-[75px] xs:min-w-[85px] sm:min-w-[100px] md:min-w-[120px] justify-center">
-              <Coins className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 bg-[#00A66E] text-black px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1.5 rounded-full shadow-sm min-w-[65px] xs:min-w-[75px] sm:min-w-[90px] md:min-w-[110px] lg:min-w-[120px] justify-center">
+              <Coins className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-[#FFD949] flex-shrink-0" />
               <div className="leading-tight text-left min-w-0">
-                <div className="text-[10px] xs:text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>
+                <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-medium truncate">{userInfo.balance}</div>
               </div>
             </div>
             {isSuperAdmin && (
@@ -518,7 +518,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                 className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#00A66E] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition text-[10px] xs:text-xs sm:text-sm min-w-0"
               >
                 <User className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate max-w-[60px] xs:max-w-[70px] sm:max-w-[90px] md:max-w-none">{userInfo.name || <span className="text-[10px] xs:text-xs sm:text-sm">User</span>}</span>
+                <span className="truncate max-w-[50px] xs:max-w-[60px] sm:max-w-[80px] md:max-w-none">{userInfo.name || <span className="text-[10px] xs:text-xs sm:text-sm">User</span>}</span>
                 <ChevronDown
                   className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
                 />
@@ -531,7 +531,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-52 xs:w-56 sm:w-64 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
+                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[280px] xs:w-56 sm:w-64 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
                   >
                     <div className="px-3 xs:px-4 py-2 xs:py-3 bg-gray-100 text-[10px] xs:text-xs font-semibold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
                       <div className="flex items-center gap-1.5 xs:gap-2">
@@ -659,7 +659,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
       </div>
       {/* Marquee */}
       <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
-        <div className="animate-marquee text-[0.6rem] xs:text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-white font-medium whitespace-nowrap">
+        <div className="animate-marquee text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.70rem] lg:text-[0.75rem] text-white font-medium whitespace-nowrap">
           Welcome to Playlive7! If you have any queries, contact us +923254353
         </div>
       </div>
@@ -669,13 +669,13 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         <div className="relative z-[20]">
           {/* Main Navigation Header */}
           <div className="bg-[#00A66E] text-black">
-            <div className="px-1.5 xs:px-2 sm:px-3 md:px-4 lg:px-4 py-1.5 xs:py-2 sm:py-2.5 md:py-3">
-              <div className="flex justify-start sm:justify-center items-center space-x-1 xs:space-x-1.5 sm:space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-6 overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="px-1 xs:px-1.5 sm:px-3 md:px-4 lg:px-4 py-1 xs:py-1.5 sm:py-2 md:py-2.5 lg:py-3">
+              <div className="flex justify-start sm:justify-center items-center space-x-0.5 xs:space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-3 xl:space-x-4 overflow-x-auto no-scrollbar scroll-smooth">
                 {navigationItems.map((item) => (
                   <button
                     key={item}
                     onClick={() => onTabChange?.(item)}
-                    className={`font-semibold flex items-center gap-1 xs:gap-1.5 whitespace-nowrap text-[0.6rem] xs:text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] lg:text-[0.8rem] transition-colors min-h-[22px] xs:min-h-[24px] sm:min-h-[28px] px-1.5 xs:px-2 sm:px-2.5 md:px-3 py-1 xs:py-1.5 sm:py-2 ${
+                    className={`font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 whitespace-nowrap text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] lg:text-[0.75rem] xl:text-[0.8rem] transition-colors min-h-[20px] xs:min-h-[22px] sm:min-h-[24px] md:min-h-[26px] lg:min-h-[28px] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-1 sm:py-1.5 md:py-2 ${
                       item === 'Game Controls' ? 'hover:text-gray-200' : ''
                     } ${
                       item === activeTab 
