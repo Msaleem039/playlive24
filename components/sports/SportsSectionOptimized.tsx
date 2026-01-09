@@ -14,22 +14,72 @@ interface SportsSectionProps {
   onFantasyMatch?: (matchId: string) => void
 }
 
+// Function to get sport-specific background color
+const getSportHeaderColor = (sport: string): string => {
+  const sportLower = sport.toLowerCase().trim()
+  
+  switch (sportLower) {
+    case 'cricket':
+      return 'bg-[#005461]' // Green for Cricket
+    case 'soccer':
+    case 'football':
+      return 'bg-[#0066CC]' // Blue for Soccer
+    case 'tennis':
+      return 'bg-[#018790]' // Orange/Red for Tennis
+    case 'horse':
+    case 'horse racing':
+      return 'bg-[#36656B]' // Saddle Brown for Horse Racing
+    case 'greyhound':
+    case 'greyhound racing':
+      return 'bg-[#6B7280]' // Gray for Greyhound Racing
+    case 'badminton':
+      return 'bg-[#10B981]' // Emerald Green for Badminton
+    case 'basketball':
+      return 'bg-[#FF6B00]' // Orange for Basketball
+    case 'baseball':
+      return 'bg-[#1E40AF]' // Deep Blue for Baseball
+    case 'hockey':
+      return 'bg-[#059669]' // Teal Green for Hockey
+    case 'rugby':
+      return 'bg-[#DC2626]' // Red for Rugby
+    case 'volleyball':
+      return 'bg-[#EA580C]' // Orange Red for Volleyball
+    case 'kabaddi':
+      return 'bg-[#7C3AED]' // Purple for Kabaddi
+    case 'cycling':
+      return 'bg-[#0284C7]' // Sky Blue for Cycling
+    case 'running':
+      return 'bg-[#F59E0B]' // Amber for Running
+    case 'boxing':
+      return 'bg-[#991B1B]' // Dark Red for Boxing
+    case 'mma':
+    case 'ufc':
+      return 'bg-[#1F2937]' // Dark Gray for MMA/UFC
+    default:
+      return 'bg-[#00A66E]' // Default green
+  }
+}
+
 // Memoized header component
-const SportsHeader = memo(({ sport }: { sport: string }) => (
-  <div className="bg-[#00A66E] text-white px-4 py-3 rounded-t-lg">
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-bold">{sport}</h3>
-      <div className="flex items-center gap-2">
-        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
-          BM
-        </button>
-        <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
-          F
-        </button>
+const SportsHeader = memo(({ sport }: { sport: string }) => {
+  const headerColor = getSportHeaderColor(sport)
+  
+  return (
+    <div className={`${headerColor} text-white px-4 py-1 rounded-t-lg`}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-normal">{sport}</h3>
+        <div className="hidden sm:flex items-center gap-2">
+          <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
+            BM
+          </button>
+          <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
+            F
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-))
+  )
+})
 
 SportsHeader.displayName = 'SportsHeader'
 

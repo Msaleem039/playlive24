@@ -33,8 +33,8 @@ export default function SportsSection({ sport, matches, showViewMore = true }: S
       {/* Header */}
       <div className="bg-[#00A66E] text-white px-4 py-3 rounded-t-lg">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">{sport}</h3>
-          <div className="flex items-center gap-2">
+          <h3 className="text-base font-normal">{sport}</h3>
+          {/* <div className="flex items-center gap-2">
             <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
               BM
             </button>
@@ -44,7 +44,7 @@ export default function SportsSection({ sport, matches, showViewMore = true }: S
             <button className="bg-white/20 text-white text-xs px-2 py-1 rounded hover:bg-white/30 transition-colors">
               F
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
