@@ -259,7 +259,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                           : 'bg-green-500 text-white'
                       }`}
                     >
-                      {isWicket ? 'WW' : ball}
+                      {isWicket ? 'W' : ball}
                     </div>
                   )
                 })}

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, BookOpen, Search, ChevronLeft, Zap, CheckCircle } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
-import { useGetPendingBookmakerMarketsQuery, useSettleBookmakerMutation } from "@/app/services/Api"
+import { useGetPendingBookmakerMarketsQuery, useSettleBookmakerMutation, useCancelBetsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
 export function BookmakerSettlementScreen() {
@@ -19,6 +19,7 @@ export function BookmakerSettlementScreen() {
   const [marketId, setMarketId] = useState("")
   
   const [settleBookmaker, { isLoading: isSettling }] = useSettleBookmakerMutation()
+  const [cancelBets, { isLoading: isCancelling }] = useCancelBetsMutation()
 
   const { data: pendingData, isLoading, refetch } = useGetPendingBookmakerMarketsQuery({}, { 
     pollingInterval: 30000
@@ -193,32 +194,83 @@ export function BookmakerSettlementScreen() {
     }
 
     const selectedSelectionData = getAvailableSelectionIds(selectedMatch).find(s => s.selectionId === selectedSelectionId)
+    const bets = getBetsForSelectionId(selectedMatch, selectedSelectionId)
     const betCount = selectedSelectionData?.count || 0
     const totalAmount = selectedSelectionData?.totalAmount || 0
     const betName = selectedSelectionData?.betName || selectedSelectionId
     
-    const confirmMessage = `This will ${isCancel ? 'cancel/refund' : 'settle'} ALL ${betCount} Bookmaker bet(s) for Selection ID ${selectedSelectionId} (${betName}) (Total: Rs${totalAmount.toLocaleString()}).\n\nOther Selection IDs, Match Odds and Fancy bets will NOT be affected.\n\nContinue?`
+    // Collect betIds and verify selectionId from bets
+    const betData = bets.map((bet: any) => ({
+      betId: bet.betId || bet.id,
+      selectionId: bet.selectionId || bet.selection_id || selectedSelectionId
+    })).filter((item: any) => item.betId != null)
     
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
-    try {
-      // Payload format: { eventId: string, marketId: string, winnerSelectionId: string }
-      // Example: { "eventId": "35100761", "marketId": "6230221786468", "winnerSelectionId": "1" }
-      const payload = {
-        eventId: eventIdNum,
-        marketId: marketIdNum,
-        winnerSelectionId: selectionIdNum
+    const betIds = betData.map((item: any) => item.betId)
+    
+    // Extract selectionId from bets (should all be the same since we filtered by selectedSelectionId)
+    const betSelectionIds = [...new Set(betData.map((item: any) => item.selectionId).filter((id: any) => id != null))]
+    const betSelectionId = betSelectionIds.length > 0 ? String(betSelectionIds[0]) : selectionIdNum
+    
+    if (isCancel) {
+      // Use cancelBets endpoint
+      if (betIds.length === 0) {
+        toast.error("No bet IDs found to cancel")
+        return
       }
       
-      await settleBookmaker(payload).unwrap()
-      toast.success(isCancel ? `Bookmaker bets cancelled successfully for Selection ID ${selectedSelectionId}` : `Bookmaker bets settled successfully for Selection ID ${selectedSelectionId}. ${betCount} bet(s) processed.`)
-      refetch()
-      setSelectedMatch(null)
-      setSelectedSelectionId(null)
-    } catch (error: any) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to settle bookmaker bets")
+      // Verify selectionId matches
+      if (betSelectionIds.length > 1) {
+        toast.error(`Bets have different selection IDs. This should not happen.`)
+        return
+      }
+      
+      const confirmMessage = `Cancelling ${betIds.length} Bookmaker bet(s) for Selection ID ${betSelectionId} (${betName}) - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
+
+      try {
+        const payload = {
+          eventId: eventIdNum,
+          marketId: marketIdNum,
+          selectionId: betSelectionId,
+          betIds: betIds
+        }
+        
+        await cancelBets(payload).unwrap()
+        toast.success(`Bookmaker bets cancelled successfully for Selection ID ${selectedSelectionId}. ${betIds.length} bet(s) cancelled.`)
+        refetch()
+        setSelectedMatch(null)
+        setSelectedSelectionId(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to cancel bookmaker bets")
+      }
+    } else {
+      // Use regular settlement
+      const confirmMessage = `Settling ${betCount} Bookmaker bet(s) for Selection ID ${selectedSelectionId} (${betName}) - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
+
+      try {
+        const payload = {
+          eventId: eventIdNum,
+          marketId: marketIdNum,
+          winnerSelectionId: selectionIdNum
+        }
+        
+        await settleBookmaker(payload).unwrap()
+        toast.success(`Bookmaker bets settled successfully for Selection ID ${selectedSelectionId}. ${betCount} bet(s) processed.`)
+        refetch()
+        setSelectedMatch(null)
+        setSelectedSelectionId(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to settle bookmaker bets")
+      }
     }
   }
 
@@ -450,16 +502,16 @@ export function BookmakerSettlementScreen() {
                     setSelectedSelectionId(null)
                   }}
                   className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
-                  disabled={isSettling}
+                  disabled={isSettling || isCancelling}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSettle}
-                  disabled={isSettling || !selectedSelectionId || !eventId.trim() || !selectionId.trim() || !marketId.trim()}
+                  disabled={(isSettling || isCancelling) || !selectedSelectionId || !eventId.trim() || !selectionId.trim() || !marketId.trim()}
                   className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
                 >
-                  {isSettling ? (
+                  {(isSettling || isCancelling) ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       Settling...

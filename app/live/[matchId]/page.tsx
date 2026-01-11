@@ -12,7 +12,6 @@ import { useGetMyPendingBetsQuery, useGetMatchPositionsQuery } from '@/app/servi
 import BetSlipModal from '@/components/modal/BetSlipModal'
 import MatchOdds from '@/components/markets/MatchOdds'
 import FancyDetail from '@/components/markets/FancyDetail'
-import { calculatePositions, type Bet } from '@/lib/utils/positionCalculations'
 import type {
   BettingOption,
   MarketRow,
@@ -98,19 +97,16 @@ export default function LiveMatchDetailPage() {
   const BACK_COLUMNS = 1
   const LAY_COLUMNS = 1
 
-  // Optimistic state for pending bets (positions are recalculated automatically)
-  const [optimisticBets, setOptimisticBets] = useState<Bet[]>([])
-
-  // Single authoritative state per market - FINAL positions from backend
-  const [marketPositions, setMarketPositions] = useState<Record<string, number>>({})
-
   // Pending settlements/bets for logged-in user across matches
   const { data: myPendingBetsData, isLoading: isLoadingPendingBets, refetch: refetchPendingBets } = useGetMyPendingBetsQuery(undefined)
 
+  // Parse matchId to get eventId (for later use)
+  const eventIdForPositions = matchId
+
   // Fetch match positions for profit/loss calculation
   const { data: positionsData, isLoading: isLoadingPositions, refetch: refetchPositions } = useGetMatchPositionsQuery(
-    matchId || '',
-    { skip: !matchId || !authUser }
+    matchId ? { matchId } : { eventId: eventIdForPositions || '' },
+    { skip: !matchId || !authUser, pollingInterval: 10000 }
   )
 
   const userPendingBets = useMemo(() => {
@@ -740,84 +736,72 @@ export default function LiveMatchDetailPage() {
     return sortedMarkets
   }, [allMarkets])
 
-  // Extract all selection IDs from betting markets for position calculation
-  const allSelections = useMemo(() => {
-    const selections: string[] = []
-    bettingMarkets.forEach((market) => {
-      market.rows.forEach((row) => {
-        if (row.selectionId) {
-          const selectionIdStr = String(row.selectionId)
-          if (!selections.includes(selectionIdStr)) {
-            selections.push(selectionIdStr)
+  // Extract positions from API response - separate by market type
+  // Support both formats: { selectionId: number } and { selectionId: { profit: number, loss: number } }
+  const positionsByMarketType = useMemo(() => {
+    if (!positionsData?.success || !positionsData?.data) {
+      return {
+        matchOdds: {} as Record<string, number | { profit: number; loss: number }>,
+        bookmaker: {} as Record<string, number | { profit: number; loss: number }>,
+        fancy: {} as Record<string, number | { profit: number; loss: number }>
+      }
+    }
+
+    const data = positionsData.data
+    const result = {
+      matchOdds: {} as Record<string, number | { profit: number; loss: number }>,
+      bookmaker: {} as Record<string, number | { profit: number; loss: number }>,
+      fancy: {} as Record<string, number | { profit: number; loss: number }>
+    }
+
+    // Extract matchOdds positions - preserve full object if it has profit/loss
+    if (data.matchOdds?.positions) {
+      Object.entries(data.matchOdds.positions).forEach(([selectionId, position]: [string, any]) => {
+        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
+          // Keep the full object with profit and loss
+          result.matchOdds[selectionId] = {
+            profit: Number(position.profit || 0),
+            loss: Number(position.loss || 0)
           }
+        } else if (typeof position === 'number') {
+          // Simple number format
+          result.matchOdds[selectionId] = position
         }
       })
-    })
-    return selections
-  }, [bettingMarkets])
-
-  // Convert bet from BetSlipModal format to calculatePositions Bet format
-  const convertBetToPositionFormat = (
-    bet: {
-      selectionId?: number
-      type: 'back' | 'lay'
-      odds: string
-      stake?: string
-      betvalue?: number
-    }
-  ): Bet | null => {
-    if (!bet.selectionId) return null
-
-    const stake = bet.betvalue || parseFloat(bet.stake || '0')
-    const odds = parseFloat(bet.odds || '0')
-
-    if (isNaN(stake) || stake <= 0 || isNaN(odds) || odds <= 0) {
-      return null
     }
 
-    return {
-      selectionId: String(bet.selectionId),
-      betType: bet.type.toUpperCase() as 'BACK' | 'LAY',
-      odds,
-      stake
+    // Extract bookmaker positions
+    if (data.bookmaker?.positions) {
+      Object.entries(data.bookmaker.positions).forEach(([selectionId, position]: [string, any]) => {
+        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
+          result.bookmaker[selectionId] = {
+            profit: Number(position.profit || 0),
+            loss: Number(position.loss || 0)
+          }
+        } else if (typeof position === 'number') {
+          result.bookmaker[selectionId] = position
+        }
+      })
     }
-  }
 
-  // Convert userPendingBets to Bet format for position calculation
-  const pendingBetsForCalculation = useMemo(() => {
-    const bets: Bet[] = []
-    
-    // Convert API pending bets to Bet format
-    userPendingBets.forEach((bet: any) => {
-      const selectionId = bet.selectionId ?? bet.selection_id
-      const betType = bet.betType ?? bet.bet_type
-      const odds = bet.betRate ?? bet.odds ?? bet.bet_rate
-      const stake = bet.betValue ?? bet.betvalue ?? bet.amount
-
-      if (selectionId && betType && odds && stake) {
-        bets.push({
-          selectionId: String(selectionId),
-          betType: betType.toUpperCase() as 'BACK' | 'LAY',
-          odds: Number(odds),
-          stake: Number(stake)
-        })
-      }
-    })
-
-    // Add optimistic bets
-    return [...bets, ...optimisticBets]
-  }, [userPendingBets, optimisticBets])
-
-  // Calculate positions using both API data and optimistic bets
-  // This will automatically recalculate when optimisticBets changes
-  const calculatedPositions = useMemo(() => {
-    if (allSelections.length === 0 || pendingBetsForCalculation.length === 0) {
-      return {}
+    // Extract fancy positions (if available in response)
+    if (data.fancy?.positions) {
+      Object.entries(data.fancy.positions).forEach(([selectionId, position]: [string, any]) => {
+        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
+          result.fancy[selectionId] = {
+            profit: Number(position.profit || 0),
+            loss: Number(position.loss || 0)
+          }
+        } else if (typeof position === 'number') {
+          result.fancy[selectionId] = position
+        }
+      })
     }
-    return calculatePositions(allSelections, pendingBetsForCalculation)
-  }, [allSelections, pendingBetsForCalculation])
 
-  // onPlaceBetClick function for optimistic updates
+    return result
+  }, [positionsData])
+
+  // onPlaceBetClick function - simplified (no optimistic updates needed)
   const onPlaceBetClick = (newBet: {
     selectionId?: number
     type: 'back' | 'lay'
@@ -825,67 +809,9 @@ export default function LiveMatchDetailPage() {
     stake?: string
     betvalue?: number
   }) => {
-    // 1️⃣ Convert to Bet format
-    const convertedBet = convertBetToPositionFormat(newBet)
-    if (!convertedBet) {
-      console.warn('Failed to convert bet for optimistic update')
-      return
-    }
-
-    // 2️⃣ Optimistically add bet
-    // This will trigger recalculation via pendingBetsForCalculation -> calculatedPositions
-    setOptimisticBets((prev) => [...prev, convertedBet])
+    // Position updates will come from API polling
+    // No need for optimistic updates
   }
-
-  // Clear optimistic state when API data is refetched
-  useEffect(() => {
-    if (myPendingBetsData && optimisticBets.length > 0) {
-      // Clear optimistic bets after a short delay to allow API to catch up
-      const timer = setTimeout(() => {
-        setOptimisticBets([])
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [myPendingBetsData, optimisticBets.length])
-
-  // Clear market positions when market changes
-  useEffect(() => {
-    setMarketPositions({})
-  }, [matchId])
-
-  // Update market positions from backend response
-  // This is the AUTHORITATIVE source - replaces any optimistic calculations
-  useEffect(() => {
-    if (positionsData && Array.isArray(positionsData) && positionsData.length > 0) {
-      // Convert backend positions to Record<string, number> format
-      const positionsMap: Record<string, number> = {}
-      positionsData.forEach((position: any) => {
-        const selectionId = String(position.selectionId)
-        // Use pnlIfWin as the position value (profit if this selection wins)
-        positionsMap[selectionId] = Number(position.pnlIfWin || 0)
-      })
-      // Backend response REPLACES frontend state (no merging)
-      setMarketPositions(positionsMap)
-    } else if (positionsData === null || (Array.isArray(positionsData) && positionsData.length === 0)) {
-      // Clear positions if no data
-      setMarketPositions({})
-    }
-  }, [positionsData])
-
-  // Clear positions when no pending bets exist
-  useEffect(() => {
-    if (userPendingBets.length === 0 && optimisticBets.length === 0) {
-      setMarketPositions({})
-    }
-  }, [userPendingBets.length, optimisticBets.length])
-
-  // Position source priority: backend truth > optimistic preview
-  const positionsToDisplay = useMemo(() => {
-    if (Object.keys(marketPositions).length > 0) {
-      return marketPositions // Backend truth
-    }
-    return calculatedPositions // Optimistic preview
-  }, [marketPositions, calculatedPositions])
 
   // Detect odds changes and trigger blink animation
   useEffect(() => {
@@ -1281,8 +1207,15 @@ export default function LiveMatchDetailPage() {
                   setBetSlipOpen(true)
                 }
 
-                // Determine if this market should show positions (Match Odds or Bookmaker)
-                const shouldShowPositions = isMatchOdds || marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch'
+                // Determine positions based on market type
+                let positionsForMarket: Record<string, number | { profit: number; loss: number }> | undefined = undefined
+                if (isMatchOdds) {
+                  positionsForMarket = positionsByMarketType.matchOdds
+                } else if (marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch') {
+                  positionsForMarket = positionsByMarketType.bookmaker
+                } else if (isFancy) {
+                  positionsForMarket = positionsByMarketType.fancy
+                }
                 
                 // Use MatchOdds component for match odds markets
                 if (isMatchOdds) {
@@ -1295,7 +1228,7 @@ export default function LiveMatchDetailPage() {
                       isMobile={isMobile}
                       onBetSelect={handleBetSelect}
                       onRefresh={refetch}
-                      positions={shouldShowPositions ? positionsToDisplay : undefined}
+                      positions={positionsForMarket}
                     />
                   )
                 }
@@ -1324,7 +1257,7 @@ export default function LiveMatchDetailPage() {
                     isMobile={isMobile}
                     onBetSelect={handleBetSelect}
                     onRefresh={market.name === 'MATCH_ODDS' ? refetch : undefined}
-                    positions={shouldShowPositions ? positionsToDisplay : undefined}
+                    positions={positionsForMarket}
                   />
                 )
               })
@@ -1469,15 +1402,7 @@ export default function LiveMatchDetailPage() {
         authUser={authUser}
         onPlaceBetClick={onPlaceBetClick}
         onBetPlaced={(betData) => {
-          // Clear optimistic bets immediately on success
-          setOptimisticBets([])
-          
-          // If backend response contains positions, use them immediately (backend truth)
-          if (betData?.positions && Object.keys(betData.positions).length > 0) {
-            setMarketPositions(betData.positions)
-          }
-          
-          // Refetch from backend to sync - backend response will update marketPositions via useEffect
+          // Refetch positions and pending bets from backend after bet is placed
           refetchPendingBets()
           refetchPositions()
         }}

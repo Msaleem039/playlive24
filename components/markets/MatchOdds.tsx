@@ -19,7 +19,7 @@ interface MatchOddsProps {
     marketGType?: string
   }) => void
   onRefresh?: () => void
-  positions?: Record<string, number>
+  positions?: Record<string, number | { profit: number; loss: number }>
 }
 
 const BACK_COLUMNS = 1
@@ -101,7 +101,28 @@ export default function MatchOdds({
             {market.rows.map((row, rowIndex) => {
               // Get position for this team/runner
               const selectionIdStr = row.selectionId ? String(row.selectionId) : ''
-              const pnl = positions && selectionIdStr ? (positions[selectionIdStr] || 0) : null
+              const positionValue = positions && selectionIdStr ? positions[selectionIdStr] : null
+              
+              // Handle both formats: number or { profit, loss } object
+              // Calculate net position: if object format, use profit (net profit), otherwise use the number directly
+              let netPosition: number | null = null
+              
+              if (positionValue != null) {
+                if (typeof positionValue === 'object' && 'profit' in positionValue) {
+                  // For object format: use profit value (which represents net profit/loss)
+                  // profit shows the positive value, loss shows the negative value
+                  // Display the profit if it exists and is non-zero, otherwise show loss
+                  const profit = Number(positionValue.profit || 0)
+                  const loss = Number(positionValue.loss || 0)
+                  // Use profit if it's non-zero, otherwise use loss (which will be negative or zero)
+                  netPosition = profit !== 0 ? profit : (loss !== 0 ? loss : 0)
+                } else if (typeof positionValue === 'number') {
+                  netPosition = positionValue
+                }
+              }
+              
+              // Show position if it's non-zero
+              const hasPosition = netPosition !== null && netPosition !== 0
               
               return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
@@ -109,11 +130,11 @@ export default function MatchOdds({
                   <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
                     {row.team}
                   </div>
-                  {pnl !== null && pnl !== 0 && (
-                    <div className={`text-[10px] font-semibold mt-0.5 ${
-                      pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                  {hasPosition && (
+                    <div className={`text-[10px] font-semibold mt-0.5 leading-tight ${
+                      netPosition! >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {pnl >= 0 ? `+${pnl.toFixed(2)}` : pnl.toFixed(2)}
+                      {netPosition! >= 0 ? '+' : ''}{netPosition!.toFixed(2)}
                     </div>
                   )}
                 </td>

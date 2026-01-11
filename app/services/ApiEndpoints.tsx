@@ -70,6 +70,7 @@ export const API_END_POINTS = {
     settleFancy: `${BASE_URL}/admin/settlement/fancy`,
     settleMatchOdds: `${BASE_URL}/admin/settlement/match-odds`,
     settleBookmaker: `${BASE_URL}/admin/settlement/bookmaker`,
+    cancelBets: `${BASE_URL}/admin/settlement/cancel-bets`,
     rollbackSettlement: `${BASE_URL}/admin/settlement/rollback`,
     deleteBet: `${BASE_URL}/admin/settlement/bet`,
 
@@ -82,7 +83,7 @@ export const API_END_POINTS = {
     updateSiteVideo: `${BASE_URL}/site-video`,
 
     /////////////////////////////<===POSITIONS===>//////////////////////////////
-    getMatchPositions: `${BASE_URL}/positions/match/:matchId`,
+    getMatchPositions: `${BASE_URL}/positions`,
 
     /////////////////////////////<===ACCOUNT STATEMENT===>//////////////////////////////
     getAccountStatement: `${BASE_URL}/client/account-statement`,

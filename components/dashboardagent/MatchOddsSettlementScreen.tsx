@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, Play, Search, ChevronLeft, Zap, CheckCircle } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
-import { useGetPendingMarketsQuery, useSettleMatchOddsMutation } from "@/app/services/Api"
+import { useGetPendingMarketsQuery, useSettleMatchOddsMutation, useCancelBetsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
 export function MatchOddsSettlementScreen() {
@@ -15,8 +15,10 @@ export function MatchOddsSettlementScreen() {
   const [eventId, setEventId] = useState("")
   const [marketId, setMarketId] = useState("")
   const [winnerSelectionId, setWinnerSelectionId] = useState("")
+  const [isCancel, setIsCancel] = useState(false)
   
   const [settleMatchOdds, { isLoading: isSettling }] = useSettleMatchOddsMutation()
+  const [cancelBets, { isLoading: isCancelling }] = useCancelBetsMutation()
 
   const { data: pendingData, isLoading, refetch } = useGetPendingMarketsQuery({}, { 
     pollingInterval: 30000
@@ -200,6 +202,7 @@ export function MatchOddsSettlementScreen() {
       } else {
         setWinnerSelectionId("")
       }
+      setIsCancel(false)
     }
   }, [selectedMatch, runners])
 
@@ -256,30 +259,87 @@ export function MatchOddsSettlementScreen() {
       return
     }
     
+    const bets = selectedMatch?.matchOdds?.bets || []
     const betCount = selectedMatch?.matchOdds?.count || 0
     const totalAmount = selectedMatch?.matchOdds?.totalAmount || 0
     
-    const confirmMessage = `This will settle ALL ${betCount} Match Odds bet(s) for this market (Total: Rs${totalAmount.toLocaleString()}).\n\nFancy and Bookmaker bets will NOT be affected.\n\nContinue?`
+    // Collect betIds and their selectionIds from all bets
+    const betData = bets.map((bet: any) => ({
+      betId: bet.betId || bet.id,
+      selectionId: bet.selectionId || bet.selection_id || null
+    })).filter((item: any) => item.betId != null)
     
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
-    try {
-      // Payload format: { eventId: string, marketId: string, winnerSelectionId: string }
-      // Example: { "eventId": "35105462", "marketId": "5953754337655", "winnerSelectionId": "1" }
-      const payload = {
-        eventId: eventIdNum,
-        marketId: marketIdNum,
-        winnerSelectionId: winnerSelectionIdNum
+    const betIds = betData.map((item: any) => item.betId)
+    
+    if (isCancel) {
+      // Use cancelBets endpoint
+      if (betIds.length === 0) {
+        toast.error("No bet IDs found to cancel")
+        return
       }
       
-      await settleMatchOdds(payload).unwrap()
-      toast.success(`Match Odds bets settled successfully. ${betCount} bet(s) processed.`)
-      refetch()
-      setSelectedMatch(null)
-    } catch (error: any) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to settle match odds")
+      // Extract unique selectionIds from bets
+      const selectionIds = [...new Set(betData.map((item: any) => item.selectionId).filter((id: any) => id != null))]
+      
+      if (selectionIds.length === 0) {
+        toast.error("No selection IDs found in bets. Cannot cancel bets without selection IDs.")
+        return
+      }
+      
+      // If bets have different selectionIds, we need to group them and cancel separately
+      if (selectionIds.length > 1) {
+        toast.error(`Bets have different selection IDs (${selectionIds.join(', ')}). Please cancel bets with the same selection ID together.`)
+        return
+      }
+      
+      // All bets have the same selectionId, use it
+      const betSelectionId = String(selectionIds[0])
+      
+      const confirmMessage = `Cancelling ${betIds.length} Match Odds bet(s) for Selection ID ${betSelectionId} - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
+
+      try {
+        const payload = {
+          eventId: eventIdNum,
+          marketId: marketIdNum,
+          selectionId: betSelectionId,
+          betIds: betIds
+        }
+        
+        await cancelBets(payload).unwrap()
+        toast.success(`Match Odds bets cancelled successfully. ${betIds.length} bet(s) cancelled.`)
+        refetch()
+        setSelectedMatch(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to cancel match odds bets")
+      }
+    } else {
+      // Use regular settlement
+      const confirmMessage = `Settling ${betCount} Match Odds bet(s) for this market - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
+
+      try {
+        const payload = {
+          eventId: eventIdNum,
+          marketId: marketIdNum,
+          winnerSelectionId: winnerSelectionIdNum
+        }
+        
+        await settleMatchOdds(payload).unwrap()
+        toast.success(`Match Odds bets settled successfully. ${betCount} bet(s) processed.`)
+        refetch()
+        setSelectedMatch(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to settle match odds")
+      }
     }
   }
 
@@ -408,8 +468,8 @@ export function MatchOddsSettlementScreen() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Winner Selection <span className="text-red-500">*</span>
-                {runners && runners.length > 0 && (
+                {isCancel ? "Selection ID" : "Winner Selection"} <span className="text-red-500">*</span>
+                {runners && runners.length > 0 && !isCancel && (
                   <span className="ml-2 text-xs text-gray-500 font-normal">({runners.length} options available)</span>
                 )}
               </label>
@@ -465,20 +525,33 @@ export function MatchOddsSettlementScreen() {
               )}
             </div>
 
+            <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <input
+                type="checkbox"
+                id="isCancel"
+                checked={isCancel}
+                onChange={(e) => setIsCancel(e.target.checked)}
+                className="w-4 h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
+              />
+              <label htmlFor="isCancel" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Cancel/Refund all bets
+              </label>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
               <Button
                 onClick={() => setSelectedMatch(null)}
                 className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
-                disabled={isSettling}
+                disabled={isSettling || isCancelling}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSettle}
-                disabled={isSettling || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
+                disabled={(isSettling || isCancelling) || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
                 className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
               >
-                {isSettling ? (
+                {(isSettling || isCancelling) ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Settling...
@@ -486,7 +559,7 @@ export function MatchOddsSettlementScreen() {
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    Settle All Bets
+                    {isCancel ? "Cancel Bets" : "Settle All Bets"}
                   </>
                 )}
               </Button>

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, Target, Search, ChevronLeft, Zap, CheckCircle } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
-import { useGetPendingFancyMarketsQuery, useSettleFancyMutation } from "@/app/services/Api"
+import { useGetPendingFancyMarketsQuery, useSettleFancyMutation, useCancelBetsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
 export function FancySettlementScreen() {
@@ -20,6 +20,7 @@ export function FancySettlementScreen() {
   const [marketId, setMarketId] = useState("")
   
   const [settleFancy, { isLoading: isSettling }] = useSettleFancyMutation()
+  const [cancelBets, { isLoading: isCancelling }] = useCancelBetsMutation()
 
   const { data: pendingData, isLoading, refetch } = useGetPendingFancyMarketsQuery({}, { 
     pollingInterval: 30000
@@ -53,7 +54,25 @@ export function FancySettlementScreen() {
     })
   }, [matches, searchTerm])
 
-  // Extract selectionId from settlementId (format: "matchId_selectionId")
+  // Extract selectionId from bet - prioritizes direct field, falls back to settlementId extraction
+  const getSelectionIdFromBet = (bet: any): string => {
+    // Priority 1: Use bet.selectionId directly (can be number or string)
+    if (bet.selectionId != null) {
+      return String(bet.selectionId)
+    }
+    // Priority 2: Try bet.selection_id
+    if (bet.selection_id != null) {
+      return String(bet.selection_id)
+    }
+    // Priority 3: Extract from settlementId (format: "eventId_selectionId")
+    if (bet.settlementId && bet.settlementId.includes("_")) {
+      const parts = bet.settlementId.split("_")
+      return parts[1] || ""
+    }
+    return ""
+  }
+
+  // Extract selectionId from settlementId (format: "matchId_selectionId") - kept for backward compatibility
   const extractSelectionId = (settlementId: string) => {
     if (!settlementId || !settlementId.includes("_")) return ""
     const parts = settlementId.split("_")
@@ -67,21 +86,21 @@ export function FancySettlementScreen() {
     const selectionIdMap: Record<string, { selectionId: string, betName: string, count: number, totalAmount: number, bets: any[] }> = {}
     
     match.fancy.bets.forEach((bet: any) => {
-      const extractedSelectionId = extractSelectionId(bet.settlementId || "")
-      if (!extractedSelectionId) return
+      const selectionId = getSelectionIdFromBet(bet)
+      if (!selectionId) return
       
-      if (!selectionIdMap[extractedSelectionId]) {
-        selectionIdMap[extractedSelectionId] = {
-          selectionId: extractedSelectionId,
+      if (!selectionIdMap[selectionId]) {
+        selectionIdMap[selectionId] = {
+          selectionId: selectionId,
           betName: bet.betName || 'Unknown',
           count: 0,
           totalAmount: 0,
           bets: []
         }
       }
-      selectionIdMap[extractedSelectionId].count += 1
-      selectionIdMap[extractedSelectionId].totalAmount += bet.amount || 0
-      selectionIdMap[extractedSelectionId].bets.push(bet)
+      selectionIdMap[selectionId].count += 1
+      selectionIdMap[selectionId].totalAmount += bet.amount || 0
+      selectionIdMap[selectionId].bets.push(bet)
     })
     
     return Object.values(selectionIdMap).sort((a, b) => a.selectionId.localeCompare(b.selectionId))
@@ -91,8 +110,8 @@ export function FancySettlementScreen() {
   const getBetsForSelectionId = (match: any, selId: string | null) => {
     if (!match?.fancy?.bets || !selId) return []
     return match.fancy.bets.filter((bet: any) => {
-      const extractedSelectionId = extractSelectionId(bet.settlementId || "")
-      return extractedSelectionId === selId
+      const betSelectionId = getSelectionIdFromBet(bet)
+      return betSelectionId === selId
     })
   }
 
@@ -121,6 +140,79 @@ export function FancySettlementScreen() {
     
     return Object.values(grouped)
   }, [selectedMatch, selectedSelectionId])
+
+  // Helper functions to extract data from bets (used in both button validation and handleSettle)
+  const extractSelectionIdFromBet = (bet: any, fallbackSelectionId: string) => {
+    if (bet.selectionId != null) {
+      return String(bet.selectionId)
+    }
+    if (bet.selection_id != null) {
+      return String(bet.selection_id)
+    }
+    if (bet.settlementId && bet.settlementId.includes("_")) {
+      const parts = bet.settlementId.split("_")
+      return parts[1] || fallbackSelectionId
+    }
+    return fallbackSelectionId
+  }
+  
+  const extractMarketIdFromBet = (bet: any) => {
+    if (bet.marketId != null) {
+      return String(bet.marketId)
+    }
+    if (bet.market_id != null) {
+      return String(bet.market_id)
+    }
+    if (bet.market?.marketId != null) {
+      return String(bet.market.marketId)
+    }
+    return null
+  }
+  
+  const extractEventIdFromBet = (bet: any, matchEventId?: string) => {
+    if (bet.eventId != null) {
+      return String(bet.eventId)
+    }
+    if (bet.event_id != null) {
+      return String(bet.event_id)
+    }
+    if (matchEventId) {
+      return String(matchEventId)
+    }
+    return null
+  }
+
+  // Check if cancel button should be enabled (can extract all required data from bets)
+  const canCancelBets = useMemo(() => {
+    if (!selectedMatch || !selectedSelectionId || !isCancel) return false
+    
+    const bets = getBetsForSelectionId(selectedMatch, selectedSelectionId)
+    if (bets.length === 0) return false
+    
+    // Check if we have at least one bet with an ID
+    const hasBetIds = bets.some((bet: any) => bet.id || bet.betId)
+    if (!hasBetIds) return false
+    
+    // Check if we can extract selectionId
+    const hasSelectionId = bets.some((bet: any) => {
+      const selId = extractSelectionIdFromBet(bet, selectedSelectionId)
+      return selId && selId !== ""
+    })
+    
+    // Check if we can extract marketId
+    const hasMarketId = bets.some((bet: any) => {
+      const mktId = extractMarketIdFromBet(bet)
+      return mktId && mktId !== ""
+    })
+    
+    // Check if we can extract eventId
+    const hasEventId = bets.some((bet: any) => {
+      const evtId = extractEventIdFromBet(bet, selectedMatch.eventId)
+      return evtId && evtId !== ""
+    })
+    
+    return hasBetIds && hasSelectionId && hasMarketId && hasEventId
+  }, [selectedMatch, selectedSelectionId, isCancel])
 
   // Initialize form when match is selected
   useEffect(() => {
@@ -161,30 +253,121 @@ export function FancySettlementScreen() {
     }
 
     const selectedSelectionData = getAvailableSelectionIds(selectedMatch).find(s => s.selectionId === selectedSelectionId)
+    const bets = getBetsForSelectionId(selectedMatch, selectedSelectionId)
     const betCount = selectedSelectionData?.count || 0
     const totalAmount = selectedSelectionData?.totalAmount || 0
     const betName = selectedSelectionData?.betName || selectedSelectionId
     
-    const confirmMessage = `This will ${isCancel ? 'cancel/refund' : 'settle'} ALL ${betCount} Fancy bet(s) for Selection ID ${selectedSelectionId} (${betName}) (Total: Rs${totalAmount.toLocaleString()}).\n\nOther Selection IDs, Match Odds and Bookmaker bets will NOT be affected.\n\nContinue?`
+    // Collect betIds and extract data from bets
+    // Bet structure: { id, selectionId (number), marketId, eventId, settlementId }
+    const betData = bets.map((bet: any) => {
+      // Bet ID: prioritize 'id' field (as shown in API response), fallback to 'betId'
+      const betId = bet.id || bet.betId || null
+      if (!betId) return null
+      
+      return {
+        betId: betId,
+        selectionId: extractSelectionIdFromBet(bet, selectedSelectionId),
+        marketId: extractMarketIdFromBet(bet),
+        eventId: extractEventIdFromBet(bet, selectedMatch.eventId)
+      }
+    }).filter((item: any) => item != null && item.betId != null)
     
-    if (!confirm(confirmMessage)) {
-      return
-    }
+    const betIds = betData.map((item: any) => item.betId)
+    
+    // Extract selectionId from bets (should all be the same since we filtered by selectedSelectionId)
+    const betSelectionIds = [...new Set(betData.map((item: any) => item.selectionId).filter((id: any) => id != null))]
+    const betSelectionId = betSelectionIds.length > 0 ? String(betSelectionIds[0]) : selectionId.trim()
+    
+    // Extract marketId from bets (try to find a common one, or use form value)
+    const betMarketIds = [...new Set(betData.map((item: any) => item.marketId).filter((id: any) => id != null && id !== ""))]
+    const betMarketId = betMarketIds.length > 0 ? String(betMarketIds[0]) : marketId.trim()
+    
+    // Extract eventId from bets (should be same for all bets in a match)
+    const betEventIds = [...new Set(betData.map((item: any) => item.eventId).filter((id: any) => id != null && id !== ""))]
+    const betEventId = betEventIds.length > 0 ? String(betEventIds[0]) : eventId.trim()
+    
+    if (isCancel) {
+      // Use cancelBets endpoint
+      if (betIds.length === 0) {
+        toast.error("No bet IDs found to cancel")
+        return
+      }
+      
+      // Validate required fields
+      if (!betMarketId) {
+        toast.error("Market ID is required for cancelling bets. Please enter it manually or ensure bets have marketId.")
+        return
+      }
+      
+      if (!betSelectionId) {
+        toast.error("Selection ID could not be extracted from bets")
+        return
+      }
+      
+      if (!betEventId) {
+        toast.error("Event ID is required for cancelling bets")
+        return
+      }
+      
+      // Verify selectionId matches
+      if (betSelectionIds.length > 1) {
+        toast.error(`Bets have different selection IDs (${betSelectionIds.join(', ')}). Cannot cancel bets with different selection IDs together.`)
+        return
+      }
+      
+      // Verify marketId matches if multiple found
+      if (betMarketIds.length > 1) {
+        toast.warning(`Bets have different market IDs (${betMarketIds.join(', ')}). Using first market ID: ${betMarketId}`)
+      }
+      
+      const confirmMessage = `Cancelling ${betIds.length} Fancy bet(s) for Selection ID ${betSelectionId} (${betName}) - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
 
-    try {
-      await settleFancy({
-        eventId: eventId.trim(),
-        selectionId: selectionId.trim(),
-        decisionRun: isCancel ? undefined : Number(decisionRun),
-        isCancel,
-        marketId: marketId.trim() || undefined
-      }).unwrap()
-      toast.success(isCancel ? `Fancy bets cancelled successfully for Selection ID ${selectedSelectionId}` : `Fancy bets settled successfully for Selection ID ${selectedSelectionId}. ${betCount} bet(s) processed.`)
-      refetch()
-      setSelectedMatch(null)
-      setSelectedSelectionId(null)
-    } catch (error: any) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to settle fancy bets")
+      try {
+        const payload = {
+          eventId: betEventId,
+          marketId: betMarketId,
+          selectionId: betSelectionId,
+          betIds: betIds
+        }
+        
+        await cancelBets(payload).unwrap()
+        toast.success(`Fancy bets cancelled successfully for Selection ID ${betSelectionId}. ${betIds.length} bet(s) cancelled.`)
+        refetch()
+        setSelectedMatch(null)
+        setSelectedSelectionId(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to cancel fancy bets")
+      }
+    } else {
+      // Use regular settlement
+      const confirmMessage = `Settling ${betCount} Fancy bet(s) for Selection ID ${selectedSelectionId} (${betName}) - Total: Rs${totalAmount.toLocaleString()}`
+      
+      // Show info toast and proceed
+      toast.info(confirmMessage, {
+        duration: 3000,
+      })
+
+      try {
+        await settleFancy({
+          eventId: eventId.trim(),
+          selectionId: selectionId.trim(),
+          decisionRun: Number(decisionRun),
+          isCancel: false,
+          marketId: marketId.trim() || undefined
+        }).unwrap()
+        toast.success(`Fancy bets settled successfully for Selection ID ${selectedSelectionId}. ${betCount} bet(s) processed.`)
+        refetch()
+        setSelectedMatch(null)
+        setSelectedSelectionId(null)
+      } catch (error: any) {
+        toast.error(error?.data?.error || error?.data?.message || "Failed to settle fancy bets")
+      }
     }
   }
 
@@ -337,7 +520,7 @@ export function FancySettlementScreen() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Market ID <span className="text-gray-500">(Optional)</span>
+                Market ID <span className={isCancel ? "text-red-500" : "text-gray-500"}>{isCancel ? "*" : "(Optional)"}</span>
               </label>
               <Input
                 type="text"
@@ -345,6 +528,7 @@ export function FancySettlementScreen() {
                 onChange={(e) => setMarketId(e.target.value)}
                 placeholder="Enter market ID"
                 className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                required={isCancel}
               />
             </div>
 
@@ -387,16 +571,20 @@ export function FancySettlementScreen() {
                   setSelectedSelectionId(null)
                 }}
                 className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
-                disabled={isSettling}
+                disabled={isSettling || isCancelling}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSettle}
-                disabled={isSettling || !selectedSelectionId || !eventId.trim() || !selectionId.trim() || (!isCancel && !decisionRun.trim())}
+                disabled={
+                  (isSettling || isCancelling) || 
+                  !selectedSelectionId || 
+                  (isCancel ? !canCancelBets : (!eventId.trim() || !selectionId.trim() || !decisionRun.trim()))
+                }
                 className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
               >
-                {isSettling ? (
+                {(isSettling || isCancelling) ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Settling...

@@ -279,6 +279,15 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['Settlement'] as any,
     }),
 
+    cancelBets: builder.mutation({
+      query: (data: { eventId: string; marketId: string; selectionId: string; betIds: string[] }) => ({
+        url: API_END_POINTS.cancelBets,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+
     rollbackSettlement: builder.mutation({
       query: (data: { settlementId: string }) => ({
         url: API_END_POINTS.rollbackSettlement,
@@ -330,10 +339,15 @@ export const api = SplitApiSettings.injectEndpoints({
 
     /////////////////////////////<===POSITIONS QUERIES===>//////////////////////////////
     getMatchPositions: builder.query({
-      query: (matchId: string) => ({
-        url: API_END_POINTS.getMatchPositions.replace(":matchId", matchId),
-        method: "GET",
-      }),
+      query: (params?: { matchId?: string; eventId?: string }) => {
+        const queryParams = new URLSearchParams()
+        if (params?.matchId) queryParams.append('matchId', params.matchId)
+        if (params?.eventId) queryParams.append('eventId', params.eventId)
+        return {
+          url: `${API_END_POINTS.getMatchPositions}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+          method: "GET",
+        }
+      },
       providesTags: ['Positions'] as any,
     }),
 
@@ -398,6 +412,7 @@ export const {
     useSettleFancyMutation,
     useSettleMatchOddsMutation,
     useSettleBookmakerMutation,
+    useCancelBetsMutation,
     useRollbackSettlementMutation,
     useDeleteBetMutation,
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
