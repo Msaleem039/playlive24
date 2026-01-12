@@ -21,9 +21,11 @@ import { useRouter } from "next/navigation"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser } from "@/app/store/slices/authSlice"
-import { useGetWalletQuery } from "@/app/services/Api"
+import { useGetWalletQuery, useChangePasswordMutation } from "@/app/services/Api"
 import Cookies from "js-cookie"
 import { RefreshCw } from "lucide-react"
+import { toast } from "sonner"
+import ChangePasswordModal from "./modal/ChangePasswordModal"
 
 interface DashboardTopBarProps {
   onSidebarOpen: () => void
@@ -34,11 +36,13 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   const dispatch = useDispatch<any>()
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isBalanceMenuOpen, setIsBalanceMenuOpen] = useState(false)
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const balanceMenuRef = useRef<HTMLDivElement | null>(null)
 
   const authUser = useSelector(selectCurrentUser)
+  const [changePassword] = useChangePasswordMutation()
 
   // Fetch wallet data (balance, liability, availableBalance)
   const { data: walletData, refetch: refetchWallet } = useGetWalletQuery(undefined, {
@@ -147,7 +151,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
       return [
         { label: "Change Password", href: "/client/change-password", icon: Lock },
         { label: "Account Statement", href: "/client/account-statement", icon: FileText },
-        { label: "Profit Loss", href: "/client/profit-loss", icon: BarChart2 },
+        // { label: "Profit Loss", href: "/client/profit-loss", icon: BarChart2 },
         { label: "Bet History", href: "/client/bet-history", icon: History },
         { label: "Rules", href: "/client/rules", icon: BookOpen },
         { label: "Set Button Value", href: "/client/set-button-value", icon: SlidersHorizontal },
@@ -197,6 +201,31 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isBalanceMenuOpen])
+
+  const handleChangePassword = async (data: {
+    password: string
+    confirmPassword: string
+  }) => {
+    try {
+      await changePassword({
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      }).unwrap()
+      toast.success("Password updated successfully")
+      setIsChangePasswordModalOpen(false)
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to change password. Please try again."
+      toast.error("Change password failed", {
+        description: errorMessage,
+      })
+      throw error
+    }
+  }
 
   const handleLogout = () => {
     try {
@@ -334,17 +363,34 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
                   </div>
 
                   <div className="py-1 text-xs sm:text-sm text-gray-700">
-                    {dropdownItems.map(({ label, href, icon: Icon }) => (
-                      <Link
-                        key={label}
-                        href={href}
-                        className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f4f7f6] transition"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00A66E] flex-shrink-0" />
-                        <span className="text-[11px] sm:text-xs md:text-sm">{label}</span>
-                      </Link>
-                    ))}
+                    {dropdownItems.map(({ label, href, icon: Icon }) => {
+                      if (label === "Change Password") {
+                        return (
+                          <button
+                            key={label}
+                            onClick={() => {
+                              setIsChangePasswordModalOpen(true)
+                              setIsUserMenuOpen(false)
+                            }}
+                            className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f4f7f6] transition text-left"
+                          >
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00A66E] flex-shrink-0" />
+                            <span className="text-[11px] sm:text-xs md:text-sm">{label}</span>
+                          </button>
+                        )
+                      }
+                      return (
+                        <Link
+                          key={label}
+                          href={href}
+                          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f4f7f6] transition"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00A66E] flex-shrink-0" />
+                          <span className="text-[11px] sm:text-xs md:text-sm">{label}</span>
+                        </Link>
+                      )
+                    })}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 text-left text-[#8B1A3A] hover:bg-[#fce8ee] transition"
@@ -359,6 +405,14 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        username={userInfo.name}
+        onSubmit={handleChangePassword}
+      />
     </div>
   )
 }
