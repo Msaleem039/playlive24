@@ -241,9 +241,12 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             {data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
-                  // Handle wicket indicators (WW, W, etc.)
-                  const isWicket = ball.toUpperCase().includes('W')
-                  const ballValue = ball.replace(/W/gi, '')
+                  const ballUpper = ball.toUpperCase()
+                  // Check for wide ball (Wd, Wd1, Wd2, etc.)
+                  const isWide = ballUpper.includes('WD')
+                  // Check for wicket (W, W1, W2, etc. but not Wd)
+                  const isWicket = ballUpper.includes('W') && !isWide
+                  const ballValue = ball.replace(/W/gi, '').replace(/D/gi, '')
                   const isZero = ballValue === '0' || ballValue === '0.0' || ballValue === ''
                   
                   return (
@@ -252,6 +255,8 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                       className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${
                         isWicket
                           ? 'bg-red-500 text-white'
+                          : isWide
+                          ? 'bg-green-500 text-white'
                           : isZero
                           ? 'bg-gray-600 text-gray-300'
                           : ballValue === '4' || ballValue === '6'
@@ -259,7 +264,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                           : 'bg-green-500 text-white'
                       }`}
                     >
-                      {isWicket ? 'W' : ball}
+                      {isWicket || isWide ? 'W' : ball}
                     </div>
                   )
                 })}

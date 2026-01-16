@@ -4,6 +4,14 @@ import { useState, useEffect, useMemo } from "react"
 import { X, RefreshCw, CheckCircle, Play, Activity } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
+// WARNING: This modal component is currently NOT USED anywhere in the codebase.
+// The MatchOddsSettlementScreen component handles all Match Odds settlements.
+// If you need to use this modal, ensure it's NOT used together with MatchOddsSettlementScreen
+// to avoid duplicate API calls to POST /admin/settlement/match-odds
+//
+// NOTE: This component ONLY uses Match Odds settlement endpoint
+// Endpoint: POST /admin/settlement/match-odds
+// DO NOT import or use any fancy settlement APIs here
 import { useSettleMatchOddsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
@@ -156,6 +164,9 @@ export function MatchOddsSettlementModal({ match, isOpen, onClose, onSettle }: M
         winnerSelectionId: winnerSelectionId.trim()
       }
       
+      // WARNING: This calls POST /admin/settlement/match-odds
+      // Ensure this modal is NOT used together with MatchOddsSettlementScreen
+      // to avoid duplicate API calls for the same settlement
       await settleMatchOdds(payload).unwrap()
       toast.success(`Match odds bets settled successfully. ${betCount} bet(s) processed.`)
       onSettle()

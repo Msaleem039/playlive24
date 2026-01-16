@@ -4,6 +4,12 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, Play, Search, ChevronLeft, Zap, CheckCircle } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
+// NOTE: This component ONLY uses Match Odds settlement endpoints
+// Endpoints: 
+//   - GET /admin/settlement/pending/markets (for pending markets)
+//   - POST /admin/settlement/match-odds (for settlement)
+//   - POST /admin/settlement/cancel-bets (for cancellation)
+// DO NOT import or use any fancy settlement APIs here
 import { useGetPendingMarketsQuery, useSettleMatchOddsMutation, useCancelBetsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 
@@ -333,6 +339,9 @@ export function MatchOddsSettlementScreen() {
           winnerSelectionId: winnerSelectionIdNum
         }
         
+        // NOTE: This is the ONLY place that should call POST /admin/settlement/match-odds
+        // MatchOddsSettlementModal also has this call but is currently unused.
+        // If the modal is used in the future, ensure they're not used together to avoid duplicate calls.
         await settleMatchOdds(payload).unwrap()
         toast.success(`Match Odds bets settled successfully. ${betCount} bet(s) processed.`)
         refetch()

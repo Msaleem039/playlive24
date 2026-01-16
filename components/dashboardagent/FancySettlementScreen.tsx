@@ -4,6 +4,12 @@ import { useState, useEffect, useMemo } from "react"
 import { RefreshCw, Target, Search, ChevronLeft, Zap, CheckCircle } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
+// NOTE: This component is the ONLY place that should use Fancy settlement endpoint
+// Endpoints:
+//   - GET /admin/settlement/pending/fancy-markets (for pending markets)
+//   - POST /admin/settlement/fancy (for settlement) - ONLY called here
+//   - POST /admin/settlement/cancel-bets (for cancellation)
+// DO NOT use fancy settlement APIs in MatchOddsSettlementModal or MatchOddsSettlementScreen
 import { useGetPendingFancyMarketsQuery, useSettleFancyMutation, useCancelBetsMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 

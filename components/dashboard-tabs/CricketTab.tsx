@@ -532,11 +532,15 @@ export default function CricketTab() {
                   })()
 
               const handleMatchClick = () => {
+                // Only navigate for live matches
+                if (!isLive) {
+                  return
+                }
                 // Use gmid first (from new API), then match_id, then id
                 const matchId = match.gmid ?? match.match_id ?? match.id
                 if (matchId) {
                   // Set flag to auto-open TV when navigating from main page (only for live matches)
-                  if (typeof window !== 'undefined' && isLive) {
+                  if (typeof window !== 'undefined') {
                     sessionStorage.setItem('fromMainPage', 'true')
                   }
                   router.push(`/live/${matchId}`)
@@ -547,7 +551,9 @@ export default function CricketTab() {
                 <div 
                   key={match.gmid ?? match.match_id ?? match.id ?? index} 
                   onClick={handleMatchClick}
-                  className={`flex flex-col sm:grid sm:grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 sm:px-2 py-2 hover:bg-gray-50 cursor-pointer ${
+                  className={`flex flex-col sm:grid sm:grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 sm:px-2 py-2 ${
+                    isLive ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'
+                  } ${
                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                   }`}
                   style={{ minHeight: '60px' }}

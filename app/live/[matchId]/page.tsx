@@ -38,6 +38,22 @@ export default function LiveMatchDetailPage() {
   const isAdmin = userRole === 'ADMIN'
   const shouldShowTV = !isSuperAdmin && !isAdmin // Hide TV for SUPER_ADMIN and ADMIN
   
+  // Calculate wallet balance - check multiple possible fields
+  const walletBalance = useMemo(() => {
+    if (!authUser) return 0
+    return Number(
+      authUser?.balance ??
+      authUser?.walletBalance ??
+      authUser?.availableBalance ??
+      authUser?.available_balance ??
+      authUser?.chips ??
+      0
+    )
+  }, [authUser])
+  
+  // TV toggle enabled only if wallet balance >= 200
+  const canToggleTV = walletBalance >= 200
+  
   // Redirect SUPER_ADMIN and ADMIN away from detail page
   useEffect(() => {
     if (isSuperAdmin || isAdmin) {
@@ -64,6 +80,13 @@ export default function LiveMatchDetailPage() {
     }
     return false
   })
+  
+  // Force toggle off if balance becomes insufficient
+  useEffect(() => {
+    if (!canToggleTV && liveToggle) {
+      setLiveToggle(false)
+    }
+  }, [canToggleTV, liveToggle])
   const [selectedTab, setSelectedTab] = useState('all')
   const [dashboardTab, setDashboardTab] = useState('Cricket')
 
@@ -757,11 +780,15 @@ export default function LiveMatchDetailPage() {
     // Extract matchOdds positions - preserve full object if it has profit/loss
     if (data.matchOdds?.positions) {
       Object.entries(data.matchOdds.positions).forEach(([selectionId, position]: [string, any]) => {
-        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
-          // Keep the full object with profit and loss
+        // Check if it's an object with profit or loss properties (even if values are 0)
+        if (typeof position === 'object' && 
+            position !== null && 
+            !Array.isArray(position) &&
+            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
+          // Always preserve the full object with profit and loss, even if values are 0
           result.matchOdds[selectionId] = {
-            profit: Number(position.profit || 0),
-            loss: Number(position.loss || 0)
+            profit: position.profit != null ? Number(position.profit) : 0,
+            loss: position.loss != null ? Number(position.loss) : 0
           }
         } else if (typeof position === 'number') {
           // Simple number format
@@ -773,10 +800,15 @@ export default function LiveMatchDetailPage() {
     // Extract bookmaker positions
     if (data.bookmaker?.positions) {
       Object.entries(data.bookmaker.positions).forEach(([selectionId, position]: [string, any]) => {
-        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
+        // Check if it's an object with profit or loss properties (even if values are 0)
+        if (typeof position === 'object' && 
+            position !== null && 
+            !Array.isArray(position) &&
+            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
+          // Always preserve the full object with profit and loss, even if values are 0
           result.bookmaker[selectionId] = {
-            profit: Number(position.profit || 0),
-            loss: Number(position.loss || 0)
+            profit: position.profit != null ? Number(position.profit) : 0,
+            loss: position.loss != null ? Number(position.loss) : 0
           }
         } else if (typeof position === 'number') {
           result.bookmaker[selectionId] = position
@@ -787,10 +819,15 @@ export default function LiveMatchDetailPage() {
     // Extract fancy positions (if available in response)
     if (data.fancy?.positions) {
       Object.entries(data.fancy.positions).forEach(([selectionId, position]: [string, any]) => {
-        if (typeof position === 'object' && (position.profit != null || position.loss != null)) {
+        // Check if it's an object with profit or loss properties (even if values are 0)
+        if (typeof position === 'object' && 
+            position !== null && 
+            !Array.isArray(position) &&
+            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
+          // Always preserve the full object with profit and loss, even if values are 0
           result.fancy[selectionId] = {
-            profit: Number(position.profit || 0),
-            loss: Number(position.loss || 0)
+            profit: position.profit != null ? Number(position.profit) : 0,
+            loss: position.loss != null ? Number(position.loss) : 0
           }
         } else if (typeof position === 'number') {
           result.fancy[selectionId] = position
@@ -1046,21 +1083,36 @@ export default function LiveMatchDetailPage() {
                 <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0">
                   <span className="text-xs sm:text-sm font-semibold">Live TV</span>
           <button
-            onClick={() => setLiveToggle(!liveToggle)}
+            onClick={() => canToggleTV && setLiveToggle(!liveToggle)}
+            disabled={!canToggleTV}
             className={`relative w-10 h-5 rounded-full transition-colors ${
-              liveToggle ? 'bg-white' : 'bg-gray-300'
+              !canToggleTV 
+                ? 'bg-gray-400 cursor-not-allowed opacity-50' 
+                : liveToggle 
+                  ? 'bg-white' 
+                  : 'bg-gray-300'
             }`}
-            title={liveToggle ? 'Turn off Live TV' : 'Turn on Live TV'}
+            title={
+              !canToggleTV 
+                ? 'Minimum wallet balance of Rs 200 required to access Live TV' 
+                : liveToggle 
+                  ? 'Turn off Live TV' 
+                  : 'Turn on Live TV'
+            }
           >
             <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[#00A66E] transition-transform flex items-center justify-center ${
-                liveToggle ? 'translate-x-5' : 'translate-x-0'
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform flex items-center justify-center ${
+                !canToggleTV
+                  ? 'bg-gray-500'
+                  : liveToggle
+                    ? 'bg-[#00A66E] translate-x-5'
+                    : 'bg-[#00A66E] translate-x-0'
               }`}
             >
-              {liveToggle ? (
+              {liveToggle && canToggleTV ? (
                         <span className="text-white text-xs font-bold">✓</span>
               ) : (
-                        <span className="text-gray-600 text-xs font-bold">−</span>
+                        <span className={`text-xs font-bold ${!canToggleTV ? 'text-gray-300' : 'text-white'}`}>−</span>
               )}
             </div>
           </button>
@@ -1302,21 +1354,36 @@ export default function LiveMatchDetailPage() {
             <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0">
               <span className="text-sm font-semibold">Live TV</span>
               <button
-                onClick={() => setLiveToggle(!liveToggle)}
+                onClick={() => canToggleTV && setLiveToggle(!liveToggle)}
+                disabled={!canToggleTV}
                 className={`relative w-10 h-5 rounded-full transition-colors ${
-                  liveToggle ? 'bg-white' : 'bg-gray-300'
+                  !canToggleTV 
+                    ? 'bg-gray-400 cursor-not-allowed opacity-50' 
+                    : liveToggle 
+                      ? 'bg-white' 
+                      : 'bg-gray-300'
                 }`}
-                title={liveToggle ? 'Turn off Live TV' : 'Turn on Live TV'}
+                title={
+                  !canToggleTV 
+                    ? 'Minimum wallet balance of Rs 200 required to access Live TV' 
+                    : liveToggle 
+                      ? 'Turn off Live TV' 
+                      : 'Turn on Live TV'
+                }
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[#00A66E] transition-transform flex items-center justify-center ${
-                    liveToggle ? 'translate-x-5' : 'translate-x-0'
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform flex items-center justify-center ${
+                    !canToggleTV
+                      ? 'bg-gray-500'
+                      : liveToggle
+                        ? 'bg-[#00A66E] translate-x-5'
+                        : 'bg-[#00A66E] translate-x-0'
                   }`}
                 >
-                  {liveToggle ? (
+                  {liveToggle && canToggleTV ? (
                     <span className="text-white text-xs font-bold">✓</span>
                   ) : (
-                    <span className="text-gray-600 text-xs font-bold">−</span>
+                    <span className={`text-xs font-bold ${!canToggleTV ? 'text-gray-300' : 'text-white'}`}>−</span>
                   )}
                 </div>
               </button>
