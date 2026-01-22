@@ -8,7 +8,7 @@ import LiveScorecard from '@/components/scorecard/LiveScorecard'
 import DashboardHeader from '@/components/dashboard-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
-import { useGetMyPendingBetsQuery, useGetMatchPositionsQuery } from '@/app/services/Api'
+import { useGetMyPendingBetsQuery, useGetMatchPositionsQuery, useGetWalletQuery } from '@/app/services/Api'
 import BetSlipModal from '@/components/modal/BetSlipModal'
 import MatchOdds from '@/components/markets/MatchOdds'
 import FancyDetail from '@/components/markets/FancyDetail'
@@ -38,22 +38,6 @@ export default function LiveMatchDetailPage() {
   const isAdmin = userRole === 'ADMIN'
   const shouldShowTV = !isSuperAdmin && !isAdmin // Hide TV for SUPER_ADMIN and ADMIN
   
-  // Calculate wallet balance - check multiple possible fields
-  const walletBalance = useMemo(() => {
-    if (!authUser) return 0
-    return Number(
-      authUser?.balance ??
-      authUser?.walletBalance ??
-      authUser?.availableBalance ??
-      authUser?.available_balance ??
-      authUser?.chips ??
-      0
-    )
-  }, [authUser])
-  
-  // TV toggle enabled only if wallet balance >= 200
-  const canToggleTV = walletBalance >= 200
-  
   // Redirect SUPER_ADMIN and ADMIN away from detail page
   useEffect(() => {
     if (isSuperAdmin || isAdmin) {
@@ -80,13 +64,6 @@ export default function LiveMatchDetailPage() {
     }
     return false
   })
-  
-  // Force toggle off if balance becomes insufficient
-  useEffect(() => {
-    if (!canToggleTV && liveToggle) {
-      setLiveToggle(false)
-    }
-  }, [canToggleTV, liveToggle])
   const [selectedTab, setSelectedTab] = useState('all')
   const [dashboardTab, setDashboardTab] = useState('Cricket')
 
@@ -102,6 +79,21 @@ export default function LiveMatchDetailPage() {
   }
   const [blinkingOdds, setBlinkingOdds] = useState<Set<string>>(new Set())
   const previousOddsRef = useRef<Map<string, { odds: string; amount: string }>>(new Map())
+  
+  // Stable positions state - persists across API updates (wallet-like behavior)
+  // Match Odds: { selectionId: net } - net is final P/L if that runner wins
+  // Bookmaker: { selectionId: net } - same structure
+  // Fancy: { fancyId: { YES/NO: net } } - outcome-based net values
+  const stablePositionsRef = useRef<{
+    matchOdds: Record<string, number> // selectionId -> net
+    bookmaker: Record<string, number> // selectionId -> net
+    fancy: Record<string, Record<string, number>> // fancyId -> { YES/NO -> net }
+    _lastMatchId?: string // Track last matchId to detect changes
+  }>({
+    matchOdds: {},
+    bookmaker: {},
+    fancy: {}
+  })
   
   // Bet slip state
   const [betSlipOpen, setBetSlipOpen] = useState(false)
@@ -131,6 +123,19 @@ export default function LiveMatchDetailPage() {
     matchId ? { matchId } : { eventId: eventIdForPositions || '' },
     { skip: !matchId || !authUser, pollingInterval: 10000 }
   )
+
+  // Fetch wallet data for Live TV access check
+  const { data: walletData } = useGetWalletQuery(undefined, {
+    skip: !authUser,
+    pollingInterval: 30000,
+  })
+
+  // Check if user can toggle TV (requires minimum wallet balance of Rs 200)
+  const canToggleTV = useMemo(() => {
+    if (!authUser) return false
+    const balance = walletData?.balance ?? authUser?.balance ?? authUser?.walletBalance ?? authUser?.availableBalance ?? authUser?.available_balance ?? authUser?.chips ?? 0
+    return Number(balance) >= 200
+  }, [authUser, walletData])
 
   const userPendingBets = useMemo(() => {
     if (!myPendingBetsData) return []
@@ -575,7 +580,46 @@ export default function LiveMatchDetailPage() {
             return
           }
           
-          const oddsForRunner = market.odds?.runners?.find((r: OddsRunner) => r.selectionId === runner.selectionId)
+          // CRITICAL: Position API uses selectionIds from odds data, not from market runners
+          // We need to match market runners to odds runners to get the correct selectionId
+          let oddsForRunner: OddsRunner | undefined = undefined
+          let positionSelectionId: number = runner.selectionId
+          
+          if (market.odds?.runners && Array.isArray(market.odds.runners)) {
+            // First try: Match by selectionId (if they happen to match)
+            oddsForRunner = market.odds.runners.find((r: OddsRunner) => r.selectionId === runner.selectionId)
+            
+            // Second try: Match by array position (runners are usually in same order)
+            // This is the most reliable method since Position API uses odds selectionIds
+            if (!oddsForRunner && market.runners.length === market.odds.runners.length) {
+              const runnerIndex = market.runners.findIndex((r: MarketRunner) => r.selectionId === runner.selectionId)
+              if (runnerIndex >= 0 && runnerIndex < market.odds.runners.length) {
+                oddsForRunner = market.odds.runners[runnerIndex]
+                positionSelectionId = oddsForRunner.selectionId
+                console.log('[Market Transform] Matched by array position:', {
+                  team: runner.runnerName,
+                  marketRunnerIndex: runnerIndex,
+                  marketRunnerSelectionId: runner.selectionId,
+                  oddsRunnerSelectionId: oddsForRunner.selectionId,
+                  positionSelectionId
+                })
+              }
+            }
+            
+            // If we found an odds runner, use its selectionId for position matching
+            if (oddsForRunner) {
+              positionSelectionId = oddsForRunner.selectionId
+            } else {
+              console.warn('[Market Transform] No odds runner found for market runner:', {
+                team: runner.runnerName,
+                marketRunnerSelectionId: runner.selectionId,
+                availableOddsSelectionIds: market.odds.runners.map((r: OddsRunner) => r.selectionId),
+                marketRunnersCount: market.runners.length,
+                oddsRunnersCount: market.odds.runners.length,
+                marketRunnerIndex: market.runners.findIndex((r: MarketRunner) => r.selectionId === runner.selectionId)
+              })
+            }
+          }
           
           const backOdds: BettingOption[] = []
           const layOdds: BettingOption[] = []
@@ -618,9 +662,21 @@ export default function LiveMatchDetailPage() {
 
           rows.push({
             team: runner.runnerName || 'Unknown',
-            selectionId: runner.selectionId,
+            selectionId: positionSelectionId, // Use selectionId from odds data for position matching
             back: backOdds,
             lay: layOdds
+          })
+          
+          // Debug: Log selectionId mapping
+          console.log('[Market Transform] SelectionId mapping:', {
+            team: runner.runnerName,
+            marketRunnerSelectionId: runner.selectionId,
+            oddsRunnerSelectionId: oddsForRunner?.selectionId,
+            positionSelectionId: positionSelectionId,
+            hasOddsRunner: !!oddsForRunner,
+            allOddsRunners: market.odds?.runners?.map((r: OddsRunner) => ({
+              selectionId: r.selectionId
+            })) || []
           })
         })
 
@@ -759,84 +815,176 @@ export default function LiveMatchDetailPage() {
     return sortedMarkets
   }, [allMarkets])
 
-  // Extract positions from API response - separate by market type
-  // Support both formats: { selectionId: number } and { selectionId: { profit: number, loss: number } }
-  const positionsByMarketType = useMemo(() => {
-    if (!positionsData?.success || !positionsData?.data) {
-      return {
-        matchOdds: {} as Record<string, number | { profit: number; loss: number }>,
-        bookmaker: {} as Record<string, number | { profit: number; loss: number }>,
-        fancy: {} as Record<string, number | { profit: number; loss: number }>
+  // Clear positions when matchId changes (prevent mixing positions across matches)
+  useEffect(() => {
+    console.log('[Positions] Match changed, clearing positions:', { matchId, previousMatchId: stablePositionsRef.current._lastMatchId })
+    stablePositionsRef.current.matchOdds = {}
+    stablePositionsRef.current.bookmaker = {}
+    stablePositionsRef.current.fancy = {}
+    stablePositionsRef.current._lastMatchId = matchId
+  }, [matchId])
+
+  // Extract positions from API response - STABLE STATE (merges with existing, never clears)
+  // 
+  // NEW API FORMAT (simplified):
+  // {
+  //   "eventId": "32547891",
+  //   "matchOdds": {
+  //     "681460": 122,    // ← Match Detail API selectionId
+  //     "63361": 0        // ← Match Detail API selectionId
+  //   },
+  //   "bookmaker": {
+  //     "681460": 120,
+  //     "63361": -150
+  //   },
+  //   "fancy": {
+  //     "fancyId_1": {
+  //       "YES": 50,
+  //       "NO": -100
+  //     }
+  //   }
+  // }
+  //
+  // CRITICAL RULES:
+  // 1. marketId is UNRELIABLE and completely ignored (not in new API)
+  // 2. matchOdds and bookmaker are already normalized: { [selectionId: string]: number }
+  // 3. Extract directly - NO calculations, NO transformations
+  // 4. Each match handled independently (scoped by eventId)
+  useEffect(() => {
+    console.log('[Positions] Raw API response:', {
+      hasData: !!positionsData,
+      success: positionsData?.success,
+      data: positionsData?.data,
+      eventId: positionsData?.data?.eventId
+    })
+
+    // Only update positions if API returns valid data
+    if (positionsData?.success && positionsData?.data) {
+      const data = positionsData.data
+      
+      console.log('[Positions] Processing positions data:', {
+        hasMatchOdds: !!data.matchOdds,
+        matchOddsType: typeof data.matchOdds,
+        matchOddsValue: data.matchOdds,
+        hasBookmaker: !!data.bookmaker,
+        bookmakerType: typeof data.bookmaker,
+        bookmakerValue: data.bookmaker,
+        hasFancy: !!data.fancy,
+        fancyType: typeof data.fancy
+      })
+
+      // Extract matchOdds positions - already in normalized format: { [selectionId: string]: number }
+      // Example: { "7337": 80, "10301": -200 }
+      if (data.matchOdds && typeof data.matchOdds === 'object') {
+        console.log('[Positions] Extracting matchOdds positions:', {
+          matchOddsKeys: Object.keys(data.matchOdds),
+          matchOddsEntries: Object.entries(data.matchOdds)
+        })
+        
+        Object.entries(data.matchOdds).forEach(([selectionId, netValue]: [string, any]) => {
+          // netValue is already a number (no nested object structure)
+          // Store directly - NO calculations, NO transformations
+          if (netValue !== undefined && netValue !== null) {
+            stablePositionsRef.current.matchOdds[String(selectionId)] = Number(netValue)
+            console.log('[Positions] Stored matchOdds position:', {
+              selectionId: String(selectionId),
+              net: Number(netValue),
+              stored: stablePositionsRef.current.matchOdds[String(selectionId)]
+            })
+          } else {
+            console.log('[Positions] Skipping matchOdds position - invalid value:', {
+              selectionId,
+              netValue,
+              type: typeof netValue
+            })
+          }
+        })
+        
+        console.log('[Positions] Final matchOdds positions after extraction:', {
+          allPositions: stablePositionsRef.current.matchOdds,
+          keys: Object.keys(stablePositionsRef.current.matchOdds),
+          count: Object.keys(stablePositionsRef.current.matchOdds).length
+        })
+      } else {
+        console.log('[Positions] No matchOdds data to extract:', {
+          hasMatchOdds: !!data.matchOdds,
+          type: typeof data.matchOdds
+        })
+      }
+
+      // Extract bookmaker positions - same normalized format: { [selectionId: string]: number }
+      // Example: { "7337": 120, "10301": -150 }
+      if (data.bookmaker && typeof data.bookmaker === 'object') {
+        console.log('[Positions] Extracting bookmaker positions:', {
+          bookmakerKeys: Object.keys(data.bookmaker),
+          bookmakerEntries: Object.entries(data.bookmaker)
+        })
+        
+        Object.entries(data.bookmaker).forEach(([selectionId, netValue]: [string, any]) => {
+          // netValue is already a number (no nested object structure)
+          // Store directly - NO calculations, NO transformations
+          if (netValue !== undefined && netValue !== null) {
+            stablePositionsRef.current.bookmaker[String(selectionId)] = Number(netValue)
+            console.log('[Positions] Stored bookmaker position:', {
+              selectionId: String(selectionId),
+              net: Number(netValue)
+            })
+          }
+        })
+        
+        console.log('[Positions] Final bookmaker positions after extraction:', {
+          allPositions: stablePositionsRef.current.bookmaker,
+          keys: Object.keys(stablePositionsRef.current.bookmaker)
+        })
+      }
+
+      // Extract fancy positions - format: { [fancyId: string]: { YES: number, NO: number } }
+      // Example: { "fancyId_1": { "YES": 50, "NO": -100 } }
+      if (data.fancy && typeof data.fancy === 'object') {
+        Object.entries(data.fancy).forEach(([fancyId, fancyPositions]: [string, any]) => {
+          // fancyPositions is already an object: { YES: number, NO: number }
+          if (fancyPositions && typeof fancyPositions === 'object') {
+            // Initialize fancy entry if not exists
+            if (!stablePositionsRef.current.fancy[fancyId]) {
+              stablePositionsRef.current.fancy[fancyId] = {}
+            }
+            
+            // Extract YES/NO values directly - already numbers, no nested structure
+            Object.entries(fancyPositions).forEach(([key, netValue]: [string, any]) => {
+              // Key is "YES" or "NO", netValue is already a number
+              if (netValue !== undefined && netValue !== null) {
+                stablePositionsRef.current.fancy[fancyId][key] = Number(netValue)
+              }
+            })
+          }
+        })
       }
     }
-
-    const data = positionsData.data
-    const result = {
-      matchOdds: {} as Record<string, number | { profit: number; loss: number }>,
-      bookmaker: {} as Record<string, number | { profit: number; loss: number }>,
-      fancy: {} as Record<string, number | { profit: number; loss: number }>
-    }
-
-    // Extract matchOdds positions - preserve full object if it has profit/loss
-    if (data.matchOdds?.positions) {
-      Object.entries(data.matchOdds.positions).forEach(([selectionId, position]: [string, any]) => {
-        // Check if it's an object with profit or loss properties (even if values are 0)
-        if (typeof position === 'object' && 
-            position !== null && 
-            !Array.isArray(position) &&
-            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
-          // Always preserve the full object with profit and loss, even if values are 0
-          result.matchOdds[selectionId] = {
-            profit: position.profit != null ? Number(position.profit) : 0,
-            loss: position.loss != null ? Number(position.loss) : 0
-          }
-        } else if (typeof position === 'number') {
-          // Simple number format
-          result.matchOdds[selectionId] = position
-        }
-      })
-    }
-
-    // Extract bookmaker positions
-    if (data.bookmaker?.positions) {
-      Object.entries(data.bookmaker.positions).forEach(([selectionId, position]: [string, any]) => {
-        // Check if it's an object with profit or loss properties (even if values are 0)
-        if (typeof position === 'object' && 
-            position !== null && 
-            !Array.isArray(position) &&
-            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
-          // Always preserve the full object with profit and loss, even if values are 0
-          result.bookmaker[selectionId] = {
-            profit: position.profit != null ? Number(position.profit) : 0,
-            loss: position.loss != null ? Number(position.loss) : 0
-          }
-        } else if (typeof position === 'number') {
-          result.bookmaker[selectionId] = position
-        }
-      })
-    }
-
-    // Extract fancy positions (if available in response)
-    if (data.fancy?.positions) {
-      Object.entries(data.fancy.positions).forEach(([selectionId, position]: [string, any]) => {
-        // Check if it's an object with profit or loss properties (even if values are 0)
-        if (typeof position === 'object' && 
-            position !== null && 
-            !Array.isArray(position) &&
-            ('profit' in position || 'loss' in position || position.profit !== undefined || position.loss !== undefined)) {
-          // Always preserve the full object with profit and loss, even if values are 0
-          result.fancy[selectionId] = {
-            profit: position.profit != null ? Number(position.profit) : 0,
-            loss: position.loss != null ? Number(position.loss) : 0
-          }
-        } else if (typeof position === 'number') {
-          result.fancy[selectionId] = position
-        }
-      })
-    }
-
-    return result
+    // Note: We never clear positions even if API returns empty/partial response
   }, [positionsData])
+
+  // Memoized positions for rendering - always uses stable ref
+  // Match Odds & Bookmaker: Record<selectionId, net>
+  // Fancy: Record<fancyId, Record<YES/NO, net>>
+  const positionsByMarketType = useMemo(() => {
+    const result = {
+      matchOdds: { ...stablePositionsRef.current.matchOdds }, // selectionId -> net (create new object for reactivity)
+      bookmaker: { ...stablePositionsRef.current.bookmaker }, // selectionId -> net
+      fancy: { ...stablePositionsRef.current.fancy } // fancyId -> { YES/NO -> net }
+    }
+    
+    console.log('[Positions] Memoized positions for rendering:', {
+      matchOdds: result.matchOdds,
+      matchOddsKeys: Object.keys(result.matchOdds),
+      matchOddsCount: Object.keys(result.matchOdds).length,
+      bookmaker: result.bookmaker,
+      bookmakerKeys: Object.keys(result.bookmaker),
+      refMatchOdds: stablePositionsRef.current.matchOdds,
+      refMatchOddsKeys: Object.keys(stablePositionsRef.current.matchOdds)
+    })
+    
+    return result
+  }, [positionsData]) // Re-render when positionsData changes (but positions persist in ref)
 
   // onPlaceBetClick function - simplified (no optimistic updates needed)
   const onPlaceBetClick = (newBet: {
@@ -1259,15 +1407,53 @@ export default function LiveMatchDetailPage() {
                   setBetSlipOpen(true)
                 }
 
-                // Determine positions based on market type
-                let positionsForMarket: Record<string, number | { profit: number; loss: number }> | undefined = undefined
+                // POSITION MAPPING: Pass normalized positions to MatchOdds component
+                // 
+                // NEW API FORMAT (already normalized):
+                // {
+                //   "matchOdds": { "7337": 80, "10301": -200 },
+                //   "bookmaker": { "7337": 120, "10301": -150 }
+                // }
+                //
+                // Matching in MatchOdds: String(row.selectionId) === Object.keys(positions)
+                // 
+                // RULES:
+                // 1. marketId is UNRELIABLE and completely ignored (not in new API)
+                // 2. Match ONLY by selectionId
+                // 3. Positions shown ONLY in MatchOdds (not in Fancy)
+                // 4. No calculations or transformations
+                let positionsForMarket: Record<string, number> | undefined = undefined
+                
                 if (isMatchOdds) {
+                  // Match Odds: Pass normalized positions object
+                  // Component will match: String(row.selectionId) === positions[selectionId]
                   positionsForMarket = positionsByMarketType.matchOdds
+                  
+                  console.log('[Positions] Passing to MatchOdds component:', {
+                    marketName: market.name,
+                    marketIndex,
+                    positions: positionsForMarket,
+                    positionsKeys: positionsForMarket ? Object.keys(positionsForMarket) : [],
+                    positionsCount: positionsForMarket ? Object.keys(positionsForMarket).length : 0,
+                    marketRows: market.rows.map((r: any) => ({
+                      team: r.team,
+                      selectionId: r.selectionId,
+                      selectionIdStr: String(r.selectionId),
+                      willMatch: positionsForMarket ? positionsForMarket[String(r.selectionId)] !== undefined : false
+                    }))
+                  })
                 } else if (marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch') {
+                  // Bookmaker: Same normalized structure
                   positionsForMarket = positionsByMarketType.bookmaker
-                } else if (isFancy) {
-                  positionsForMarket = positionsByMarketType.fancy
+                  
+                  console.log('[Positions] Passing to Bookmaker component:', {
+                    marketName: market.name,
+                    marketIndex,
+                    positions: positionsForMarket,
+                    positionsKeys: positionsForMarket ? Object.keys(positionsForMarket) : []
+                  })
                 }
+                // Fancy markets: Do NOT pass positions (positions only in MatchOdds)
                 
                 // Use MatchOdds component for match odds markets
                 if (isMatchOdds) {
@@ -1286,6 +1472,7 @@ export default function LiveMatchDetailPage() {
                 }
 
                 // Use FancyDetail component for fancy markets
+                // NOTE: Do NOT pass positions to FancyDetail (positions only shown in MatchOdds component)
                 if (isFancy) {
                   return (
                     <FancyDetail

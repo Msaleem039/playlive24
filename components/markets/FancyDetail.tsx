@@ -19,6 +19,7 @@ interface FancyDetailProps {
     marketGType?: string
     size?: number // For fancy markets: the percentage/size value (100, 90, 120, etc.)
   }) => void
+  positions?: Record<string, number> // YES/NO -> net (outcome-based net value)
 }
 
 const YES_COLUMNS = 1
@@ -29,7 +30,8 @@ export default function FancyDetail({
   marketIndex,
   blinkingOdds,
   isMobile,
-  onBetSelect
+  onBetSelect,
+  positions
 }: FancyDetailProps) {
   return (
     <div 
@@ -66,13 +68,13 @@ export default function FancyDetail({
         <table className="w-full text-xs sm:text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-1 sm:px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-16 sm:w-20">
+              <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24">
                 Team
               </th>
               {Array.from({ length: YES_COLUMNS }).map((_, i) => (
                 <th 
                   key={`yes-${i}`} 
-                  className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
+                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
                 >
                   Yes
                 </th>
@@ -80,7 +82,7 @@ export default function FancyDetail({
               {Array.from({ length: NO_COLUMNS }).map((_, i) => (
                 <th 
                   key={`lay-${i}`} 
-                  className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
+                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
                 >
                   NO
                 </th>
@@ -88,17 +90,37 @@ export default function FancyDetail({
             </tr>
           </thead>
           <tbody>
-            {market.rows.map((row, rowIndex) => (
+            {market.rows.map((row, rowIndex) => {
+              // FANCY DISPLAY RULE: Each YES/NO option shows its own outcome-based net value
+              // Display each value ONLY under its own option - do NOT calculate or transform
+              const positionKey = (row.team || '').toUpperCase().trim()
+              const netValue = positions && positionKey ? positions[positionKey] : undefined
+              
+              return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-0.5 py-0.5 font-medium text-xs sm:text-sm text-gray-900 truncate">
-                  {row.team}
+                <td className="px-0.5 py-0.5">
+                  <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
+                    {row.team}
+                  </div>
+                  {netValue !== undefined && netValue !== null && netValue !== 0 ? (
+                    // Show net value badge - exactly as backend provides
+                    <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mt-1 border ${
+                      netValue > 0
+                        ? 'bg-green-50 text-green-700 border-green-200' 
+                        : netValue < 0
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}>
+                      {netValue > 0 ? '+' : ''}{netValue.toFixed(2)}
+                    </div>
+                  ) : null}
                 </td>
                 {/* Yes Odds */}
                 {row.back.map((option, optIndex) => {
                   const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`yes-${optIndex}`} className="px-0.5 py-0.5">
+                    <td key={`yes-${optIndex}`} className="px-1 py-1">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -115,16 +137,16 @@ export default function FancyDetail({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
+                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
-                            ? 'bg-gray-100'
+                            ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
-                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                            : 'bg-blue-100 hover:bg-blue-200 cursor-pointer'
+                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
+                            : 'bg-blue-50 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600">{option.amount}</div>
+                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
@@ -134,7 +156,7 @@ export default function FancyDetail({
                   const oddKey = `${marketIndex}-${rowIndex}-lay-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`no-${optIndex}`} className="px-0.5 py-0.5">
+                    <td key={`no-${optIndex}`} className="px-1 py-1">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -151,22 +173,23 @@ export default function FancyDetail({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
+                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
-                            ? 'bg-gray-100'
+                            ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
-                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                            : 'bg-pink-100 hover:bg-pink-200 cursor-pointer'
+                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
+                            : 'bg-pink-50 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600">{option.amount}</div>
+                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
                 })}
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>

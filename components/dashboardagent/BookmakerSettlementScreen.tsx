@@ -340,45 +340,76 @@ export function BookmakerSettlementScreen() {
                 Bookmaker Settlements - {getAvailableSelectionIds(selectedMatch).find(s => s.selectionId === selectedSelectionId)?.betName || `Selection ID: ${selectedSelectionId}`}
               </h3>
             </div>
-            <div className="overflow-x-auto -mx-3 md:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-gray-700 uppercase">Selection</th>
-                      <th className="px-3 md:px-6 py-2 md:py-4 text-center text-xs font-bold text-gray-700 uppercase">Bets Count</th>
-                      <th className="px-3 md:px-6 py-2 md:py-4 text-right text-xs font-bold text-gray-700 uppercase">Total Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {groupedSettlements.length > 0 ? (
-                      groupedSettlements.map((group: any, index: number) => (
-                        <tr key={group.settlementId || index} className="hover:bg-gray-50">
-                          <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-semibold">
-                            {group.betName || group.settlementId || "N/A"}
-                          </td>
-                          <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                            <span className="text-xs md:text-sm font-semibold text-green-600">
-                              {group.count} {group.count === 1 ? 'bet' : 'bets'}
-                            </span>
-                          </td>
-                          <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-right">
-                            <span className="text-xs md:text-sm font-bold text-green-600">
-                              Rs{group.totalAmount?.toLocaleString() || 0}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="px-3 md:px-6 py-8 md:py-12 text-center">
-                          <p className="text-gray-500 font-medium text-sm md:text-base">No bookmaker bets found for this selection ID</p>
+            
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-gray-700 uppercase">Selection</th>
+                    <th className="px-4 md:px-6 py-2 md:py-4 text-center text-xs font-bold text-gray-700 uppercase">Bets Count</th>
+                    <th className="px-4 md:px-6 py-2 md:py-4 text-right text-xs font-bold text-gray-700 uppercase">Total Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {groupedSettlements.length > 0 ? (
+                    groupedSettlements.map((group: any, index: number) => (
+                      <tr key={group.settlementId || index} className="hover:bg-gray-50">
+                        <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-semibold">
+                          {group.betName || group.settlementId || "N/A"}
+                        </td>
+                        <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
+                          <span className="text-xs md:text-sm font-semibold text-green-600">
+                            {group.count} {group.count === 1 ? 'bet' : 'bets'}
+                          </span>
+                        </td>
+                        <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-right">
+                          <span className="text-xs md:text-sm font-bold text-green-600">
+                            Rs{group.totalAmount?.toLocaleString() || 0}
+                          </span>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-4 md:px-6 py-8 md:py-12 text-center">
+                        <p className="text-gray-500 font-medium text-sm md:text-base">No bookmaker bets found for this selection ID</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden divide-y divide-gray-200">
+              {groupedSettlements.length > 0 ? (
+                groupedSettlements.map((group: any, index: number) => (
+                  <div key={group.settlementId || index} className="p-4">
+                    <div className="font-semibold text-sm text-gray-900 mb-2">
+                      {group.betName || group.settlementId || "N/A"}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-0.5">Bets Count</div>
+                        <span className="text-sm font-semibold text-green-600">
+                          {group.count} {group.count === 1 ? 'bet' : 'bets'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 mb-0.5">Total Amount</div>
+                        <span className="text-sm font-bold text-green-600">
+                          Rs{group.totalAmount?.toLocaleString() || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-gray-500 font-medium text-sm">No bookmaker bets found for this selection ID</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -563,62 +594,114 @@ export function BookmakerSettlementScreen() {
           <RefreshCw className="w-8 h-8 md:w-10 md:h-10 animate-spin text-[#00A66E]" />
         </div>
       ) : filteredMatches.length > 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-green-50 px-3 md:px-6 py-2 md:py-3 border-b border-green-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm md:text-base font-semibold text-green-900">
-                Bookmaker Pending Settlements
-              </h3>
-              <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
-              </span>
+        <>
+          {/* Desktop Table View - Hidden on mobile */}
+          <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-green-50 px-3 md:px-6 py-2 md:py-3 border-b border-green-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm md:text-base font-semibold text-green-900">
+                  Bookmaker Pending Settlements
+                </h3>
+                <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                  {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="overflow-x-auto -mx-3 md:mx-0">
-            <div className="inline-block min-w-full align-middle">
+            <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-green-50">
                   <tr>
-                    <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-green-900 uppercase">Match ID</th>
-                    <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-green-900 uppercase">Match Title</th>
-                    <th className="px-3 md:px-6 py-2 md:py-4 text-center text-xs font-bold text-green-900 uppercase">Bookmaker Bets</th>
-                    <th className="px-3 md:px-6 py-2 md:py-4 text-right text-xs font-bold text-green-900 uppercase">Amount</th>
-                    <th className="px-3 md:px-6 py-2 md:py-4 text-center text-xs font-bold text-green-900 uppercase">Actions</th>
+                    <th className="px-4 xl:px-6 py-2 md:py-4 text-left text-xs font-bold text-green-900 uppercase">Match ID</th>
+                    <th className="px-4 xl:px-6 py-2 md:py-4 text-left text-xs font-bold text-green-900 uppercase">Match Title</th>
+                    <th className="px-4 xl:px-6 py-2 md:py-4 text-center text-xs font-bold text-green-900 uppercase">Bookmaker Bets</th>
+                    <th className="px-4 xl:px-6 py-2 md:py-4 text-right text-xs font-bold text-green-900 uppercase">Amount</th>
+                    <th className="px-4 xl:px-6 py-2 md:py-4 text-center text-xs font-bold text-green-900 uppercase">Actions</th>
                   </tr>
                 </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMatches.map((match: any, index: number) => (
-                  <tr key={match.matchId || index} className="hover:bg-gray-50">
-                    <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-mono">{match.matchId || "N/A"}</td>
-                    <td className="px-3 md:px-6 py-2 md:py-4 text-xs md:text-sm">
-                      {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
-                    </td>
-                    <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs md:text-sm font-semibold">
-                        <BookOpen className="w-3 h-3" />
-                        {match.bookmaker?.count || 0} Bookmaker bet{match.bookmaker?.count !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-right">
-                      <span className="text-xs md:text-sm font-bold text-green-600">
-                        Rs{(match.bookmaker?.totalAmount || 0).toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                      <Button
-                        onClick={() => setSelectedMatch(match)}
-                        className="text-[#00A66E] hover:text-[#00C97A] font-medium text-xs md:text-sm px-2 md:px-3 py-1 md:py-1.5"
-                      >
-                        View Details
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredMatches.map((match: any, index: number) => (
+                    <tr key={match.matchId || index} className="hover:bg-gray-50">
+                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-xs xl:text-sm font-mono">{match.matchId || "N/A"}</td>
+                      <td className="px-4 xl:px-6 py-2 md:py-4 text-xs xl:text-sm">
+                        {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
+                      </td>
+                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs xl:text-sm font-semibold">
+                          <BookOpen className="w-3 h-3" />
+                          {match.bookmaker?.count || 0} Bookmaker bet{match.bookmaker?.count !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-right">
+                        <span className="text-xs xl:text-sm font-bold text-green-600">
+                          Rs{(match.bookmaker?.totalAmount || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center">
+                        <Button
+                          onClick={() => setSelectedMatch(match)}
+                          className="text-[#00A66E] hover:text-[#00C97A] font-medium text-xs xl:text-sm px-2 xl:px-3 py-1 xl:py-1.5"
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        </div>
+
+          {/* Mobile/Tablet Card View - Visible on mobile and tablet */}
+          <div className="lg:hidden space-y-3">
+            <div className="bg-green-50 px-4 py-3 rounded-t-lg border-b border-green-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-green-900">
+                  Bookmaker Pending Settlements
+                </h3>
+                <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                  {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
+                </span>
+              </div>
+            </div>
+            {filteredMatches.map((match: any, index: number) => (
+              <div key={match.matchId || index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-200">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-mono font-semibold text-gray-900 mb-1 truncate">
+                      ID: {match.matchId || "N/A"}
+                    </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-0.5">Bookmaker Bets</div>
+                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-semibold">
+                      <BookOpen className="w-3 h-3" />
+                      {match.bookmaker?.count || 0} bet{match.bookmaker?.count !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-0.5">Total Amount</div>
+                    <div className="text-sm font-bold text-green-600">
+                      Rs{(match.bookmaker?.totalAmount || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setSelectedMatch(match)}
+                  className="w-full bg-[#00A66E] hover:bg-[#00C97A] text-white font-medium text-sm px-4 py-2.5 rounded-lg"
+                >
+                  View Details
+                </Button>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
           <BookOpen className="w-16 h-16 text-green-400 mx-auto mb-4" />

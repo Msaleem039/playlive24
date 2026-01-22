@@ -19,7 +19,7 @@ interface MatchOddsProps {
     marketGType?: string
   }) => void
   onRefresh?: () => void
-  positions?: Record<string, number | { profit: number; loss: number }>
+  positions?: Record<string, number> // selectionId -> net (final P/L if that runner wins)
 }
 
 const BACK_COLUMNS = 1
@@ -76,13 +76,13 @@ export default function MatchOdds({
         <table className="w-full text-xs sm:text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-1 sm:px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-16 sm:w-20">
+              <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24">
                 Team
               </th>
               {Array.from({ length: BACK_COLUMNS }).map((_, i) => (
                 <th 
                   key={`back-${i}`} 
-                  className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
+                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
                 >
                   Back
                 </th>
@@ -90,7 +90,7 @@ export default function MatchOdds({
               {Array.from({ length: LAY_COLUMNS }).map((_, i) => (
                 <th 
                   key={`lay-${i}`} 
-                  className="px-0.5 py-1.5 text-center text-xs font-semibold text-gray-700 w-[20px] sm:w-[20px]"
+                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
                 >
                   Lay
                 </th>
@@ -99,70 +99,59 @@ export default function MatchOdds({
           </thead>
           <tbody>
             {market.rows.map((row, rowIndex) => {
-              // Get position for this team/runner
+              // POSITION MAPPING: Match positions ONLY by selectionId comparison
+              // 
+              // STRICT RULES:
+              // 1. Position API response is the single source of truth
+              //    - net value = final profit/loss if that team wins
+              // 2. Map ONLY by selectionId:
+              //    - row.selectionId comes from Match Detail API
+              //    - Position API runner keys are selectionIds
+              //    - Do NOT use marketId (unreliable, comes from Fancy API)
+              // 3. Frontend must NOT: calculate, transform, invert, or infer values
+              // 4. Display net exactly as provided:
+              //    - net > 0 → green profit
+              //    - net < 0 → red loss
+              //    - net = 0 or undefined → show nothing
+              // 5. Each match handled independently (no mixing across matches)
+              // 
+              // Matching logic: String(row.selectionId) === Object.keys(positions)
               const selectionIdStr = row.selectionId ? String(row.selectionId) : ''
-              const positionValue = positions && selectionIdStr ? positions[selectionIdStr] : null
+              const netValue = positions && selectionIdStr ? positions[selectionIdStr] : undefined
               
-              // Handle both formats: number or { profit, loss } object
-              let profit: number | null = null
-              let loss: number | null = null
-              let netPosition: number | null = null
-              let showBothValues = false
-              
-              if (positionValue != null) {
-                // Check if it's an object (not array, not null)
-                if (typeof positionValue === 'object' && 
-                    positionValue !== null && 
-                    !Array.isArray(positionValue)) {
-                  const posObj = positionValue as any
-                  
-                  // Check if object has profit or loss properties (even if values are 0 or null)
-                  // Use multiple checks to ensure we catch the object format
-                  const hasProfitKey = 'profit' in posObj || posObj.hasOwnProperty('profit')
-                  const hasLossKey = 'loss' in posObj || posObj.hasOwnProperty('loss')
-                  const profitValue = posObj.profit
-                  const lossValue = posObj.loss
-                  
-                  // If object has profit or loss keys, OR if we can access the values, treat as object format
-                  if (hasProfitKey || hasLossKey || profitValue !== undefined || lossValue !== undefined) {
-                    showBothValues = true
-                    // Always extract both, defaulting to 0 if not present or null
-                    profit = (hasProfitKey && profitValue != null && profitValue !== undefined) 
-                      ? Number(profitValue) 
-                      : 0
-                    loss = (hasLossKey && lossValue != null && lossValue !== undefined) 
-                      ? Number(lossValue) 
-                      : 0
-                  }
-                } else if (typeof positionValue === 'number') {
-                  // For number format: treat as net position
-                  netPosition = positionValue
-                }
+              // Debug logging for first row to diagnose matching issues
+              if (rowIndex === 0) {
+                console.log('[MatchOdds] Position lookup:', {
+                  team: row.team,
+                  rowSelectionId: row.selectionId,
+                  selectionIdStr,
+                  hasPositions: !!positions,
+                  positionsKeys: positions ? Object.keys(positions) : [],
+                  positionsValues: positions,
+                  netValue,
+                  matchFound: netValue !== undefined
+                })
               }
               
+              // DISPLAY: Show net value exactly as backend provides
+              // No calculations, no transformations, no inference
+              
               return (
-              <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-0.5 py-0.5">
+              <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                <td className="px-2 py-2">
                   <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
                     {row.team}
                   </div>
-                  {showBothValues ? (
-                    // Show both profit and loss when available (object format)
-                    // Always show both, even if one is 0
-                    <div className="flex flex-col gap-0.5 mt-0.5 leading-tight">
-                      <div className="text-[10px] font-semibold text-green-600">
-                        P: {profit! >= 0 ? '+' : ''}{profit!.toFixed(2)}
-                      </div>
-                      <div className="text-[10px] font-semibold text-red-600">
-                        L: {loss!.toFixed(2)}
-                      </div>
-                    </div>
-                  ) : netPosition !== null && netPosition !== 0 ? (
-                    // Fallback to net position display for number format
-                    <div className={`text-[10px] font-semibold mt-0.5 leading-tight ${
-                      netPosition >= 0 ? 'text-green-600' : 'text-red-600'
+                  {netValue !== undefined && netValue !== null && netValue !== 0 ? (
+                    // Show net value badge - exactly as backend provides
+                    <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mt-1 border ${
+                      netValue > 0
+                        ? 'bg-green-50 text-green-700 border-green-200' 
+                        : netValue < 0
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-gray-50 text-gray-600 border-gray-200'
                     }`}>
-                      {netPosition >= 0 ? '+' : ''}{netPosition.toFixed(2)}
+                      {netValue > 0 ? '+' : ''}{netValue.toFixed(2)}
                     </div>
                   ) : null}
                 </td>
@@ -171,7 +160,7 @@ export default function MatchOdds({
                   const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`back-${optIndex}`} className="px-0.5 py-0.5">
+                    <td key={`back-${optIndex}`} className="px-1 py-1">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -187,16 +176,16 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
+                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
-                            ? 'bg-gray-100'
+                            ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
-                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                            : 'bg-blue-100 hover:bg-blue-200 cursor-pointer'
+                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
+                            : 'bg-blue-50 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600">{option.amount}</div>
+                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
@@ -206,7 +195,7 @@ export default function MatchOdds({
                   const oddKey = `${marketIndex}-${rowIndex}-lay-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`lay-${optIndex}`} className="px-0.5 py-0.5">
+                    <td key={`lay-${optIndex}`} className="px-1 py-1">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -222,16 +211,16 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 rounded transition-colors ${
+                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
-                            ? 'bg-gray-100'
+                            ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
-                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                            : 'bg-pink-100 hover:bg-pink-200 cursor-pointer'
+                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
+                            : 'bg-pink-50 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs text-gray-900">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600">{option.amount}</div>
+                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
