@@ -48,7 +48,7 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
       case 'ADMIN':
         return 'bg-purple-100 text-purple-800'
       case 'AGENT':
-        return 'bg-[#5A7ACD] text-blue-800'
+        return 'bg-[#AEDBFB]text-blue-800'
       case 'CLIENT':
         return 'bg-green-100 text-green-800'
       default:

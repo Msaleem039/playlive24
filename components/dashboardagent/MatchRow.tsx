@@ -53,7 +53,7 @@ export default function MatchRow({
   const getStatusDisplay = () => {
     if (isLive) return { text: "Live Now", color: "text-red-600", dot: "bg-red-500" }
     if (isCompleted) return { text: match.status_str, color: "text-green-600", dot: "bg-green-500" }
-    if (isUpcoming) return { text: "Upcoming", color: "text-blue-600", dot: "bg-[#5A7ACD]0" }
+    if (isUpcoming) return { text: "Upcoming", color: "text-blue-600", dot: "bg-[#AEDBFB]0" }
     return { text: match.status_str, color: "text-gray-600", dot: "bg-gray-500" }
   }
   

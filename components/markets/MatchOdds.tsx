@@ -345,7 +345,7 @@ export default function MatchOdds({
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-[#5A7ACD] hover:bg-[#5A7ACD] cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
+                            : 'bg-blue-50 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
@@ -380,7 +380,7 @@ export default function MatchOdds({
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-[#F875AA] hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
+                            : 'bg-pink-50 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>

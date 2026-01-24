@@ -142,7 +142,7 @@ export default function FancyDetail({
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-[#5A7ACD] hover:bg-[#5A7ACD] cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
+                            : 'bg-[#AEDBFB]hover:bg-[#AEDBFB]cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>

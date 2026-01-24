@@ -61,16 +61,24 @@ export function MatchOddsSettlementScreen() {
     })
   }, [matches, searchTerm])
 
-  // Extract marketId - prioritize bet.marketId which contains the full exchange market ID
+  // Extract marketId - prioritize bet.marketId
+  // NOTE: Backend accepts both integer market IDs (like "6571503686236") and decimal market IDs (like "1.252991818")
   const extractMarketId = (match: any) => {
     const bets = match?.matchOdds?.bets || []
     
-    // Priority 1: Check bet.marketId directly (this is the full exchange market ID like "6571503686236")
-    // Based on API response: bet.marketId contains the full exchange market ID
+    // Helper function to validate market ID format - accepts both integers and decimals
+    const isValidMarketId = (id: string): boolean => {
+      // Must be a non-empty string and a valid number (can be integer or decimal)
+      if (!id || typeof id !== 'string') return false
+      const trimmed = id.trim()
+      // Accept any valid number format (integers or decimals like "1.252991818")
+      return trimmed.length > 0 && !isNaN(Number(trimmed)) && isFinite(Number(trimmed))
+    }
+    
+    // Priority 1: Check bet.marketId directly
     if (bets.length > 0 && bets[0].marketId) {
-      const marketId = String(bets[0].marketId)
-      // Verify it's a long number (exchange market ID format - typically 10+ digits)
-      if (marketId && /^\d+$/.test(marketId) && marketId.length >= 10) {
+      const marketId = String(bets[0].marketId).trim()
+      if (isValidMarketId(marketId)) {
         return marketId
       }
     }
@@ -78,8 +86,8 @@ export function MatchOddsSettlementScreen() {
     // Priority 2: Check all bets for marketId (in case first bet doesn't have it)
     for (const bet of bets) {
       if (bet.marketId) {
-        const marketId = String(bet.marketId)
-        if (marketId && /^\d+$/.test(marketId) && marketId.length >= 10) {
+        const marketId = String(bet.marketId).trim()
+        if (isValidMarketId(marketId)) {
           return marketId
         }
       }
@@ -88,17 +96,17 @@ export function MatchOddsSettlementScreen() {
     // Priority 3: Check bet.market.marketId
     for (const bet of bets) {
       if (bet.market?.marketId) {
-        const marketId = String(bet.market.marketId)
-        if (marketId && /^\d+$/.test(marketId) && marketId.length >= 10) {
+        const marketId = String(bet.market.marketId).trim()
+        if (isValidMarketId(marketId)) {
           return marketId
         }
       }
     }
     
-    // Priority 4: Check matchOdds.marketId if it's a long number
+    // Priority 4: Check matchOdds.marketId
     if (match?.matchOdds?.marketId) {
-      const marketIdStr = String(match.matchOdds.marketId)
-      if (marketIdStr && /^\d+$/.test(marketIdStr) && marketIdStr.length >= 10) {
+      const marketIdStr = String(match.matchOdds.marketId).trim()
+      if (isValidMarketId(marketIdStr)) {
         return marketIdStr
       }
     }
@@ -107,40 +115,29 @@ export function MatchOddsSettlementScreen() {
     if (match?.matchOdds?.markets && Array.isArray(match.matchOdds.markets)) {
       for (const market of match.matchOdds.markets) {
         if (market.marketId) {
-          const marketId = String(market.marketId)
-          if (marketId && /^\d+$/.test(marketId) && marketId.length >= 10) {
+          const marketId = String(market.marketId).trim()
+          if (isValidMarketId(marketId)) {
             return marketId
           }
         }
         if (market.id) {
-          const marketId = String(market.id)
-          if (marketId && /^\d+$/.test(marketId) && marketId.length >= 10) {
+          const marketId = String(market.id).trim()
+          if (isValidMarketId(marketId)) {
             return marketId
           }
         }
       }
     }
     
-    // Priority 6: Check match.marketId if it's a long number
+    // Priority 6: Check match.marketId
     if (match?.marketId) {
-      const marketIdStr = String(match.marketId)
-      if (marketIdStr && /^\d+$/.test(marketIdStr) && marketIdStr.length >= 10) {
+      const marketIdStr = String(match.marketId).trim()
+      if (isValidMarketId(marketIdStr)) {
         return marketIdStr
       }
     }
     
-    // Priority 7: Fallback - return any marketId found (even if short)
-    // Note: settlementId contains short market ID (e.g., "35100660_70130"), so we avoid it
-    if (bets.length > 0 && bets[0].marketId) {
-      return String(bets[0].marketId)
-    }
-    if (match?.matchOdds?.marketId) {
-      return String(match.matchOdds.marketId)
-    }
-    if (match?.marketId) {
-      return String(match.marketId)
-    }
-    
+    // No market ID found - user will need to manually enter it
     return ""
   }
 
@@ -244,10 +241,10 @@ export function MatchOddsSettlementScreen() {
       return
     }
     
-    // Validate marketId is a valid number (exchange market ID format)
+    // Validate marketId is a valid number (backend accepts both integers and decimals like "1.252991818")
     const marketIdNum = marketId.trim()
-    if (!/^\d+$/.test(marketIdNum)) {
-      toast.error("Market ID must be a valid number (exchange market ID)")
+    if (!marketIdNum || isNaN(Number(marketIdNum)) || !isFinite(Number(marketIdNum))) {
+      toast.error("Market ID must be a valid number")
       return
     }
     
@@ -332,22 +329,85 @@ export function MatchOddsSettlementScreen() {
         duration: 3000,
       })
 
+      // Ensure all values are valid numbers (not NaN)
+      if (isNaN(Number(eventIdNum)) || isNaN(Number(marketIdNum)) || isNaN(Number(winnerSelectionIdNum))) {
+        toast.error("Invalid ID format. Please ensure all IDs are valid numbers.")
+        return
+      }
+      
+      // API expects strings for eventId, marketId, and winnerSelectionId
+      // Declare outside try-catch so it's accessible in catch block for error logging
+      const finalPayload = {
+        eventId: eventIdNum,
+        marketId: marketIdNum,
+        winnerSelectionId: winnerSelectionIdNum
+      }
+
       try {
-        const payload = {
-          eventId: eventIdNum,
-          marketId: marketIdNum,
-          winnerSelectionId: winnerSelectionIdNum
-        }
+        // Debug: Log the payload being sent
+        console.log('🔵 [Match Odds Settlement] ========== SENDING SETTLEMENT REQUEST ==========', {
+          endpoint: '/admin/settlement/match-odds',
+          payload: finalPayload,
+          payloadTypes: {
+            eventId: typeof finalPayload.eventId,
+            marketId: typeof finalPayload.marketId,
+            winnerSelectionId: typeof finalPayload.winnerSelectionId
+          },
+          payloadStringified: JSON.stringify(finalPayload),
+          originalStringValues: {
+            eventId: eventIdNum,
+            marketId: marketIdNum,
+            winnerSelectionId: winnerSelectionIdNum
+          },
+          note: 'Backend expects strings for eventId, marketId, and winnerSelectionId'
+        })
         
         // NOTE: This is the ONLY place that should call POST /admin/settlement/match-odds
         // MatchOddsSettlementModal also has this call but is currently unused.
         // If the modal is used in the future, ensure they're not used together to avoid duplicate calls.
-        await settleMatchOdds(payload).unwrap()
+        await settleMatchOdds(finalPayload).unwrap()
         toast.success(`Match Odds bets settled successfully. ${betCount} bet(s) processed.`)
         refetch()
         setSelectedMatch(null)
       } catch (error: any) {
-        toast.error(error?.data?.error || error?.data?.message || "Failed to settle match odds")
+        // Enhanced error logging
+        console.error('❌ [Match Odds Settlement] Error details:', {
+          error,
+          errorData: error?.data,
+          errorMessage: error?.message,
+          errorResponse: error?.data?.error || error?.data?.message,
+          fullError: JSON.stringify(error, null, 2),
+          payloadSent: finalPayload,
+          payloadStringified: JSON.stringify(finalPayload),
+          originalStringValues: {
+            eventId: eventIdNum,
+            marketId: marketIdNum,
+            winnerSelectionId: winnerSelectionIdNum
+          }
+        })
+        
+        // Show detailed error message
+        const errorMessage = 
+          error?.data?.error || 
+          error?.data?.message || 
+          error?.message || 
+          'Failed to settle match odds'
+        
+        toast.error(errorMessage)
+        
+        // If validation error, show more details
+        if (error?.data?.error?.toLowerCase().includes('validation') || 
+            error?.data?.message?.toLowerCase().includes('validation') ||
+            errorMessage.toLowerCase().includes('validation')) {
+          console.error('⚠️ [Match Odds Settlement] Validation error - check payload format:', {
+            expectedFormat: 'eventId, marketId, winnerSelectionId (all as numbers or strings)',
+            sentPayload: {
+              eventId: eventIdNum,
+              marketId: marketIdNum,
+              winnerSelectionId: winnerSelectionIdNum
+            }
+          })
+        }
       }
     }
   }
@@ -355,7 +415,7 @@ export function MatchOddsSettlementScreen() {
   // Render selected match view
   if (selectedMatch) {
     return (
-      <div className="flex-1 overflow-y-auto p-3 md:p-6 pb-20 md:pb-6">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6">
         <button
           onClick={() => setSelectedMatch(null)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3 md:mb-4 text-sm md:text-base"
@@ -451,25 +511,20 @@ export function MatchOddsSettlementScreen() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Market ID <span className="text-red-500">*</span>
-                <span className="ml-2 text-xs text-gray-500 font-normal">(Exchange Market ID - should be 10+ digits)</span>
+                <span className="ml-2 text-xs text-gray-500 font-normal">(Accepts both integer and decimal values, e.g., 7519538977640 or 1.252991818)</span>
               </label>
               <Input
                 type="text"
                 value={marketId}
                 onChange={(e) => setMarketId(e.target.value)}
-                placeholder="Enter exchange market ID (e.g., 7519538977640)"
-                className={`w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E] ${
-                  marketId && marketId.length < 10 ? 'border-yellow-500' : ''
-                }`}
+                placeholder="Enter market ID (e.g., 1.252991818 or 7519538977640)"
+                className="w-full border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
                 required
               />
               {marketId && (
                 <div className="mt-1">
-                  <p className={`text-xs ${marketId.length < 10 ? 'text-yellow-600 font-semibold' : 'text-gray-500'}`}>
-                    Market ID: {marketId} ({marketId.length} digits)
-                    {marketId.length < 10 && (
-                      <span className="ml-2">⚠️ This looks like a short ID. Please verify the full exchange market ID (should be 10+ digits like 7519538977640)</span>
-                    )}
+                  <p className="text-xs text-gray-500">
+                    Market ID: {marketId} ({marketId.length} {marketId.includes('.') ? 'characters' : 'digits'})
                   </p>
                 </div>
               )}
@@ -547,10 +602,10 @@ export function MatchOddsSettlementScreen() {
               </label>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 pb-3 md:pb-0 border-t border-gray-200 sticky bottom-0 bg-white z-10 -mx-3 md:mx-0 px-3 md:px-0 md:relative md:bg-transparent">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
               <Button
                 onClick={() => setSelectedMatch(null)}
-                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
+                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
                 disabled={isSettling || isCancelling}
               >
                 Cancel
@@ -558,7 +613,7 @@ export function MatchOddsSettlementScreen() {
               <Button
                 onClick={handleSettle}
                 disabled={(isSettling || isCancelling) || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-                className="px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
+                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
               >
                 {(isSettling || isCancelling) ? (
                   <>
@@ -612,7 +667,7 @@ export function MatchOddsSettlementScreen() {
         </div>
       ) : filteredMatches.length > 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-[#5A7ACD] px-3 md:px-6 py-2 md:py-3 border-b border-blue-200">
+          <div className="bg-blue-50 px-3 md:px-6 py-2 md:py-3 border-b border-blue-200">
             <div className="flex items-center justify-between">
               <h3 className="text-sm md:text-base font-semibold text-blue-900">
                 Match Odds Pending Settlements
@@ -625,7 +680,7 @@ export function MatchOddsSettlementScreen() {
           <div className="overflow-x-auto -mx-3 md:mx-0">
             <div className="inline-block min-w-full align-middle">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-[#5A7ACD]">
+                <thead className="bg-blue-50">
                   <tr>
                     <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-blue-900 uppercase">Match ID</th>
                     <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-blue-900 uppercase">Match Title</th>
@@ -642,7 +697,7 @@ export function MatchOddsSettlementScreen() {
                         {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#5A7ACD] text-blue-800 rounded-md text-xs md:text-sm font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs md:text-sm font-semibold">
                           <Play className="w-3 h-3" />
                           {match.matchOdds?.count || 0} Match Odds bet{match.matchOdds?.count !== 1 ? 's' : ''}
                         </span>

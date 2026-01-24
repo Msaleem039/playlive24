@@ -224,7 +224,7 @@ export function BetHistoryView() {
                     <td className="px-3 py-2 text-xs">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                         bet.betType === 'BACK' 
-                          ? 'bg-[#5A7ACD] text-blue-800' 
+                          ? 'bg-[#AEDBFB]text-blue-800' 
                           : 'bg-pink-100 text-pink-800'
                       }`}>
                         {bet.betType || 'N/A'}

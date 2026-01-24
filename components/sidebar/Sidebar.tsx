@@ -248,7 +248,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
                                       match.status === "live" 
                                         ? "bg-red-100 text-red-800" 
                                         : match.status === "upcoming"
-                                        ? "bg-[#5A7ACD] text-blue-800"
+                                        ? "bg-[#AEDBFB]text-blue-800"
                                         : "bg-gray-100 text-gray-800"
                                     }`}>
                                       {match.status === "live" ? "LIVE" : match.status === "upcoming" ? "UPCOMING" : "FINISHED"}

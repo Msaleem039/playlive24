@@ -389,7 +389,7 @@ export default function UserManagement() {
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           (user.role || '').toUpperCase() === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                          (user.role || '').toUpperCase() === 'AGENT' ? 'bg-[#5A7ACD] text-blue-800' :
+                          (user.role || '').toUpperCase() === 'AGENT' ? 'bg-[#AEDBFB]text-blue-800' :
                           (user.role || '').toUpperCase() === 'CLIENT' ? 'bg-green-100 text-green-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>

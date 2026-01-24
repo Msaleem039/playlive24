@@ -41,7 +41,7 @@ const MatchCardOptimized = memo(({
     switch (status) {
       case 1: return "text-green-600 bg-green-100" 
       case 2: return "text-gray-600 bg-gray-100" 
-      case 3: return "text-blue-600 bg-[#5A7ACD]" 
+      case 3: return "text-blue-600 bg-[#AEDBFB]" 
       default: return "text-gray-600 bg-gray-100"
     }
   }
