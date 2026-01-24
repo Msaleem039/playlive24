@@ -126,7 +126,7 @@ export default function SuperAdminSelectClient() {
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mb-2">
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-[#5A7ACD] rounded-lg mb-2">
                   <BarChart3 className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs text-gray-600 mb-1">User Management</p>

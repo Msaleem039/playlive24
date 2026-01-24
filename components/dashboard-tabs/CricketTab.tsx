@@ -648,42 +648,42 @@ export default function CricketTab() {
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.team1)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-blue-100'
+                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#5A7ACD]'
                   }`}>
                     {team1Odds !== '-' ? team1Odds : '-'}
                   </div>
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.team2)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-blue-100' : 'bg-pink-100'
+                      : index % 2 === 0 ? 'bg-[#5A7ACD]' : 'bg-pink-100'
                   }`}>
                     {team2Odds !== '-' ? team2Odds : '-'}
                   </div>
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.over)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-blue-100'
+                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#5A7ACD]'
                   }`}>
                     {overOdds !== '-' ? overOdds : '-'}
                   </div>
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.under)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-blue-100' : 'bg-pink-100'
+                      : index % 2 === 0 ? 'bg-[#5A7ACD]' : 'bg-pink-100'
                   }`}>
                     {underOdds !== '-' ? underOdds : '-'}
                   </div>
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.total1)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-blue-100'
+                      : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#5A7ACD]'
                   }`}>
                     {total1Odds !== '-' ? total1Odds : '-'}
                   </div>
                   <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
                     blinkingOdds.has(oddKeys.total2)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
-                      : index % 2 === 0 ? 'bg-blue-100' : 'bg-pink-100'
+                      : index % 2 === 0 ? 'bg-[#5A7ACD]' : 'bg-pink-100'
                   }`}>
                     {total2Odds !== '-' ? total2Odds : '-'}
                   </div>

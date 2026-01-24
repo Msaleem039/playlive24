@@ -355,7 +355,7 @@ export function MatchOddsSettlementScreen() {
   // Render selected match view
   if (selectedMatch) {
     return (
-      <div className="flex-1 overflow-y-auto p-3 md:p-6">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 pb-20 md:pb-6">
         <button
           onClick={() => setSelectedMatch(null)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3 md:mb-4 text-sm md:text-base"
@@ -547,10 +547,10 @@ export function MatchOddsSettlementScreen() {
               </label>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 pb-3 md:pb-0 border-t border-gray-200 sticky bottom-0 bg-white z-10 -mx-3 md:mx-0 px-3 md:px-0 md:relative md:bg-transparent">
               <Button
                 onClick={() => setSelectedMatch(null)}
-                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
+                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
                 disabled={isSettling || isCancelling}
               >
                 Cancel
@@ -558,7 +558,7 @@ export function MatchOddsSettlementScreen() {
               <Button
                 onClick={handleSettle}
                 disabled={(isSettling || isCancelling) || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
+                className="px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
               >
                 {(isSettling || isCancelling) ? (
                   <>
@@ -612,7 +612,7 @@ export function MatchOddsSettlementScreen() {
         </div>
       ) : filteredMatches.length > 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-blue-50 px-3 md:px-6 py-2 md:py-3 border-b border-blue-200">
+          <div className="bg-[#5A7ACD] px-3 md:px-6 py-2 md:py-3 border-b border-blue-200">
             <div className="flex items-center justify-between">
               <h3 className="text-sm md:text-base font-semibold text-blue-900">
                 Match Odds Pending Settlements
@@ -625,7 +625,7 @@ export function MatchOddsSettlementScreen() {
           <div className="overflow-x-auto -mx-3 md:mx-0">
             <div className="inline-block min-w-full align-middle">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-blue-50">
+                <thead className="bg-[#5A7ACD]">
                   <tr>
                     <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-blue-900 uppercase">Match ID</th>
                     <th className="px-3 md:px-6 py-2 md:py-4 text-left text-xs font-bold text-blue-900 uppercase">Match Title</th>
@@ -642,7 +642,7 @@ export function MatchOddsSettlementScreen() {
                         {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs md:text-sm font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#5A7ACD] text-blue-800 rounded-md text-xs md:text-sm font-semibold">
                           <Play className="w-3 h-3" />
                           {match.matchOdds?.count || 0} Match Odds bet{match.matchOdds?.count !== 1 ? 's' : ''}
                         </span>

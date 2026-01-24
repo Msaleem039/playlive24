@@ -379,7 +379,7 @@ export function FancySettlementScreen() {
 
   if (selectedMatch) {
     return (
-      <div className="flex-1 overflow-y-auto p-3 md:p-6">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 pb-20 md:pb-6">
         <button
           onClick={() => setSelectedMatch(null)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3 md:mb-4 text-sm md:text-base"
@@ -601,13 +601,13 @@ export function FancySettlementScreen() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4 pb-3 md:pb-0 border-t border-gray-200 sticky bottom-0 bg-white z-10 -mx-3 md:mx-0 px-3 md:px-0 md:relative md:bg-transparent">
               <Button
                 onClick={() => {
                   setSelectedMatch(null)
                   setSelectedSelectionId(null)
                 }}
-                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto"
+                className="bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
                 disabled={isSettling || isCancelling}
               >
                 Cancel
@@ -619,7 +619,7 @@ export function FancySettlementScreen() {
                   !selectedSelectionId || 
                   (isCancel ? !canCancelBets : (!eventId.trim() || !selectionId.trim() || !decisionRun.trim()))
                 }
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
+                className="px-4 md:px-6 py-2.5 md:py-2.5 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto shadow-lg md:shadow-none"
               >
                 {(isSettling || isCancelling) ? (
                   <>

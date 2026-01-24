@@ -31,7 +31,7 @@ export default function MatchCard({ match }: MatchCardProps) {
     switch (status) {
       case 1: return "text-green-600 bg-green-100" 
       case 2: return "text-gray-600 bg-gray-100" 
-      case 3: return "text-blue-600 bg-blue-100" 
+      case 3: return "text-blue-600 bg-[#5A7ACD]" 
       default: return "text-gray-600 bg-gray-100"
     }
   }

@@ -399,27 +399,34 @@ export default function BetSlipModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/50">
-      <div className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0 animate-slideUp sm:animate-scaleIn" 
+        onClick={(e) => e.stopPropagation()}
+      >
         <div
-          className="bg-white border border-gray-300 flex flex-col rounded-t-lg sm:rounded-lg overflow-hidden shadow-2xl"
+          className="bg-gradient-to-br from-cyan-50/90 via-blue-50/90 to-purple-50/90 backdrop-blur-xl border border-cyan-200/50 flex flex-col rounded-t-lg sm:rounded-lg overflow-hidden shadow-2xl shadow-cyan-500/20"
           style={{ maxHeight: isMobile ? '360px' : '420px' }}
         >
-          <div className="bg-gradient-to-r from-[#334443] to-[#1a2a28] text-white px-3 sm:px-4 py-2.5 flex items-center justify-between">
-            <span className="text-sm font-semibold">Bet Slip</span>
-            <span className="text-xs text-gray-300 cursor-pointer hover:text-white">Edit Stakes</span>
+          <div className="relative bg-gradient-to-r from-cyan-500/80 via-blue-500/80 to-purple-500/80 backdrop-blur-md text-white px-3 sm:px-4 py-2.5 flex items-center justify-between overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+            <span className="text-sm font-semibold relative z-10 drop-shadow-lg">Bet Slip</span>
+            <span className="text-xs text-cyan-100 cursor-pointer hover:text-white transition-colors relative z-10">Edit Stakes</span>
           </div>
 
-          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gray-50">
-            <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold text-gray-700">
-              <div className="bg-[#e8f5e9] px-1 sm:px-2 py-1 rounded text-center sm:text-left">Bet for</div>
-              <div className="bg-[#e3f2fd] px-1 sm:px-2 py-1 rounded text-center">Odds</div>
-              <div className="bg-[#fff3e0] px-1 sm:px-2 py-1 rounded text-center">Stake</div>
-              <div className="bg-[#f3e5f5] px-1 sm:px-2 py-1 rounded text-center">P/L</div>
+          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gradient-to-b from-white/40 to-cyan-50/30 backdrop-blur-sm">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold">
+              <div className="bg-gradient-to-br from-emerald-200/60 to-teal-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center sm:text-left border border-emerald-300/40 shadow-sm animate-fadeIn delay-100">Bet for</div>
+              <div className="bg-gradient-to-br from-cyan-200/60 to-blue-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-cyan-300/40 shadow-sm animate-fadeIn delay-200">Odds</div>
+              <div className="bg-gradient-to-br from-amber-200/60 to-orange-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-amber-300/40 shadow-sm animate-fadeIn delay-300">Stake</div>
+              <div className="bg-gradient-to-br from-purple-200/60 to-pink-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-purple-300/40 shadow-sm animate-fadeIn delay-400">P/L</div>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white rounded-lg p-2 border border-gray-200">
-              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate text-center sm:text-left px-1">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white/60 backdrop-blur-md rounded-lg p-2 border border-cyan-200/50 shadow-lg shadow-cyan-500/10 animate-fadeIn delay-500">
+              <div className="text-xs sm:text-sm font-medium text-gray-800 truncate text-center sm:text-left px-1">
                 {selectedBet.team}
               </div>
               
@@ -429,7 +436,7 @@ export default function BetSlipModal({
                   type="text"
                   value={odds}
                   onChange={(e) => setOdds(e.target.value)}
-                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-[#00A66E]"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-cyan-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 transition-all hover:border-cyan-400/70 hover:shadow-sm hover:shadow-cyan-400/20"
                 />
               </div>
               
@@ -440,26 +447,27 @@ export default function BetSlipModal({
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
                   placeholder="0"
-                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-[#00A66E]"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-cyan-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 transition-all hover:border-cyan-400/70 hover:shadow-sm hover:shadow-cyan-400/20"
                 />
               </div>
               
-              <div className="text-xs sm:text-sm text-gray-700 text-center px-1">{plText}</div>
+              <div className="text-xs sm:text-sm text-gray-700 text-center px-1 font-medium">{plText}</div>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-              {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount) => {
+              {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount, index) => {
                 const currentStake = parseFloat(stake) || 0
                 const isActive = currentStake === amount || (currentStake >= amount && currentStake < amount * 2)
                 return (
                   <button
                     key={amount}
                     onClick={() => handleQuickStake(amount)}
-                    className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-all ${
+                    className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                       isActive
-                        ? 'bg-[#00A66E] hover:bg-[#008a5a] text-white shadow-md'
-                        : 'bg-[#6366f1] hover:bg-[#4f46e5] text-white hover:shadow-md'
+                        ? 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/40 ring-2 ring-cyan-300/50 animate-pulse'
+                        : 'bg-gradient-to-br from-purple-400/80 to-pink-400/80 hover:from-purple-500/90 hover:to-pink-500/90 text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 backdrop-blur-sm border border-purple-300/30'
                     }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {isMobile && amount >= 1000 ? `${amount / 1000}k` : amount.toLocaleString()}
                   </button>
@@ -470,27 +478,89 @@ export default function BetSlipModal({
             <div className="flex gap-1.5 sm:gap-2 pt-2">
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-colors"
+                className="flex-1 bg-gradient-to-r from-gray-400/80 to-gray-500/80 hover:from-gray-500/90 hover:to-gray-600/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-gray-500/20 backdrop-blur-sm border border-gray-300/30"
               >
                 Close
               </button>
               <button
                 onClick={handleClear}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-colors"
+                className="flex-1 bg-gradient-to-r from-amber-400/80 to-orange-400/80 hover:from-amber-500/90 hover:to-orange-500/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 backdrop-blur-sm border border-amber-300/30"
               >
                 Clear
               </button>
               <button
                 onClick={handlePlaceBet}
                 disabled={isPlacingBet}
-                className="flex-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:transform-none shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 backdrop-blur-sm border border-cyan-300/50 relative overflow-hidden"
               >
-                {isPlacingBet ? 'Submitting...' : 'Submit'}
+                {isPlacingBet && (
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></span>
+                )}
+                <span className="relative z-10">{isPlacingBet ? 'Submitting...' : 'Submit'}</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideUp {
+            from {
+              transform: translateY(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+          @keyframes scaleIn {
+            from {
+              transform: scale(0.9);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+          }
+          .animate-slideUp {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          .animate-shimmer {
+            animation: shimmer 2s infinite;
+          }
+          .delay-100 {
+            animation-delay: 0.1s;
+          }
+          .delay-200 {
+            animation-delay: 0.2s;
+          }
+          .delay-300 {
+            animation-delay: 0.3s;
+          }
+          .delay-400 {
+            animation-delay: 0.4s;
+          }
+          .delay-500 {
+            animation-delay: 0.5s;
+          }
+        `
+      }} />
     </div>
   )
 }
