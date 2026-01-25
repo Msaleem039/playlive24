@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { usePlaceBetMutation } from '@/app/services/Api'
 import { toast } from 'sonner'
+import Loader from '@/components/utils/Loader'
 
 interface SelectedBet {
   team: string
@@ -403,6 +404,15 @@ export default function BetSlipModal({
       className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
     >
+      {/* Loader Overlay when placing bet */}
+      {isPlacingBet && (
+        <div className="absolute inset-0 flex items-center justify-center  z-50">
+          <div className="flex flex-col items-center gap-3 bg-white/90 backdrop-blur-md rounded-lg p-4 shadow-1xl">
+            <Loader size={40} />
+            <span className="text-sm font-semibold text-gray-700">Placing your bet...</span>
+          </div>
+        </div>
+      )}
       <div 
         className="w-full max-w-md mx-2 sm:mx-4 mb-2 sm:mb-0 animate-slideUp sm:animate-scaleIn" 
         onClick={(e) => e.stopPropagation()}
@@ -491,10 +501,13 @@ export default function BetSlipModal({
               <button
                 onClick={handlePlaceBet}
                 disabled={isPlacingBet}
-                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:transform-none shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 backdrop-blur-sm border border-cyan-300/50 relative overflow-hidden"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:transform-none shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 backdrop-blur-sm border border-cyan-300/50 relative overflow-hidden flex items-center justify-center gap-2"
               >
                 {isPlacingBet && (
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></span>
+                  <>
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></span>
+                    <Loader size={16} className="relative z-10" />
+                  </>
                 )}
                 <span className="relative z-10">{isPlacingBet ? 'Submitting...' : 'Submit'}</span>
               </button>

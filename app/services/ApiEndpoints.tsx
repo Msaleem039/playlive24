@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -72,7 +72,7 @@ export const API_END_POINTS = {
     settleBookmaker: `${BASE_URL}/admin/settlement/bookmaker`,
     cancelBets: `${BASE_URL}/admin/settlement/cancel-bets`,
     rollbackSettlement: `${BASE_URL}/admin/settlement/rollback`,
-    deleteBet: `${BASE_URL}/admin/settlement/bet`,
+    deleteBet: `${BASE_URL}/admin/settlement/bet/:betId`,
 
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     getAdminMatches: `${BASE_URL}/admin/matches`,
@@ -87,5 +87,8 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===ACCOUNT STATEMENT===>//////////////////////////////
     getAccountStatement: `${BASE_URL}/client/account-statement`,
+
+    /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
+    getBetAggregation: `${BASE_URL}/admin/settlement/bet-aggregation`,
  
 }

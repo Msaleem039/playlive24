@@ -124,13 +124,6 @@ export default function LiveMatchDetailPage() {
   const positionsQueryParams = useMemo(() => {
     // Always use eventId parameter (matchId and eventId are the same value, but API expects eventId)
     const params = eventId ? { eventId } : { eventId: matchId || '' }
-    console.log('🔍 [Positions API] Building query params:', {
-      eventId,
-      matchId,
-      finalParams: params,
-      willSkip: !matchId || !authUser,
-      note: 'API endpoint: /positions?eventId=...'
-    })
     return params
   }, [eventId, matchId, authUser])
   
@@ -139,37 +132,6 @@ export default function LiveMatchDetailPage() {
     { skip: !matchId || !authUser, pollingInterval: 10000 }
   )
   
-  // Debug: Log the actual API request URL and response
-  useEffect(() => {
-    if (!matchId || !authUser) {
-      console.log('⏭️ [Positions API] Skipped - missing matchId or authUser')
-      return
-    }
-    
-    const queryString = new URLSearchParams(positionsQueryParams as any).toString()
-    const fullUrl = `http://localhost:3000/positions?${queryString}`
-    
-    console.log('🌐 [Positions API] ========== API REQUEST ==========', {
-      url: fullUrl,
-      method: 'GET',
-      queryParams: positionsQueryParams,
-      isLoading: isLoadingPositions,
-      hasError: !!positionsError,
-      error: positionsError
-    })
-    
-    if (positionsData !== undefined) {
-      console.log('📥 [Positions API] ========== API RESPONSE ==========', {
-        hasData: !!positionsData,
-        success: positionsData?.success,
-        eventId: positionsData?.data?.eventId,
-        matchOdds: positionsData?.data?.matchOdds,
-        matchOddsKeys: positionsData?.data?.matchOdds ? Object.keys(positionsData.data.matchOdds) : [],
-        matchOddsCount: positionsData?.data?.matchOdds ? Object.keys(positionsData.data.matchOdds).length : 0,
-        fullResponse: JSON.stringify(positionsData, null, 2)
-      })
-    }
-  }, [positionsData, positionsQueryParams, isLoadingPositions, positionsError, matchId, authUser])
 
   const { positionsByMarketType, addOptimisticPosition } = usePositions(positionsData, matchId)
 
@@ -513,15 +475,6 @@ export default function LiveMatchDetailPage() {
                   marketType: positionMarketType
                 })
               }
-              
-              console.log('[Positions] Added optimistic position:', {
-                selectionId: selectedBet.selectionId,
-                netValue,
-                marketType: positionMarketType,
-                betType,
-                stake: stakeValue,
-                odds: oddsValue
-              })
             }
           }
           

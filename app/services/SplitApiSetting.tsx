@@ -15,7 +15,8 @@ const baseQuery = fetchBaseQuery({
             if (token) {
                 headers.set('authorization', `Bearer ${token}`);
                 headers.set('accept', 'application/json');
-                headers.set('Content-Type', 'application/json');
+                // Don't set Content-Type here - RTK Query will set it automatically when body is present
+                // This avoids issues with DELETE requests without body
             } else {
                 headers.set('authorization', '');
             }
@@ -27,6 +28,20 @@ const baseQuery = fetchBaseQuery({
 });
 
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+    // For DELETE requests without body, remove Content-Type header if it was set
+    if (args?.method === 'DELETE' && !args?.body) {
+        // Create a custom prepareHeaders that removes Content-Type
+        const originalPrepareHeaders = baseQuery.prepareHeaders;
+        if (originalPrepareHeaders) {
+            args.prepareHeaders = async (headers: Headers, api: any) => {
+                const result = await originalPrepareHeaders(headers, api);
+                // Remove Content-Type for DELETE without body
+                result.delete('Content-Type');
+                return result;
+            };
+        }
+    }
+    
     let result = await baseQuery(args, api, extraOptions);
     // Handle 401 errors by dispatching logout action
     if (result.error && result.error.status === 401) {

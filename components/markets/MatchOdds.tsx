@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
-import { Pin, RefreshCw } from 'lucide-react'
+import { Pin, RefreshCw, CheckCircle } from 'lucide-react'
 import type { BettingMarket } from '@/app/live/[matchId]/types'
 
 interface MatchOddsProps {
@@ -35,46 +34,6 @@ export default function MatchOdds({
   onRefresh,
   positions
 }: MatchOddsProps) {
-  // Debug: Log positions received by component
-  useEffect(() => {
-    const positionKeys = positions ? Object.keys(positions) : []
-    const rowSelectionIds = market.rows.map((r: any) => String(r.selectionId))
-    
-    console.log('🎯 [MatchOdds] ========== COMPONENT POSITIONS SUMMARY ==========', {
-      hasPositions: !!positions,
-      positionsType: typeof positions,
-      positionsIsArray: Array.isArray(positions),
-      positionsKeys: positionKeys,
-      positionsCount: positionKeys.length,
-      positionsValues: positions ? Object.values(positions) : [],
-      positionsStringified: positions ? JSON.stringify(positions, null, 2) : 'null',
-      marketName: market.name,
-      marketIndex,
-      marketRowsCount: market.rows.length,
-      marketRows: market.rows.map((r: any) => ({
-        team: r.team,
-        selectionId: r.selectionId,
-        selectionIdType: typeof r.selectionId,
-        selectionIdStr: String(r.selectionId),
-        willMatch: positions ? positions[String(r.selectionId)] !== undefined : false,
-        matchedValue: positions ? positions[String(r.selectionId)] : undefined
-      })),
-      matchingAnalysis: {
-        positionKeys: positionKeys,
-        rowSelectionIds: rowSelectionIds,
-        matches: rowSelectionIds.map(rowId => ({
-          rowSelectionId: rowId,
-          hasMatch: positionKeys.includes(rowId),
-          matchedKey: positionKeys.find(k => k === rowId || Number(k) === Number(rowId)),
-          matchedValue: positionKeys.find(k => k === rowId || Number(k) === Number(rowId)) 
-            ? positions![positionKeys.find(k => k === rowId || Number(k) === Number(rowId))!]
-            : undefined
-        })),
-        unmatchedPositionKeys: positionKeys.filter(k => !rowSelectionIds.includes(k) && !rowSelectionIds.some(rId => Number(rId) === Number(k))),
-        unmatchedRowIds: rowSelectionIds.filter(rId => !positionKeys.includes(rId) && !positionKeys.some(k => Number(k) === Number(rId)))
-      }
-    })
-  }, [positions, market.name, marketIndex, market.rows])
 
   return (
     <div 
@@ -199,104 +158,6 @@ export default function MatchOdds({
                 }
               }
               
-              // Enhanced debug logging for all rows to diagnose matching issues
-              const directLookup = positions && selectionIdStr ? positions[selectionIdStr] : undefined
-              const numericLookup = positions && !isNaN(selectionIdNum) ? positions[String(selectionIdNum)] : undefined
-              const matchFound = netValue !== undefined
-              
-              console.log('🔎 [MatchOdds] ========== POSITION LOOKUP VERIFICATION ==========', {
-                rowIndex,
-                team: row.team,
-                rowSelectionId: row.selectionId,
-                rowSelectionIdType: typeof row.selectionId,
-                selectionIdStr,
-                selectionIdStrType: typeof selectionIdStr,
-                selectionIdAsNumber: Number(row.selectionId),
-                hasPositions: !!positions,
-                positionsObject: positions,
-                positionsStringified: positions ? JSON.stringify(positions, null, 2) : null,
-                positionsKeys: positions ? Object.keys(positions) : [],
-                positionsKeysDetailed: positions ? Object.keys(positions).map(k => ({
-                  key: k,
-                  keyType: typeof k,
-                  keyAsNumber: Number(k),
-                  keyAsString: String(k),
-                  value: positions[k],
-                  valueType: typeof positions[k],
-                  isNaN: isNaN(Number(k)),
-                  matchesRowSelectionId: k === selectionIdStr || k === String(row.selectionId) || Number(k) === Number(row.selectionId)
-                })) : [],
-                positionsValues: positions ? Object.values(positions) : [],
-                directLookup,
-                directLookupFound: directLookup !== undefined,
-                numericLookup,
-                numericLookupFound: numericLookup !== undefined,
-                netValue,
-                matchFound,
-                comparisonDetails: positions ? {
-                  tryingString: selectionIdStr,
-                  tryingNumber: String(Number(row.selectionId)),
-                  availableKeys: Object.keys(positions),
-                  availableKeysAsNumbers: Object.keys(positions).map(k => Number(k)),
-                  stringMatch: positions[selectionIdStr] !== undefined,
-                  numberMatch: positions[String(Number(row.selectionId))] !== undefined,
-                  exactMatch: Object.keys(positions).some(k => {
-                    const keyMatches = k === selectionIdStr || k === String(row.selectionId) || Number(k) === Number(row.selectionId)
-                    if (keyMatches) {
-                      console.log('✅ [MatchOdds] Found matching key:', {
-                        matchingKey: k,
-                        rowSelectionId: row.selectionId,
-                        selectionIdStr,
-                        value: positions[k]
-                      })
-                    }
-                    return keyMatches
-                  }),
-                  allComparisons: Object.keys(positions).map(k => ({
-                    key: k,
-                    equalsString: k === selectionIdStr,
-                    equalsStringRow: k === String(row.selectionId),
-                    equalsNumber: Number(k) === Number(row.selectionId),
-                    anyMatch: k === selectionIdStr || k === String(row.selectionId) || Number(k) === Number(row.selectionId)
-                  }))
-                } : null
-              })
-              
-              // Additional verification log
-              if (matchFound) {
-                console.log('✅ [MatchOdds] SUCCESS - Position found for row:', {
-                  team: row.team,
-                  selectionId: row.selectionId,
-                  netValue,
-                  positionKey: selectionIdStr,
-                  matchedKey: Object.keys(positions || {}).find(k => positions![k] === netValue)
-                })
-              } else {
-                const positionsStatus = !positions 
-                  ? 'positions is undefined/null' 
-                  : Object.keys(positions).length === 0 
-                    ? 'positions object is empty {}' 
-                    : `positions has ${Object.keys(positions).length} keys`
-                
-                console.warn('⚠️ [MatchOdds] FAILED - Position NOT found for row:', {
-                  team: row.team,
-                  selectionId: row.selectionId,
-                  selectionIdStr,
-                  selectionIdNum,
-                  positionsStatus,
-                  availablePositionKeys: positions ? Object.keys(positions) : [],
-                  availablePositionKeysDetailed: positions ? Object.keys(positions).map(k => ({
-                    key: k,
-                    keyType: typeof k,
-                    keyAsNumber: Number(k),
-                    matchesSelectionId: k === selectionIdStr || Number(k) === selectionIdNum
-                  })) : [],
-                  suggestion: positions && Object.keys(positions).length > 0 
-                    ? `Available keys: ${Object.keys(positions).join(', ')} but looking for: ${selectionIdStr} (num: ${selectionIdNum})`
-                    : positionsStatus
-                })
-              }
-              
               // DISPLAY: Show net value exactly as backend provides
               // No calculations, no transformations, no inference
               
@@ -345,7 +206,7 @@ export default function MatchOdds({
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-blue-50 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
+                            : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
@@ -380,7 +241,7 @@ export default function MatchOdds({
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-pink-50 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
+                            : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
@@ -394,6 +255,16 @@ export default function MatchOdds({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Wrong Trade Warning */}
+      <div className="bg-red-50 border-t border-red-200 px-3 sm:px-4 py-0.5">
+        <div className="flex items-center gap-2 text-red-700">
+          <CheckCircle className="w-2 h-2 flex-shrink-0" />
+          <span className="text-[0.8rem]">
+          Wrong trades are void. Only profit bets apply
+          </span>
+        </div>
       </div>
     </div>
   )

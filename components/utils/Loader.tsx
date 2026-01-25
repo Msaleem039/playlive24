@@ -1,65 +1,61 @@
-"use client"
+'use client'
 
-import { motion } from "framer-motion"
+interface LoaderProps {
+  className?: string
+  size?: number
+}
 
-export default function Loader() {
+export default function Loader({ className = '', size = 30 }: LoaderProps) {
+  const R = size
+  const width = 2 * R
+
   return (
     <>
-      <style>{`
-        .loader-spinner {
-          width: 50px;
-          padding: 8px;
-          aspect-ratio: 1;
-          border-radius: 50%;
-          background: #00A66E;
-          --_m: 
-            conic-gradient(#0000 10%, #000),
-            linear-gradient(#000 0 0) content-box;
-          -webkit-mask: var(--_m);
-          mask: var(--_m);
-          -webkit-mask-composite: source-out;
-          mask-composite: subtract;
-          animation: loader-rotate 1s infinite linear;
-        }
-        @keyframes loader-rotate {
-          to { transform: rotate(1turn); }
-        }
-      `}</style>
-      
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          {/* Main Spinner with CSS animation */}
-          <div className="relative mb-6 flex justify-center">
-            <div className="loader-spinner" />
-          </div>
-
-          {/* Loading text with animation */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Dashboard</h3>
-            <div className="flex items-center justify-center gap-1">
-              <motion.span
-                className="w-2 h-2 bg-[#00A66E] rounded-full"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-              />
-              <motion.span
-                className="w-2 h-2 bg-[#00A66E] rounded-full"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-              />
-              <motion.span
-                className="w-2 h-2 bg-[#00A66E] rounded-full"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-              />
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <div 
+        className={`bet-loader ${className}`}
+        style={{
+          '--R': `${R}px`,
+          width: `${width}px`,
+          aspectRatio: '1',
+          borderRadius: '50%',
+          display: 'grid',
+          WebkitMask: 'linear-gradient(#000 0 0)',
+          mask: 'linear-gradient(#000 0 0)',
+          animation: 'l30 2s infinite linear'
+        } as React.CSSProperties & { '--R': string }}
+      />
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .bet-loader {
+            --g1: #514b82 96%, #0000;
+            --g2: #eeeeee 96%, #0000;
+          }
+          .bet-loader::before,
+          .bet-loader::after {
+            content: "";
+            grid-area: 1/1;
+            width: 50%;
+            background:
+              radial-gradient(farthest-side, var(--g1)) calc(var(--R) + 0.866*var(--R) - var(--R)) calc(var(--R) - 0.5*var(--R) - var(--R)),
+              radial-gradient(farthest-side, var(--g1)) calc(var(--R) + 0.866*var(--R) - var(--R)) calc(var(--R) - 0.5*var(--R) - var(--R)),
+              radial-gradient(farthest-side, var(--g2)) calc(var(--R) + 0.5*var(--R) - var(--R)) calc(var(--R) - 0.866*var(--R) - var(--R)),
+              radial-gradient(farthest-side, var(--g1)) 0 calc(-1*var(--R)),
+              radial-gradient(farthest-side, var(--g2)) calc(var(--R) - 0.5*var(--R) - var(--R)) calc(var(--R) - 0.866*var(--R) - var(--R)),
+              radial-gradient(farthest-side, var(--g1)) calc(var(--R) - 0.866*var(--R) - var(--R)) calc(var(--R) - 0.5*var(--R) - var(--R)),
+              radial-gradient(farthest-side, var(--g2)) calc(-1*var(--R)) 0,
+              radial-gradient(farthest-side, var(--g1)) calc(var(--R) - 0.866*var(--R) - var(--R)) calc(var(--R) + 0.5*var(--R) - var(--R));
+            background-size: calc(2*var(--R)) calc(2*var(--R));
+            background-repeat: no-repeat;
+          }
+          .bet-loader::after {
+            transform: rotate(180deg);
+            transform-origin: right;
+          }
+          @keyframes l30 {
+            100% { transform: rotate(-1turn); }
+          }
+        `
+      }} />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import { API_END_POINTS } from "./ApiEndpoints";
 import { SplitApiSettings } from "./SplitApiSetting";
+import Cookies from "js-cookie";
 
 export const api = SplitApiSettings.injectEndpoints({
   endpoints: (builder) => ({
@@ -109,11 +110,27 @@ export const api = SplitApiSettings.injectEndpoints({
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     getUser: builder.query({
-      query: () => ({
-        url: API_END_POINTS.getUser,
-        method: "GET",
-      }),
-      providesTags: ['User'],
+      query: (params?: { parentId?: string; type?: string }) => {
+        const queryParams = new URLSearchParams()
+        if (params?.parentId) {
+          queryParams.append('parentId', params.parentId)
+        }
+        if (params?.type) {
+          queryParams.append('type', params.type)
+        }
+        const queryString = queryParams.toString()
+        return {
+          url: queryString ? `${API_END_POINTS.getUser}?${queryString}` : API_END_POINTS.getUser,
+          method: "GET",
+        }
+      },
+      providesTags: (result, error, params) => {
+        // Provide different tags based on whether we're fetching bets or users
+        if (params?.type === 'bets') {
+          return ['User', 'BetHistory'] as any
+        }
+        return ['User'] as any
+      },
     }),
     getDashboardData: builder.query({
       query: () => ({
@@ -297,11 +314,41 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['Settlement'] as any,
     }),
     deleteBet: builder.mutation({
-      query: (data: { betId: string }) => ({
-        url: `${API_END_POINTS.deleteBet}?betId=${data.betId}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ['Settlement'] as any,
+      queryFn: async (betId: string, api, _extraOptions, baseQuery) => {
+        // Get token from Redux state or cookie
+        const state = (api.getState as any)();
+        let token = state?.auth?.token;
+        if (!token && typeof window !== 'undefined') {
+          token = Cookies.get('token');
+        }
+        
+        const url = API_END_POINTS.deleteBet.replace(':betId', betId);
+        // Get base URL - API_END_POINTS already includes BASE_URL, so if url doesn't start with http, we need to construct it
+        // Since API_END_POINTS.deleteBet already includes BASE_URL, we can use it directly
+        const fullUrl = url;
+        
+        try {
+          const response = await fetch(fullUrl, {
+            method: 'DELETE',
+            headers: {
+              'authorization': token ? `Bearer ${token}` : '',
+              'accept': 'application/json',
+              // Explicitly don't set Content-Type for DELETE without body
+            },
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            return { error: { status: response.status, data } };
+          }
+          
+          return { data };
+        } catch (error: any) {
+          return { error: { status: 'FETCH_ERROR', error: error.message } };
+        }
+      },
+      invalidatesTags: ['Settlement', 'BetHistory', 'User'] as any,
     }),
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     getAdminMatches: builder.query({
