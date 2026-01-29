@@ -108,7 +108,7 @@ export function useMatchData(eventId: string) {
     // Generate stream URL if match has TV enabled OR if we have eventId (new API)
     const hasEventId = matchData?.eventId || (marketsData && Array.isArray(marketsData) && marketsData.length > 0)
     if (!matchData?.tv && !hasEventId) return null
-    return `https://btocapi.tresting.com/embedN2?eventId=${currentEventId}`
+    return `https://tv.tresting.com/mobile.php?eventid=${currentEventId}`
   }, [currentEventId, matchData, marketsData])
 
   return {
