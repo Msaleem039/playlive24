@@ -460,7 +460,7 @@ export default function BetSlipModal({
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-              {[100, 200, 500, 1000, 2000, 5000, 10000, 20000].map((amount, index) => {
+              {[500, 1000, 5000, 10000, 20000, 50000, 100000, 200000].map((amount, index) => {
                 const currentStake = parseFloat(stake) || 0
                 const isActive = currentStake === amount || (currentStake >= amount && currentStake < amount * 2)
                 return (
