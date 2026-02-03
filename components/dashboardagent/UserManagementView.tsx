@@ -424,7 +424,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 mx-4">
                   <thead className="bg-[#00A66E]">
                     <tr>
                       <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[100px] sm:min-w-[130px]">

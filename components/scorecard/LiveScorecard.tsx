@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Volume2, VolumeX } from 'lucide-react'
+import { Volume2, VolumeX, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 
 interface Batsman {
@@ -80,6 +80,7 @@ interface LiveScorecardProps {
 
 export default function LiveScorecard({ data, isLoading, isMobile = false, matchDateTime }: LiveScorecardProps) {
   const [isMuted, setIsMuted] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   // Calculate trail (runs behind) and CRR
   const trail = useMemo(() => {
@@ -180,9 +181,9 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
       {/* Scorecard Details - Bottom Section */}
       <div className="bg-gray-800 px-2 sm:px-4 py-2">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left Side - Scores and Stats in one line */}
+          {/* Left Side - Scores (Always Visible) */}
           <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-            {/* Team Scores */}
+            {/* Team Scores - Always Visible */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Team 1 Score */}
               <div className="text-white text-xs sm:text-sm font-semibold">
@@ -210,35 +211,40 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
               </div>
             </div>
 
-            {/* CRR in one line */}
-            {currentRunRate && (
-              <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                <span className="text-gray-300">CRR</span>
-                <span className="text-green-400 font-semibold">: {currentRunRate}</span>
-              </div>
-            )}
+            {/* Additional Stats - Only when expanded */}
+            {isExpanded && (
+              <>
+                {/* CRR in one line */}
+                {currentRunRate && (
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                    <span className="text-gray-300">CRR</span>
+                    <span className="text-green-400 font-semibold">: {currentRunRate}</span>
+                  </div>
+                )}
 
-            {/* Trail in one line */}
-            {trail !== null && (
-              <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
-                <span className="text-gray-300">{data.team2.shortName} trail</span>
-                <span className="font-semibold">by {trail} runs</span>
-              </div>
-            )}
+                {/* Trail in one line */}
+                {trail !== null && (
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
+                    <span className="text-gray-300">{data.team2.shortName} trail</span>
+                    <span className="font-semibold">by {trail} runs</span>
+                  </div>
+                )}
 
-            {/* Runs Needed in one line */}
-            {runsNeededInfo && (
-              <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
-                <span className="text-gray-300">{data.team2.shortName} needs</span>
-                <span className="font-semibold">{runsNeededInfo.runs} runs in {runsNeededInfo.balls} balls to win</span>
-              </div>
+                {/* Runs Needed in one line */}
+                {runsNeededInfo && (
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
+                    <span className="text-gray-300">{data.team2.shortName} needs</span>
+                    <span className="font-semibold">{runsNeededInfo.runs} runs in {runsNeededInfo.balls} balls to win</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Right Side - Last Balls and Mute */}
+          {/* Right Side - Last Balls, Mute, and Expand/Collapse */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Last Balls */}
-            {data.lastBalls && data.lastBalls.length > 0 && (
+            {/* Last Balls - Only when expanded */}
+            {isExpanded && data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
                   const ballUpper = ball.toUpperCase()
@@ -271,23 +277,38 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
               </div>
             )}
 
-            {/* Mute Icon */}
+            {/* Mute Icon - Only when expanded */}
+            {isExpanded && (
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                className="text-gray-400 hover:text-white transition-colors p-1 flex-shrink-0"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? (
+                  <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                )}
+              </button>
+            )}
+
+            {/* Expand/Collapse Toggle Button */}
             <button
-              onClick={() => setIsMuted(!isMuted)}
+              onClick={() => setIsExpanded(!isExpanded)}
               className="text-gray-400 hover:text-white transition-colors p-1 flex-shrink-0"
-              title={isMuted ? 'Unmute' : 'Mute'}
+              title={isExpanded ? 'Show less' : 'Show more'}
             >
-              {isMuted ? (
-                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Batsman and Bowler Info - Compact one line */}
-        {(data.batsman?.length > 0 || (data.bowler && data.bowler.player_id)) && (
+        {/* Batsman and Bowler Info - Only when expanded */}
+        {isExpanded && (data.batsman?.length > 0 || (data.bowler && data.bowler.player_id)) && (
           <div className="mt-2 pt-2 border-t border-gray-700">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[10px] sm:text-xs">
               {/* Batsman */}

@@ -1,11 +1,29 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Settings, Eye, EyeOff, RefreshCw, Search } from "lucide-react"
+import { Settings, Eye, EyeOff, RefreshCw, Search, Calendar } from "lucide-react"
 import { useGetAdminMatchesQuery, useToggleMatchVisibilityMutation } from "@/app/services/Api"
 import { toast } from "sonner"
 import { Input } from "@/components/input"
 import { Button } from "@/components/utils/button"
+
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "Date not available"
+  
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+  } catch {
+    return "Invalid date"
+  }
+}
 
 export default function GameControlsView() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -89,6 +107,7 @@ export default function GameControlsView() {
                   const eventId = match.eventId || match.event_id || ""
                   const matchName = match.name || match.matchTitle || match.title || "N/A"
                   const isEnabled = match.isEnabled === true
+                  const matchDate = match.date || match.matchDate || null
                   
                   return (
                     <div
@@ -103,6 +122,10 @@ export default function GameControlsView() {
                           {eventId && (
                             <span className="font-mono">Event ID: <strong>{eventId}</strong></span>
                           )}
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                            <span>{formatDate(matchDate)}</span>
+                          </span>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             isEnabled
                               ? "bg-green-100 text-green-800"

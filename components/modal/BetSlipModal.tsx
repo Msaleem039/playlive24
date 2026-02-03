@@ -314,7 +314,7 @@ export default function BetSlipModal({
       gtype: selectedBet.marketGType || 'match_odds'
     }
 
-    console.log('Placing bet with payload:', payload)
+  
 
     // Store optimistic bet for potential rollback
     let optimisticBet: { selectionId?: number; type: 'back' | 'lay'; odds: string; stake?: string; betvalue?: number } | null = null
@@ -387,16 +387,11 @@ export default function BetSlipModal({
     onClear()
   }
 
-  // Handle quick stake button click with increment on repeat clicks
   const handleQuickStake = (amount: number) => {
-    const currentStake = parseFloat(stake) || 0
-    if (currentStake === amount) {
-      // If already set to this amount, increment by it
-      setStake((currentStake + amount).toString())
-    } else {
-      // Otherwise, set to the amount
-      setStake(amount.toString())
-    }
+    setStake(prev => {
+      const current = parseFloat(prev || '0')
+      return (current + amount).toString()
+    })
   }
 
   return (
