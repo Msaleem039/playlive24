@@ -243,8 +243,8 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
 
           {/* Right Side - Last Balls, Mute, and Expand/Collapse */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Last Balls - Only when expanded */}
-            {isExpanded && data.lastBalls && data.lastBalls.length > 0 && (
+            {/* Last Balls - Always visible */}
+            {data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
                   const ballUpper = ball.toUpperCase()

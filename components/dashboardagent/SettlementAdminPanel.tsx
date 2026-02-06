@@ -1,17 +1,18 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { RefreshCw, BarChart3, Play, Target, BookOpen, FileText, Menu } from "lucide-react"
+import { RefreshCw, BarChart3, Play, Target, BookOpen, FileText, Menu, Link2 } from "lucide-react"
 import { Button } from "@/components/utils/button"
-import { useGetPendingMarketsQuery, useGetPendingFancyMarketsQuery, useGetPendingBookmakerMarketsQuery } from "@/app/services/Api"
+import { useGetPendingMarketsQuery, useGetPendingFancyMarketsQuery, useGetPendingBookmakerMarketsQuery, useGetPendingTiedMatchMarketsQuery } from "@/app/services/Api"
 import { FancySettlementScreen } from "./FancySettlementScreen"
 import { MatchOddsSettlementScreen } from "./MatchOddsSettlementScreen"
 import { BookmakerSettlementScreen } from "./BookmakerSettlementScreen"
+import { TiedMatchSettlementScreen } from "./TiedMatchSettlementScreen"
 import { SettlementResultsScreen } from "./SettlementResultsScreen"
 
 export function SettlementAdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeScreen, setActiveScreen] = useState<"all" | "fancy" | "matchOdds" | "bookmaker" | "results">("all")
+  const [activeScreen, setActiveScreen] = useState<"all" | "fancy" | "matchOdds" | "bookmaker" | "tiedMatch" | "results">("all")
 
   // Set sidebar open on desktop by default
   useEffect(() => {
@@ -36,23 +37,30 @@ export function SettlementAdminPanel() {
     pollingInterval: 30000
   })
 
+  const { data: tiedMatchMarketsData } = useGetPendingTiedMatchMarketsQuery({}, { 
+    pollingInterval: 30000
+  })
+
   const stats = useMemo(() => {
     const marketsResponse = marketsData as any
     const fancyResponse = fancyMarketsData as any
+    const tiedMatchResponse = tiedMatchMarketsData as any
     
     const marketsMatches = marketsResponse?.data || []
     const fancyMatches = fancyResponse?.data || []
+    const tiedMatchMatches = tiedMatchResponse?.data || []
     
-    const totalMatches = (marketsResponse?.totalMatches || 0) + (fancyResponse?.totalMatches || 0)
-    const totalPendingBets = (marketsResponse?.totalPendingBets || 0) + (fancyResponse?.totalPendingBets || 0)
+    const totalMatches = (marketsResponse?.totalMatches || 0) + (fancyResponse?.totalMatches || 0) + (tiedMatchResponse?.totalMatches || 0)
+    const totalPendingBets = (marketsResponse?.totalPendingBets || 0) + (fancyResponse?.totalPendingBets || 0) + (tiedMatchResponse?.totalPendingBets || 0)
     
-    const totalAmount = [...marketsMatches, ...fancyMatches].reduce((sum: number, match: any) => {
-      return sum + (match.matchOdds?.totalAmount || 0) + (match.fancy?.totalAmount || 0) + (match.bookmaker?.totalAmount || 0)
+    const totalAmount = [...marketsMatches, ...fancyMatches, ...tiedMatchMatches].reduce((sum: number, match: any) => {
+      return sum + (match.matchOdds?.totalAmount || 0) + (match.fancy?.totalAmount || 0) + (match.bookmaker?.totalAmount || 0) + (match.totalAmount || 0)
     }, 0)
     
     const fancyMatchesCount = fancyResponse?.totalMatches || 0
     const matchOddsMatches = marketsMatches.filter((m: any) => (m.matchOdds?.count || 0) > 0).length
     const bookmakerMatches = marketsMatches.filter((m: any) => (m.bookmaker?.count || 0) > 0).length
+    const tiedMatchMatchesCount = tiedMatchResponse?.totalMatches || 0
 
     return {
       totalMatches,
@@ -60,9 +68,10 @@ export function SettlementAdminPanel() {
       totalAmount,
       fancyMatches: fancyMatchesCount,
       matchOddsMatches,
-      bookmakerMatches
+      bookmakerMatches,
+      tiedMatchMatches: tiedMatchMatchesCount
     }
-  }, [marketsData, fancyMarketsData])
+  }, [marketsData, fancyMarketsData, tiedMatchMarketsData])
 
   const renderScreen = () => {
     switch (activeScreen) {
@@ -72,6 +81,8 @@ export function SettlementAdminPanel() {
         return <MatchOddsSettlementScreen />
       case "bookmaker":
         return <BookmakerSettlementScreen />
+      case "tiedMatch":
+        return <TiedMatchSettlementScreen />
       case "results":
         return <SettlementResultsScreen />
       default:
@@ -190,6 +201,28 @@ export function SettlementAdminPanel() {
                   <span className="font-medium">Bookmaker</span>
                   <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
                     {stats.bookmakerMatches}
+                  </span>
+                </div>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveScreen("tiedMatch")
+                setSidebarOpen(false)
+              }}
+              className={`w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base ${
+                activeScreen === "tiedMatch"
+                  ? "bg-orange-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Link2 className="w-5 h-5 flex-shrink-0" />
+              {sidebarOpen && (
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-medium">Tied Match</span>
+                  <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
+                    {stats.tiedMatchMatches}
                   </span>
                 </div>
               )}

@@ -196,6 +196,13 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['Settlement'] as any,
     }),
+    getPendingTiedMatchMarkets: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getPendingTiedMatchMarkets,
+        method: "GET",
+      }),
+      providesTags: ['Settlement'] as any,
+    }),
 
     getPendingSettlementsByMatch: builder.query({
       query: (matchId: string | number) => ({
@@ -290,6 +297,14 @@ export const api = SplitApiSettings.injectEndpoints({
     settleBookmaker: builder.mutation({
       query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
         url: API_END_POINTS.settleBookmaker,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['Settlement'] as any,
+    }),
+    settleTiedMatch: builder.mutation({
+      query: (data: { eventId: string; marketId: string; winnerSelectionId: string }) => ({
+        url: API_END_POINTS.settleTiedMatch,
         method: "POST",
         body: data,
       }),
@@ -445,6 +460,7 @@ export const {
     useGetPendingMarketsQuery,
     useGetPendingFancyMarketsQuery,
     useGetPendingBookmakerMarketsQuery,
+    useGetPendingTiedMatchMarketsQuery,
     useGetPendingSettlementsByMatchQuery,
     useGetSettlementDetailsQuery,
     useGetSettlementBetsQuery,
@@ -459,6 +475,7 @@ export const {
     useSettleFancyMutation,
     useSettleMatchOddsMutation,
     useSettleBookmakerMutation,
+    useSettleTiedMatchMutation,
     useCancelBetsMutation,
     useRollbackSettlementMutation,
     useDeleteBetMutation,

@@ -91,7 +91,7 @@ export function useMatchMarkets(
     }
     
     
-    // Filter out markets with "2nd" in mname, "Tied Match", "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", "Match Odds Including Tie", "Completed Match", "Super Over", "Line" markets, "Over Total" markets (case-insensitive)
+    // Filter out markets with "2nd" in mname, "TOURNAMENT_WINNER", "Bookmaker Big Bash Cup", "Match Odds Including Tie", "Completed Match", "Super Over", "Line" markets, "Over Total" markets (case-insensitive)
     const filteredMarkets = markets.filter((market: any) => {
       const mname = (market.mname || market.marketName || '').toLowerCase().trim()
       // Exclude markets with "2nd" in the name
@@ -106,10 +106,7 @@ export function useMatchMarkets(
       if (mname.includes('over total')) {
         return false
       }
-      // Exclude "Tied Match" markets (exact match or contains "tied match" as a phrase)
-      if (mname === 'tied match' || mname.startsWith('tied match')) {
-        return false
-      }
+      // Note: "Tied Match" markets are now included and will be displayed
       // Exclude "TOURNAMENT_WINNER" markets
       if (mname === 'tournament_winner' || mname.includes('tournament winner')) {
         return false
