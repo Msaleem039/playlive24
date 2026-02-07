@@ -52,7 +52,7 @@ export const useCricketLiveUpdates = ({
 
     /** DISCONNECTED */
     socket.on("disconnect", (reason) => {
-      console.warn("❌ Disconnected:", reason)
+      // console.warn("❌ Disconnected:", reason)
       setIsConnected(false)
       setIsConnecting(false)
     })

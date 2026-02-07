@@ -93,7 +93,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Marquee */}
       <div className="bg-black text-emerald-400 py-1 overflow-hidden">
         <div className="animate-marquee text-[0.70rem] text-white font-medium whitespace-nowrap">
-          Welcome to Playlive7! If you have any queries, contact us +92321625856054
+          Welcome to Playlive24 enjoy icc cricket world cup 2026
         </div>
       </div>
       {/* Nav bar */}

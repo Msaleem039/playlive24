@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
-import ConnectionIndicator from "@/components/utils/ConnectionIndicator"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
 import Image from "next/image"
@@ -414,15 +413,6 @@ export default function CricketTab() {
             <Wifi className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             <span className="text-[10px] sm:text-xs hidden sm:inline">Live</span>
           </button>
-          
-          {/* Connection Status */}
-          <ConnectionIndicator 
-            isConnected={isConnected}
-            isConnecting={isConnecting}
-            error={wsError}
-            lastUpdate={lastUpdate}
-            className="text-white"
-          />
           
           <button 
             onClick={handleRefresh}
