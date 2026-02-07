@@ -20,6 +20,9 @@ import {
   RefreshCw,
   Radio,
   Video,
+  Settings,
+  Edit3,
+  AlertCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -32,6 +35,8 @@ import Cookies from "js-cookie"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import SelfTopupModal from "@/components/modal/SelfTopupModal"
 import VideoUploadModal from "@/components/modal/VideoUploadModal"
+import ComplaintsModal from "@/components/modal/ComplaintsModal"
+import NewsBarModal from "@/components/modal/NewsBarModal"
 import { toast } from "sonner"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
@@ -103,7 +108,11 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isSelfTopupModalOpen, setIsSelfTopupModalOpen] = useState(false)
   const [isVideoUploadModalOpen, setIsVideoUploadModalOpen] = useState(false)
+  const [isComplaintsModalOpen, setIsComplaintsModalOpen] = useState(false)
+  const [isNewsBarModalOpen, setIsNewsBarModalOpen] = useState(false)
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const adminDropdownRef = useRef<HTMLDivElement | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const authUser = useSelector(selectCurrentUser)
@@ -404,6 +413,19 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isUserMenuOpen])
 
+  useEffect(() => {
+    if (!isAdminDropdownOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(event.target as Node)) {
+        setIsAdminDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isAdminDropdownOpen])
+
   const handleChangePassword = async (data: {
     password: string
     confirmPassword: string
@@ -509,6 +531,53 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                   <Video className="w-3 h-3" />
                   <span className="hidden sm:inline">Video</span>
                 </button>
+                {/* Admin Dropdown */}
+                <div className="relative" ref={adminDropdownRef}>
+                  <button
+                    onClick={() => setIsAdminDropdownOpen((prev) => !prev)}
+                    className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors flex items-center gap-1"
+                    title="Admin Settings"
+                  >
+                    <Settings className="w-3 h-3" />
+                    <span className="hidden sm:inline">Admin</span>
+                    <ChevronDown
+                      className={`w-3 h-3 transition-transform ${isAdminDropdownOpen ? "rotate-180" : "rotate-0"}`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {isAdminDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
+                      >
+                        <button
+                          onClick={() => {
+                            setIsComplaintsModalOpen(true)
+                            setIsAdminDropdownOpen(false)
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        >
+                          <AlertCircle className="w-4 h-4 text-red-500" />
+                          <span>Complaints</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsNewsBarModalOpen(true)
+                            setIsAdminDropdownOpen(false)
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        >
+                          <Edit3 className="w-4 h-4 text-blue-500" />
+                          <span>News Bar</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </>
             )}
 
@@ -658,11 +727,11 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
         </div>
       </div>
       {/* Marquee */}
-      <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
+      {/* <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
         <div className="animate-marquee text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.70rem] lg:text-[0.75rem] text-white font-medium whitespace-nowrap">
           Welcome to Playlive7! If you have any queries, contact us +923254353
         </div>
-      </div>
+      </div> */}
 
       {/* Navigation Bar - Combined from SharedNavigation */}
       {onTabChange && (
@@ -738,6 +807,14 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
             isOpen={isVideoUploadModalOpen}
             onClose={() => setIsVideoUploadModalOpen(false)}
             currentVideoUrl={siteVideoData?.videoUrl}
+          />
+          <ComplaintsModal
+            isOpen={isComplaintsModalOpen}
+            onClose={() => setIsComplaintsModalOpen(false)}
+          />
+          <NewsBarModal
+            isOpen={isNewsBarModalOpen}
+            onClose={() => setIsNewsBarModalOpen(false)}
           />
         </>
       )}

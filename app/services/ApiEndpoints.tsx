@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -92,5 +92,13 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
     getBetAggregation: `${BASE_URL}/admin/settlement/bet-aggregation`,
+
+    /////////////////////////////<===COMPLAINT===>//////////////////////////////
+    submitComplaint: `${BASE_URL}/complaint`,
+    getComplaints: `${BASE_URL}/complaint`,
+
+    /////////////////////////////<===NEWS BAR===>//////////////////////////////
+    getNewsBar: `${BASE_URL}/news-bar`,
+    updateNewsBar: `${BASE_URL}/news-bar`,
  
 }

@@ -399,6 +399,41 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
     }),
 
+    /////////////////////////////<===COMPLAINT===>//////////////////////////////
+    submitComplaint: builder.mutation({
+      query: (data: { name: string; contactNumber: string; message: string }) => ({
+        url: API_END_POINTS.submitComplaint,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
+    getComplaints: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getComplaints,
+        method: "GET",
+      }),
+      providesTags: ['Complaints'] as any,
+    }),
+
+    /////////////////////////////<===NEWS BAR===>//////////////////////////////
+    getNewsBar: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getNewsBar,
+        method: "GET",
+      }),
+      providesTags: ['NewsBar'] as any,
+    }),
+
+    updateNewsBar: builder.mutation({
+      query: (data: { text: string }) => ({
+        url: API_END_POINTS.updateNewsBar,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ['NewsBar'] as any,
+    }),
+
     /////////////////////////////<===POSITIONS QUERIES===>//////////////////////////////
     getMatchPositions: builder.query({
       query: (params?: { matchId?: string; eventId?: string }) => {
@@ -495,5 +530,13 @@ export const {
 
     /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
     useGetBetAggregationQuery,
+
+    /////////////////////////////<===COMPLAINT===>//////////////////////////////
+    useSubmitComplaintMutation,
+    useGetComplaintsQuery,
+
+    /////////////////////////////<===NEWS BAR===>//////////////////////////////
+    useGetNewsBarQuery,
+    useUpdateNewsBarMutation,
     
 } = api;

@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/sidebar"
 import DashboardTopBar from "./dashboard-top-bar"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
+import { useGetNewsBarQuery } from "@/app/services/Api"
 
 type DashboardHeaderProps = {
   selectedTab: string
@@ -48,6 +49,13 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
     page: 1,
     per_page: 20,
   })
+
+  // Fetch news bar text
+  const { data: newsBarData } = useGetNewsBarQuery({}, {
+    pollingInterval: 60000 // Poll every minute
+  })
+  
+  const newsBarText = newsBarData?.text || "Welcome to Playlive24 enjoy icc cricket world cup 2026"
 
   // Use live matches if available and connected, otherwise use API data
   const currentCricketMatches = (isConnected && liveCricketMatches.length > 0) 
@@ -93,7 +101,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Marquee */}
       <div className="bg-black text-emerald-400 py-1 overflow-hidden">
         <div className="animate-marquee text-[0.70rem] text-white font-medium whitespace-nowrap">
-          Welcome to Playlive24 enjoy icc cricket world cup 2026
+          {newsBarText}
         </div>
       </div>
       {/* Nav bar */}

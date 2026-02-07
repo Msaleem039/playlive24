@@ -18,7 +18,8 @@ const roleNavigationItems = {
     'Game Controls',
     'System Settings',
     'Reports',
-    'Detail Report'
+    'Detail Report',
+    'Complaints'
   ],
   ADMIN: [
     'Dashboard',

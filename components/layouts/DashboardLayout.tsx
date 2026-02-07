@@ -15,6 +15,7 @@ import {
 } from "@/components/dashboardagent"
 import { MyReportView } from "@/components/MyReportView"
 import MatchesView from "@/components/MatchesView"
+import ComplaintsView from "@/components/ComplaintsView"
 import {
   MyMarketView,
   CasinoAnalysisView,
@@ -141,6 +142,7 @@ export default function DashboardLayout({ role }: { role: string }) {
         {activeTab === "System Settings" && <SystemSettingsView />}
         {activeTab === "Reports" && <ReportsView />}
         {activeTab === "Settlement" && <SettlementAdminPanel />}
+        {activeTab === "Complaints" && <ComplaintsView />}
       </main>
 
       {/* ======= Modals ======= */}

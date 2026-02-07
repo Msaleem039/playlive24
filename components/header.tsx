@@ -6,10 +6,12 @@ import Link from "next/link"
 import Logo from "./utils/Logo"
 import LoginModal from "./modal/LoginModal"
 import SignupModal from "./modal/SignupModal"
+import ComplaintModal from "./modal/ComplaintModal"
 
 export default function Header() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false)
 
   const openLoginModal = () => {
     setIsSignupModalOpen(false)
@@ -107,7 +109,7 @@ export default function Header() {
 
       {/* Floating Complain Button */}
       <motion.button
-        onClick={() => window.open('mailto:support@playlive7.com?subject=Complaint', '_blank')}
+        onClick={() => setIsComplaintModalOpen(true)}
         className="fixed bottom-16 xs:bottom-20 right-3 xs:right-4 sm:right-6 z-40 bg-red-500 hover:bg-red-600 text-white font-bold px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 mb-3 xs:mb-4 sm:mb-5 rounded-full shadow-lg border-2 border-red-400 text-[0.65rem] xs:text-xs sm:text-sm"
         animate={{ 
           scale: [1, 1.1, 1],
@@ -178,6 +180,10 @@ export default function Header() {
         isOpen={isSignupModalOpen} 
         onClose={closeModals} 
         onSwitchToLogin={openLoginModal}
+      />
+      <ComplaintModal 
+        isOpen={isComplaintModalOpen} 
+        onClose={() => setIsComplaintModalOpen(false)}
       />
     </header>
   )
