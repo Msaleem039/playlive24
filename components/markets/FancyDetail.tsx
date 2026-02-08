@@ -71,20 +71,20 @@ export default function FancyDetail({
               <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24">
                 Team
               </th>
+              {Array.from({ length: NO_COLUMNS }).map((_, i) => (
+                <th 
+                  key={`no-${i}`} 
+                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
+                >
+                  NO
+                </th>
+              ))}
               {Array.from({ length: YES_COLUMNS }).map((_, i) => (
                 <th 
                   key={`yes-${i}`} 
                   className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
                 >
                   Yes
-                </th>
-              ))}
-              {Array.from({ length: NO_COLUMNS }).map((_, i) => (
-                <th 
-                  key={`lay-${i}`} 
-                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
-                >
-                  NO
                 </th>
               ))}
             </tr>
@@ -115,42 +115,6 @@ export default function FancyDetail({
                     </div>
                   ) : null}
                 </td>
-                {/* Yes Odds */}
-                {row.back.map((option, optIndex) => {
-                  const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
-                  const isBlinking = blinkingOdds.has(oddKey)
-                  return (
-                    <td key={`yes-${optIndex}`} className="px-1 py-1">
-                      <div
-                        onClick={() => {
-                          if (option.odds !== '0' && option.amount !== '0') {
-                            onBetSelect({
-                              team: row.team,
-                              type: 'back',
-                              odds: option.odds.toString(),
-                              market: market.name,
-                              selectionId: row.selectionId,
-                              marketId: market.marketId,
-                              marketIdString: market.marketIdString,
-                              marketGType: market.gtype,
-                              size: typeof option.amount === 'number' ? option.amount : parseFloat(String(option.amount)) || 100 // Pass size (percentage) for fancy market calculation
-                            })
-                          }
-                        }}
-                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
-                          option.odds === '0' || option.amount === '0'
-                            ? 'bg-gray-100 cursor-not-allowed'
-                            : isBlinking
-                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
-                            : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
-                        }`}
-                      >
-                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
-                      </div>
-                    </td>
-                  )
-                })}
                 {/* No Odds */}
                 {row.lay.map((option, optIndex) => {
                   const oddKey = `${marketIndex}-${rowIndex}-lay-${optIndex}`
@@ -179,6 +143,42 @@ export default function FancyDetail({
                             : isBlinking
                             ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
                             : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                      </div>
+                    </td>
+                  )
+                })}
+                {/* Yes Odds */}
+                {row.back.map((option, optIndex) => {
+                  const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
+                  const isBlinking = blinkingOdds.has(oddKey)
+                  return (
+                    <td key={`yes-${optIndex}`} className="px-1 py-1">
+                      <div
+                        onClick={() => {
+                          if (option.odds !== '0' && option.amount !== '0') {
+                            onBetSelect({
+                              team: row.team,
+                              type: 'back',
+                              odds: option.odds.toString(),
+                              market: market.name,
+                              selectionId: row.selectionId,
+                              marketId: market.marketId,
+                              marketIdString: market.marketIdString,
+                              marketGType: market.gtype,
+                              size: typeof option.amount === 'number' ? option.amount : parseFloat(String(option.amount)) || 100 // Pass size (percentage) for fancy market calculation
+                            })
+                          }
+                        }}
+                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
+                          option.odds === '0' || option.amount === '0'
+                            ? 'bg-gray-100 cursor-not-allowed'
+                            : isBlinking
+                            ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4] cursor-pointer shadow-sm'
+                            : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
