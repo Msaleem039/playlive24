@@ -65,16 +65,16 @@ export default function UserPendingBets({ userPendingBets, isLoading }: UserPend
                     <div className="text-[10px] sm:text-xs text-gray-600 truncate mt-0.5">
                       {bet.marketName || bet.gtype || 'MATCH'}
                     </div>
-                    {oddsValue && (
+                    {/* {oddsValue && (
                       <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
                         Odds: <span className="font-medium">{oddsValue}</span>
                       </div>
-                    )}
+                    )} */}
                   </td>
-                  <td className="px-2 sm:px-3 py-2.5 text-center text-gray-900 font-medium text-xs sm:text-sm">
+                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-medium text-xs sm:text-sm">
                     Rs {(bet.amount || bet.betValue || 0).toLocaleString()}
                   </td>
-                  <td className="px-2 sm:px-3 py-2.5 text-center text-gray-900 font-medium text-xs sm:text-sm">
+                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-medium text-xs sm:text-sm">
                     {oddsValue ? oddsValue : '--'}
                   </td>
                 </tr>

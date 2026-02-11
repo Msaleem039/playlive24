@@ -25,6 +25,25 @@ interface FancyDetailProps {
 const YES_COLUMNS = 1
 const NO_COLUMNS = 1
 
+// Helper function to split team text for mobile display
+// Splits text like "12 Over Fancy 150 Runs" into ["12 Over", "Fancy 150 Runs"]
+const splitTeamText = (text: string): [string, string] => {
+  // Match pattern: number(s) + space + word(s) at the start
+  const match = text.match(/^(\d+\s+\w+)(\s+.+)?$/)
+  if (match) {
+    const firstPart = match[1] // e.g., "12 Over"
+    const secondPart = match[2]?.trim() || '' // e.g., "Fancy 150 Runs"
+    return [firstPart, secondPart]
+  }
+  // If no match, try to split at first space
+  const firstSpaceIndex = text.indexOf(' ')
+  if (firstSpaceIndex > 0) {
+    return [text.substring(0, firstSpaceIndex + 1).trim(), text.substring(firstSpaceIndex + 1).trim()]
+  }
+  // If no space, return as single line
+  return [text, '']
+}
+
 export default function FancyDetail({
   market,
   marketIndex,
@@ -68,7 +87,7 @@ export default function FancyDetail({
         <table className="w-full text-xs sm:text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24">
+              <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24 min-w-0">
                 Team
               </th>
               {Array.from({ length: NO_COLUMNS }).map((_, i) => (
@@ -96,12 +115,24 @@ export default function FancyDetail({
               const positionKey = (row.team || '').toUpperCase().trim()
               const netValue = positions && positionKey ? positions[positionKey] : undefined
               
+              // Split team text for mobile display
+              const [firstLine, secondLine] = isMobile ? splitTeamText(row.team) : [row.team, '']
+              
               return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-0.5 py-0.5">
-                  <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
-                    {row.team}
-                  </div>
+                <td className="px-0.5 py-0.5 min-w-0 w-20 sm:w-24">
+                  {isMobile && secondLine ? (
+                    // Mobile: Two-line display
+                    <div className="font-medium text-xs text-gray-900 break-words">
+                      <div className="leading-tight break-words">{firstLine}</div>
+                      <div className="leading-tight break-words">{secondLine}</div>
+                    </div>
+                  ) : (
+                    // Desktop: Single line (unchanged)
+                    <div className="font-medium text-xs sm:text-sm text-gray-900">
+                      {row.team}
+                    </div>
+                  )}
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
                     // Show net value badge - exactly as backend provides
                     <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mt-1 border ${
