@@ -35,7 +35,7 @@ export default function DashboardLayout({ role }: { role: string }) {
   const [loading, setLoading] = useState(true)
 
   // Your existing UI states
-  const [activeTab, setActiveTab] = useState("Dashboard")
+  const [activeTab, setActiveTab] = useState("Matches")
   const [userTab, setUserTab] = useState("Active Users")
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [isAllUsersModalOpen, setIsAllUsersModalOpen] = useState(false)
@@ -112,8 +112,8 @@ export default function DashboardLayout({ role }: { role: string }) {
         <CommonHeader activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Spacer to push content below fixed header - Top bar (h-10=40px mobile, h-12=48px desktop) + Marquee (py-1≈20px) + Nav bar (≈44px mobile, ≈48px desktop) */}
-      <div className="h-[90px] sm:h-[110px] flex-shrink-0" />
+      {/* Spacer to push content below fixed header - Top bar (h-10=40px mobile, h-12=48px desktop) + Nav bar (≈32px mobile, ≈52px desktop) */}
+      <div className="h-[72px] sm:h-[100px] flex-shrink-0" />
 
       {/* ======= Tab Content ======= - Scrollable area starts below header */}
       <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">

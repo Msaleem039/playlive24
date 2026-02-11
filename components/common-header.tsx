@@ -44,9 +44,9 @@ import { useCricketMatches } from "@/app/hooks/useCricketMatches"
 // Define navigation items for each role
 const roleNavigationItems = {
   SUPER_ADMIN: [
+    'Matches',
     'Dashboard',
     'User Management',
-    'Matches',
     'My Market',
     'Casino Analysis',
     'Game Controls',
@@ -55,9 +55,9 @@ const roleNavigationItems = {
     'Detail Report'
   ],
   ADMIN: [
+    'Matches',
     'Dashboard',
     'User List',
-    'Matches',
     'My Market',
     'Casino Analysis',
     'Game Controls',
@@ -66,9 +66,10 @@ const roleNavigationItems = {
     'Detail Report'
   ],
   AGENT: [
+    'Matches',
     'Dashboard',
     'User List',
-    'Matches',
+  
     'My Market',
     'Casino Analysis',
     // 'Game Controls',
@@ -80,9 +81,9 @@ const roleNavigationItems = {
     'Detail Report'
   ],
   CLIENT: [
+    'Matches',
     'Dashboard',
     'My Bets',
-    'Matches',
     'Account Statement',
     'Bet History',
     'Profit Loss'
@@ -100,7 +101,9 @@ interface CommonHeaderProps {
   onTabChange?: (tab: string) => void
 }
 
-export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: CommonHeaderProps = {}) {
+export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderProps = {}) {
+  // Default to 'Matches' if not provided
+  const currentActiveTab = activeTab || 'Matches'
   const router = useRouter()
   const dispatch = useDispatch<any>()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -207,15 +210,15 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
     }
 
     // Debug logging
-    console.log("CommonHeader: authUser from Redux:", authUser)
-    console.log("CommonHeader: balance field:", authUser?.balance)
-    console.log("CommonHeader: all balance fields:", {
-      balance: authUser?.balance,
-      walletBalance: authUser?.walletBalance,
-      availableBalance: authUser?.availableBalance,
-      available_balance: authUser?.available_balance,
-      chips: authUser?.chips
-    })
+    // console.log("CommonHeader: authUser from Redux:", authUser)
+    // console.log("CommonHeader: balance field:", authUser?.balance)
+    // console.log("CommonHeader: all balance fields:", {
+    //   balance: authUser?.balance,
+    //   walletBalance: authUser?.walletBalance,
+    //   availableBalance: authUser?.availableBalance,
+    //   available_balance: authUser?.available_balance,
+    //   chips: authUser?.chips
+    // })
 
     const role = (authUser?.role as string | undefined) ?? "CLIENT"
     const balanceValue = normalizeNumber(
@@ -494,9 +497,12 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
             <button
               aria-label="Open sidebar"
               onClick={() => setIsSidebarOpen(true)}
-              className="text-emerald-400 rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
+              className="rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
             >
-              <Menu className="w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5" />
+              {/* PL24 text - shown on small screens, hidden on sm and above */}
+              <span className="text-yellow-400 font-bold text-lg sm:hidden">PL24</span>
+              {/* Menu icon - hidden on small screens, shown from sm breakpoint */}
+              <Menu className="hidden sm:block w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5 text-emerald-400" />
             </button>
             {/* Logo - Hidden on small screens, shown from sm breakpoint */}
             <motion.div 
@@ -747,7 +753,7 @@ export default function CommonHeader({ activeTab = 'Dashboard', onTabChange }: C
                     className={`font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 whitespace-nowrap text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] lg:text-[0.75rem] xl:text-[0.8rem] transition-colors min-h-[20px] xs:min-h-[22px] sm:min-h-[24px] md:min-h-[26px] lg:min-h-[28px] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-1 sm:py-1.5 md:py-2 ${
                       item === 'Game Controls' ? 'hover:text-gray-200' : ''
                     } ${
-                      item === activeTab 
+                      item === currentActiveTab 
                         ? 'bg-white text-black rounded font-bold shadow-sm' 
                         : 'hover:text-gray-200 hover:bg-black/10 rounded'
                     }`}

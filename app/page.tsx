@@ -6,7 +6,6 @@ import { useGetSiteVideoQuery } from "@/app/services/Api"
 
 import Header from "@/components/header"
 import GamesSection from "@/components/games-section"
-import Watsapp from "@/components/Watsapp"
 import Footer from "@/components/footer"
 
 export default function HomePage() {
@@ -92,8 +91,6 @@ export default function HomePage() {
         <GamesSection />
         <Footer />
       </main>
-
-      <Watsapp />
     </div>
   )
 }

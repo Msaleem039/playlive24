@@ -247,30 +247,80 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             {data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
-                  const ballUpper = ball.toUpperCase()
-                  // Check for wide ball (Wd, Wd1, Wd2, etc.)
-                  const isWide = ballUpper.includes('WD')
-                  // Check for wicket (W, W1, W2, etc. but not Wd)
-                  const isWicket = ballUpper.includes('W') && !isWide
-                  const ballValue = ball.replace(/W/gi, '').replace(/D/gi, '')
-                  const isZero = ballValue === '0' || ballValue === '0.0' || ballValue === ''
+                  const ballUpper = ball.toUpperCase().trim()
+                  const ballOriginal = ball.trim()
+                  
+                  // Detect ball type - check in order of priority
+                  // 1. Wide ball (Wd, Wd1, Wd2, etc.) - starts with "WD" or contains "WD"
+                  const isWide = ballUpper.startsWith('WD') || ballUpper.includes('WD')
+                  
+                  // 2. No ball (Nb, Nb1, Nb2, etc.) - starts with "NB" or contains "NB"
+                  const isNoBall = ballUpper.startsWith('NB') || ballUpper.includes('NB')
+                  
+                  // 3. Wicket (W, W1, W2, etc.) - exact "W" or starts with "W" but not "WD"
+                  const isWicket = ballUpper === 'W' || (ballUpper.startsWith('W') && !isWide)
+                  
+                  // Extract numeric value for runs (remove W, WD, NB, D, etc.)
+                  let ballValue = ballUpper
+                    .replace(/WD/gi, '')
+                    .replace(/NB/gi, '')
+                    .replace(/W/gi, '')
+                    .replace(/D/gi, '')
+                    .trim()
+                  
+                  const numericValue = parseInt(ballValue) || 0
+                  const isZero = numericValue === 0 && !isWide && !isNoBall && !isWicket
+                  const isFour = numericValue === 4
+                  const isSix = numericValue === 6
+                  
+                  // Determine display text
+                  let displayText = ballOriginal
+                  if (isWide) {
+                    // Show "Wd" for wide, or "Wd1", "Wd2" if there are runs
+                    // Preserve original case but ensure "Wd" format
+                    if (ballValue) {
+                      displayText = `Wd${ballValue}`
+                    } else {
+                      displayText = ballOriginal.match(/^wd/i) ? 'Wd' : 'Wd'
+                    }
+                  } else if (isNoBall) {
+                    // Show "Nb" for no ball, or "Nb1", "Nb2" if there are runs
+                    if (ballValue) {
+                      displayText = `Nb${ballValue}`
+                    } else {
+                      displayText = ballOriginal.match(/^nb/i) ? 'Nb' : 'Nb'
+                    }
+                  } else if (isWicket) {
+                    // Show "W" for wicket (wickets don't typically have runs)
+                    displayText = 'W'
+                  } else if (isZero) {
+                    // Show "0" for dot ball
+                    displayText = '0'
+                  } else {
+                    // Show the numeric value for runs (1, 2, 3, 4, 6)
+                    displayText = ballValue || ballOriginal
+                  }
+                  
+                  // Determine background color
+                  let bgColor = 'bg-green-500 text-white'
+                  if (isWicket) {
+                    bgColor = 'bg-red-500 text-white'
+                  } else if (isWide) {
+                    bgColor = 'bg-blue-500 text-white'
+                  } else if (isNoBall) {
+                    bgColor = 'bg-purple-500 text-white'
+                  } else if (isZero) {
+                    bgColor = 'bg-gray-600 text-gray-300'
+                  } else if (isFour || isSix) {
+                    bgColor = 'bg-yellow-400 text-gray-900'
+                  }
                   
                   return (
                     <div
                       key={idx}
-                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${
-                        isWicket
-                          ? 'bg-red-500 text-white'
-                          : isWide
-                          ? 'bg-green-500 text-white'
-                          : isZero
-                          ? 'bg-gray-600 text-gray-300'
-                          : ballValue === '4' || ballValue === '6'
-                          ? 'bg-yellow-400 text-gray-900'
-                          : 'bg-green-500 text-white'
-                      }`}
+                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${bgColor}`}
                     >
-                      {isWicket || isWide ? 'W' : ball}
+                      {displayText}
                     </div>
                   )
                 })}

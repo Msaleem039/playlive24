@@ -15,7 +15,7 @@ export default function DashboardPageClient() {
         return savedTab
       }
     }
-    return 'Home'
+    return 'Cricket' // Default to Cricket to show matches
   })
   const mainRef = useRef<HTMLElement>(null)
 

@@ -247,21 +247,27 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
     <div className="bg-[#334443]">
       <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
+          {/* Hamburger icon - Hidden on small screens, shown from md breakpoint */}
           <button
             aria-label="Open sidebar"
             onClick={onSidebarOpen}
-            className="text-emerald-400 rounded p-1.5 sm:p-2 flex-shrink-0"
+            className="hidden md:block text-emerald-400 rounded p-1.5 sm:p-2 flex-shrink-0"
           >
             <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          {/* Logo - Hidden on small screens (sm and below), shown from md breakpoint */}
-          <motion.div 
+          {/* PL24 text on small screens, Logo on medium+ screens - both clickable to open sidebar */}
+          <motion.button
+            aria-label="Open sidebar"
+            onClick={onSidebarOpen}
             initial={{ opacity: 0, x: -20 }} 
             animate={{ opacity: 1, x: 0 }} 
-            className="hidden md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0"
+            className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <Logo/>
-          </motion.div>
+            <span className="md:hidden text-yellow-400 font-bold ">PL24</span>
+            <span className="hidden md:block">
+              <Logo/>
+            </span>
+          </motion.button>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
         <div className="relative" ref={balanceMenuRef}>

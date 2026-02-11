@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
 import LiveScorecard from '@/components/scorecard/LiveScorecard'
 import DashboardHeader from '@/components/dashboard-header'
+import CommonHeader from '@/components/common-header'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
 import { useGetMatchPositionsQuery, useGetWalletQuery } from '@/app/services/Api'
@@ -27,16 +28,11 @@ export default function LiveMatchDetailPage() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isClient = userRole === 'CLIENT'
+  const isAgent = userRole === 'AGENT'
   const isSuperAdmin = userRole === 'SUPER_ADMIN'
   const isAdmin = userRole === 'ADMIN'
   const shouldShowTV = !isSuperAdmin && !isAdmin // Hide TV for SUPER_ADMIN and ADMIN
-  
-  // Redirect SUPER_ADMIN and ADMIN away from detail page
-  useEffect(() => {
-    if (isSuperAdmin || isAdmin) {
-      router.push('/dashboard')
-    }
-  }, [isSuperAdmin, isAdmin, router])
+  const isAgentOrAdmin = isAgent || isAdmin || isSuperAdmin
 
   // TV toggle - check if coming from main page, otherwise default to false
   const [liveToggle, setLiveToggle] = useState(() => {
@@ -51,10 +47,22 @@ export default function LiveMatchDetailPage() {
     return false
   })
   const [dashboardTab, setDashboardTab] = useState('Cricket')
+  const [commonHeaderTab, setCommonHeaderTab] = useState('Matches')
 
-  // Handle tab change - navigate to dashboard with selected tab
+  // Handle tab change for CLIENT - navigate to dashboard with selected tab
   const handleTabChange = (tab: string) => {
     setDashboardTab(tab)
+    // Navigate to dashboard with the selected tab
+    router.push('/dashboard')
+    // Store the selected tab in sessionStorage so dashboard can use it
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedTab', tab)
+    }
+  }
+
+  // Handle tab change for AGENT/ADMIN - navigate to dashboard with selected tab
+  const handleCommonHeaderTabChange = (tab: string) => {
+    setCommonHeaderTab(tab)
     // Navigate to dashboard with the selected tab
     router.push('/dashboard')
     // Store the selected tab in sessionStorage so dashboard can use it
@@ -216,11 +224,6 @@ export default function LiveMatchDetailPage() {
     hasLiveTV: false
   }
 
-  // Early return if SUPER_ADMIN or ADMIN tries to access (must be after all hooks)
-  if (isSuperAdmin || isAdmin) {
-    return null
-  }
-
   // Loading state
   if (isLoading) {
     return (
@@ -255,13 +258,17 @@ export default function LiveMatchDetailPage() {
     marketGType?: string
     size?: number
   }) => {
+    // Only allow bet selection for CLIENT role
+    if (!isClient) {
+      return
+    }
     setSelectedBet(bet)
     setBetSlipOpen(true)
   }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Dashboard Header - Only for CLIENT role */}
+      {/* Dashboard Header - For CLIENT role */}
       {isClient && (
         <DashboardHeader 
           selectedTab={dashboardTab} 
@@ -269,8 +276,18 @@ export default function LiveMatchDetailPage() {
         />
       )}
       
+      {/* Common Header - For AGENT and ADMIN roles */}
+      {isAgentOrAdmin && (
+        <div className="sticky top-0 z-50">
+          <CommonHeader 
+            activeTab={commonHeaderTab} 
+            onTabChange={handleCommonHeaderTabChange} 
+          />
+        </div>
+      )}
+      
       {/* Main Content Area - Responsive Grid Layout */}
-      <div className={`${isClient ? 'min-h-[calc(100vh-108px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass(displayMatchData.hasLiveTV, streamUrl)}`}>
+      <div className={`${isClient ? 'min-h-[calc(100vh-108px)]' : isAgentOrAdmin ? 'min-h-[calc(100vh-110px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass(displayMatchData.hasLiveTV, streamUrl)}`}>
         {/* Left Panel - Betting Markets (with integrated scorecard) */}
         <div className={`flex flex-col bg-white ${getLeftPanelClass(displayMatchData.hasLiveTV, streamUrl)} px-2 sm:px-0`} style={{ gap: 0 }}>
           {/* Betting Markets Section - Scorecard integrated as first item */}

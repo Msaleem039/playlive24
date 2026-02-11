@@ -123,7 +123,7 @@ export function MyReportView() {
 
   return (
     <div className="bg-gray-100">
-      <div className="bg-white p-4 sm:p-6 shadow-sm">
+      {/* <div className="bg-white p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 space-y-4 sm:space-y-0">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">From Date</label>
@@ -160,7 +160,7 @@ export function MyReportView() {
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="p-4 sm:p-6 space-y-4">
         {isError && (
@@ -169,7 +169,7 @@ export function MyReportView() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-4">
           <SummaryCard
             title="TOTAL DEPOSIT"
             value={showLoadingState ? "…" : formatNumber(dashboardData.cash?.totalDeposit)}

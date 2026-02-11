@@ -82,7 +82,11 @@ export default function BetSlipModal({
     }
   }, [isOpen, selectedBet])
 
-  if (!isOpen || !selectedBet) return null
+  // Check if user is CLIENT - only allow betting for CLIENT role
+  const userRole = (authUser as any)?.role as string
+  const isClient = userRole === 'CLIENT'
+  
+  if (!isOpen || !selectedBet || !isClient) return null
 
   /**
    * Calculate profit/loss based on market type and bet type
@@ -422,7 +426,7 @@ export default function BetSlipModal({
             <span className="text-xs text-cyan-100 cursor-pointer hover:text-white transition-colors relative z-10">Edit Stakes</span>
           </div>
 
-          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gradient-to-b from-white/40 to-cyan-50/30 backdrop-blur-sm">
+          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gradient-to-b from-white/40 to-green-50/30 backdrop-blur-sm">
             <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold">
               <div className="bg-gradient-to-br from-emerald-200/60 to-teal-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center sm:text-left border border-emerald-300/40 shadow-sm animate-fadeIn delay-100">Bet for</div>
               <div className="bg-gradient-to-br from-cyan-200/60 to-blue-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-cyan-300/40 shadow-sm animate-fadeIn delay-200">Odds</div>
@@ -430,7 +434,7 @@ export default function BetSlipModal({
               <div className="bg-gradient-to-br from-purple-200/60 to-pink-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-purple-300/40 shadow-sm animate-fadeIn delay-400">P/L</div>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white/60 backdrop-blur-md rounded-lg p-2 border border-cyan-200/50 shadow-lg shadow-cyan-500/10 animate-fadeIn delay-500">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white/60 backdrop-blur-md rounded-lg p-2 border border-green-200/50 shadow-lg shadow-green-500/10 animate-fadeIn delay-500">
               <div className="text-xs sm:text-sm font-medium text-gray-800 truncate text-center sm:text-left px-1">
                 {selectedBet.team}
               </div>
@@ -441,7 +445,7 @@ export default function BetSlipModal({
                   type="text"
                   value={odds}
                   onChange={(e) => setOdds(e.target.value)}
-                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-cyan-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 transition-all hover:border-cyan-400/70 hover:shadow-sm hover:shadow-cyan-400/20"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-green-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#00A66E]/50 focus:border-[#00A66E] transition-all hover:border-[#00A66E]/70 hover:shadow-sm hover:shadow-green-400/20"
                 />
               </div>
               
@@ -452,7 +456,7 @@ export default function BetSlipModal({
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
                   placeholder="0"
-                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-cyan-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400 transition-all hover:border-cyan-400/70 hover:shadow-sm hover:shadow-cyan-400/20"
+                  className="w-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm bg-white/80 backdrop-blur-sm border border-green-300/50 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#00A66E]/50 focus:border-[#00A66E] transition-all hover:border-[#00A66E]/70 hover:shadow-sm hover:shadow-green-400/20"
                 />
               </div>
               
@@ -470,7 +474,7 @@ export default function BetSlipModal({
                     className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                       isActive
                         ? 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/40 ring-2 ring-cyan-300/50 animate-pulse'
-                        : 'bg-gradient-to-br from-purple-400/80 to-pink-400/80 hover:from-purple-500/90 hover:to-pink-500/90 text-white shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 backdrop-blur-sm border border-purple-300/30'
+                        : 'bg-gradient-to-br from-[#3F9AAE]/80 to-[#3F9AAE]/80 hover:from-[#3F9AAE]/90 hover:to-[#3F9AAE]/90 text-white shadow-md shadow-[#3F9AAE]/20 hover:shadow-lg hover:shadow-[#3F9AAE]/30 backdrop-blur-sm border border-[#3F9AAE]/30'
                     }`}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >

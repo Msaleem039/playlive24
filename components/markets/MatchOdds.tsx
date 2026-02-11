@@ -258,14 +258,14 @@ export default function MatchOdds({
       </div>
 
       {/* Wrong Trade Warning */}
-      <div className="bg-red-50 border-t border-red-200 px-3 sm:px-4 py-0.5">
+      {/* <div className="bg-red-50 border-t border-red-200 px-3 sm:px-4 py-0.5">
         <div className="flex items-center gap-2 text-red-700">
           <CheckCircle className="w-2 h-2 flex-shrink-0" />
           <span className="text-[0.8rem]">
           Wrong trades are void. Only profit bets apply
           </span>
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }
