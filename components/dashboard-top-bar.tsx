@@ -26,6 +26,7 @@ import Cookies from "js-cookie"
 import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import ChangePasswordModal from "./modal/ChangePasswordModal"
+import Image from "next/image"
 
 interface DashboardTopBarProps {
   onSidebarOpen: () => void
@@ -263,7 +264,9 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
             animate={{ opacity: 1, x: 0 }} 
             className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <span className="md:hidden text-yellow-400 font-bold ">PlayLIve</span>
+            <span className="md:hidden text-yellow-400 font-bold animate-pulse">
+              <Image src="/images/logop.png" alt="PlayLIve" width={40} height={40} className="w-10 h-10" />
+            </span>
             <span className="hidden md:block">
               <Logo/>
             </span>

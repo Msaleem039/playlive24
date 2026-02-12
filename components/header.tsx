@@ -147,29 +147,6 @@ export default function Header() {
           </motion.div>
         </motion.button>
       </div>
-
-      {/* Floating WhatsApp Button */}
-      <motion.div 
-        className="fixed bottom-3 xs:bottom-4 sm:bottom-6 right-3 xs:right-4 sm:right-6 z-40 w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 bg-[#30967c] rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        animate={{ 
-          y: [0, -5, 0],
-          boxShadow: [
-            "0 4px 15px rgba(48, 150, 124, 0.3)",
-            "0 8px 25px rgba(48, 150, 124, 0.5)",
-            "0 4px 15px rgba(48, 150, 124, 0.3)"
-          ]
-        }}
-        transition={{ 
-          duration: 3, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
-      >
-        <span className="text-white font-bold text-base xs:text-lg sm:text-xl">💬</span>
-      </motion.div>
-
       {/* Modals */}
       <LoginModal 
         isOpen={isLoginModalOpen} 

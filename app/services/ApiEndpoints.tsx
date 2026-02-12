@@ -100,5 +100,8 @@ export const API_END_POINTS = {
     /////////////////////////////<===NEWS BAR===>//////////////////////////////
     getNewsBar: `${BASE_URL}/news-bar`,
     updateNewsBar: `${BASE_URL}/news-bar`,
+
+    /////////////////////////////<===AGENT MATCH BOOK===>//////////////////////////////
+    getAgentMatchBook: `${BASE_URL}/agent/match-book`,
  
 }

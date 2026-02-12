@@ -9,6 +9,7 @@ import DepositCashModal from "@/components/modal/DepositCashModal"
 import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
 import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
+import ClientAccountStatementModal from "@/components/modal/ClientAccountStatementModal"
 import HierarchicalNavigation from "@/components/hierarchical/HierarchicalNavigation"
 import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useDeleteBetMutation } from "@/app/services/Api"
 import { useSelector } from "react-redux"
@@ -93,6 +94,15 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     isOpen: false,
     userId: "",
     userName: "",
+  })
+  const [accountStatementModal, setAccountStatementModal] = useState<{
+    isOpen: boolean
+    userId: string
+    username: string
+  }>({
+    isOpen: false,
+    userId: "",
+    username: "",
   })
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const [dropdownDirection, setDropdownDirection] = useState<{ [key: string]: 'up' | 'down' }>({})
@@ -528,7 +538,17 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                         </td>
                         <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5">
                           <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start items-center">
-                            <button className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors">
+                            <button 
+                              onClick={() => {
+                                const username = extractUsername(user.name || '', user.email)
+                                setAccountStatementModal({
+                                  isOpen: true,
+                                  userId: user.id,
+                                  username
+                                })
+                              }}
+                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
+                            >
                               Log
                             </button>
                             <button
@@ -643,6 +663,14 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         onClose={() => setChangePasswordModal({ ...changePasswordModal, isOpen: false })}
         username={changePasswordModal.username}
         onSubmit={handleChangePasswordSubmit}
+      />
+
+      {/* Client Account Statement Modal */}
+      <ClientAccountStatementModal
+        isOpen={accountStatementModal.isOpen}
+        onClose={() => setAccountStatementModal({ ...accountStatementModal, isOpen: false })}
+        userId={accountStatementModal.userId}
+        username={accountStatementModal.username}
       />
 
       {/* Subordinates Full Screen View */}

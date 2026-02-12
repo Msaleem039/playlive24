@@ -110,13 +110,36 @@ export const api = SplitApiSettings.injectEndpoints({
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     getUser: builder.query({
-      query: (params?: { parentId?: string; type?: string }) => {
+      query: (params?: { 
+        parentId?: string
+        type?: string
+        showCashEntry?: boolean | string
+        showMarketPnl?: boolean | string
+        showMarketCommission?: boolean | string
+        showSessionPnl?: boolean | string
+        showTossPnl?: boolean | string
+      }) => {
         const queryParams = new URLSearchParams()
         if (params?.parentId) {
           queryParams.append('parentId', params.parentId)
         }
         if (params?.type) {
           queryParams.append('type', params.type)
+        }
+        if (params?.showCashEntry !== undefined) {
+          queryParams.append('showCashEntry', params.showCashEntry.toString())
+        }
+        if (params?.showMarketPnl !== undefined) {
+          queryParams.append('showMarketPnl', params.showMarketPnl.toString())
+        }
+        if (params?.showMarketCommission !== undefined) {
+          queryParams.append('showMarketCommission', params.showMarketCommission.toString())
+        }
+        if (params?.showSessionPnl !== undefined) {
+          queryParams.append('showSessionPnl', params.showSessionPnl.toString())
+        }
+        if (params?.showTossPnl !== undefined) {
+          queryParams.append('showTossPnl', params.showTossPnl.toString())
         }
         const queryString = queryParams.toString()
         return {
@@ -470,6 +493,15 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    /////////////////////////////<===AGENT MATCH BOOK===>//////////////////////////////
+    getAgentMatchBook: builder.query({
+      query: (eventId: string | number) => ({
+        url: `${API_END_POINTS.getAgentMatchBook}?event=${eventId}`,
+        method: "GET",
+      }),
+      providesTags: ['AgentMatchBook'] as any,
+    }),
   }),
 });
 
@@ -530,6 +562,9 @@ export const {
 
     /////////////////////////////<===BET AGGREGATION===>//////////////////////////////
     useGetBetAggregationQuery,
+
+    /////////////////////////////<===AGENT MATCH BOOK===>//////////////////////////////
+    useGetAgentMatchBookQuery,
 
     /////////////////////////////<===COMPLAINT===>//////////////////////////////
     useSubmitComplaintMutation,

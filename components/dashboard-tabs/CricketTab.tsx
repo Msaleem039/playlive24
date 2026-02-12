@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useSelector } from "react-redux"
+import { selectCurrentUser } from "@/app/store/slices/authSlice"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
@@ -18,6 +20,9 @@ export default function CricketTab() {
   const previousOddsRef = useRef<Map<string, { [key: string]: string | number }>>(new Map())
   const [activeSubTab, setActiveSubTab] = useState<'live' | 'upcoming'>('live') // Sub-tab state
   const router = useRouter()
+  const authUser = useSelector(selectCurrentUser)
+  const userRole = (authUser?.role as string) || 'CLIENT'
+  const isAgent = userRole === 'AGENT'
   
   // WebSocket for live updates - only on client
   const {
@@ -522,19 +527,25 @@ export default function CricketTab() {
                   })()
 
               const handleMatchClick = () => {
-                // Only navigate for live matches
+                // Use gmid first (from new API), then match_id, then id
+                const matchId = match.gmid ?? match.match_id ?? match.id
+                if (!matchId) return
+
+                // For agents, navigate to agent match book detail page
+                if (isAgent) {
+                  router.push(`/agent/match-book/${matchId}`)
+                  return
+                }
+
+                // For other roles, only navigate for live matches
                 if (!isLive) {
                   return
                 }
-                // Use gmid first (from new API), then match_id, then id
-                const matchId = match.gmid ?? match.match_id ?? match.id
-                if (matchId) {
-                  // Set flag to auto-open TV when navigating from main page (only for live matches)
-                  if (typeof window !== 'undefined') {
-                    sessionStorage.setItem('fromMainPage', 'true')
-                  }
-                  router.push(`/live/${matchId}`)
+                // Set flag to auto-open TV when navigating from main page (only for live matches)
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem('fromMainPage', 'true')
                 }
+                router.push(`/live/${matchId}`)
               }
 
               return (
