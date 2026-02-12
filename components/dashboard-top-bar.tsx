@@ -255,7 +255,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
           >
             <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          {/* PL24 text on small screens, Logo on medium+ screens - both clickable to open sidebar */}
+          {/* PlayLIve text on small screens, Logo on medium+ screens - both clickable to open sidebar */}
           <motion.button
             aria-label="Open sidebar"
             onClick={onSidebarOpen}
@@ -263,7 +263,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
             animate={{ opacity: 1, x: 0 }} 
             className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <span className="md:hidden text-yellow-400 font-bold ">PL24</span>
+            <span className="md:hidden text-yellow-400 font-bold ">PlayLIve</span>
             <span className="hidden md:block">
               <Logo/>
             </span>

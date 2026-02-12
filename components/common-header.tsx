@@ -499,8 +499,8 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
               onClick={() => setIsSidebarOpen(true)}
               className="rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
             >
-              {/* PL24 text - shown on small screens, hidden on sm and above */}
-              <span className="text-yellow-400 font-bold text-lg sm:hidden">PL24</span>
+              {/* PlayLIve text - shown on small screens, hidden on sm and above */}
+              <span className="text-yellow-400 font-bold text-lg sm:hidden">PlayLIve</span>
               {/* Menu icon - hidden on small screens, shown from sm breakpoint */}
               <Menu className="hidden sm:block w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5 text-emerald-400" />
             </button>

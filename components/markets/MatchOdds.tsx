@@ -74,16 +74,16 @@ export default function MatchOdds({
 
       {/* Betting Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-xs sm:text-sm">
+        <table className="w-full text-[10px] sm:text-xs">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-700 w-20 sm:w-24">
+              <th className="px-1 sm:px-2 py-1 text-left text-[10px] sm:text-xs font-semibold text-gray-700 w-16 sm:w-20">
                 Team
               </th>
               {Array.from({ length: BACK_COLUMNS }).map((_, i) => (
                 <th 
                   key={`back-${i}`} 
-                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   Back
                 </th>
@@ -91,7 +91,7 @@ export default function MatchOdds({
               {Array.from({ length: LAY_COLUMNS }).map((_, i) => (
                 <th 
                   key={`lay-${i}`} 
-                  className="px-1 py-1.5 text-center text-xs font-semibold text-gray-700 w-[70px] sm:w-[75px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   Lay
                 </th>
@@ -163,13 +163,13 @@ export default function MatchOdds({
               
               return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                <td className="px-2 py-2">
-                  <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
+                <td className="px-0.5 sm:px-1 py-0.5">
+                  <div className="font-medium text-[10px] sm:text-xs text-gray-900 truncate">
                     {row.team}
                   </div>
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
                     // Show net value badge - exactly as backend provides
-                    <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mt-1 border ${
+                    <div className={`inline-flex items-center px-1 py-0.5 rounded text-[9px] font-semibold mt-0.5 border ${
                       netValue > 0
                         ? 'bg-green-50 text-green-700 border-green-200' 
                         : netValue < 0
@@ -185,7 +185,7 @@ export default function MatchOdds({
                   const oddKey = `${marketIndex}-${rowIndex}-back-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`back-${optIndex}`} className="px-1 py-1">
+                    <td key={`back-${optIndex}`} className="px-0.5 py-0.5">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -201,7 +201,7 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -209,8 +209,8 @@ export default function MatchOdds({
                             : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
@@ -220,7 +220,7 @@ export default function MatchOdds({
                   const oddKey = `${marketIndex}-${rowIndex}-lay-${optIndex}`
                   const isBlinking = blinkingOdds.has(oddKey)
                   return (
-                    <td key={`lay-${optIndex}`} className="px-1 py-1">
+                    <td key={`lay-${optIndex}`} className="px-0.5 py-0.5">
                       <div
                         onClick={() => {
                           if (option.odds !== '0' && option.amount !== '0') {
@@ -236,7 +236,7 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -244,8 +244,8 @@ export default function MatchOdds({
                             : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[10px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )

@@ -107,46 +107,46 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Floating Complain Button */}
-      <motion.button
-        onClick={() => setIsComplaintModalOpen(true)}
-        className="fixed bottom-16 xs:bottom-20 right-3 xs:right-4 sm:right-6 z-40 bg-red-500 hover:bg-red-600 text-white font-bold px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 mb-3 xs:mb-4 sm:mb-5 rounded-full shadow-lg border-2 border-red-400 text-[0.65rem] xs:text-xs sm:text-sm"
-        animate={{ 
-          scale: [1, 1.1, 1],
-          opacity: [0.8, 1, 0.8],
-          boxShadow: [
-            "0 0 10px rgba(239, 68, 68, 0.5)",
-            "0 0 20px rgba(239, 68, 68, 0.8)",
-            "0 0 10px rgba(239, 68, 68, 0.5)"
-          ]
-        }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
-        whileHover={{ 
-          scale: 1.15,
-          boxShadow: "0 0 25px rgba(239, 68, 68, 1)"
-        }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <motion.div
+      {/* Complain Button - Positioned under header */}
+      <div className="bg-black w-full flex justify-end px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-1.5 xs:py-2">
+        <motion.button
+          onClick={() => setIsComplaintModalOpen(true)}
+          className="bg-red-500 hover:bg-red-600 text-white font-bold px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 rounded-full shadow-lg border-2 border-red-400 text-[0.65rem] xs:text-xs sm:text-sm"
           animate={{ 
-            rotate: [0, 5, -5, 0],
-            scale: [1, 1.05, 1]
+            scale: [1, 1.05, 1],
+            opacity: [0.9, 1, 0.9],
+            boxShadow: [
+              "0 0 10px rgba(239, 68, 68, 0.5)",
+              "0 0 20px rgba(239, 68, 68, 0.8)",
+              "0 0 10px rgba(239, 68, 68, 0.5)"
+            ]
           }}
           transition={{ 
-            duration: 1.5, 
+            duration: 2, 
             repeat: Infinity, 
             ease: "easeInOut" 
           }}
-          className="flex items-center gap-1 xs:gap-1.5 sm:gap-2"
+          whileHover={{ 
+            scale: 1.1,
+            boxShadow: "0 0 25px rgba(239, 68, 68, 1)"
+          }}
+          whileTap={{ scale: 0.95 }}
         >
-          {/* <span className="text-lg">🚨</span> */}
-          <span className="font-semibold tracking-wide whitespace-nowrap">FOR COMPLAIN</span>
-        </motion.div>
-      </motion.button>
+          <motion.div
+            animate={{ 
+              rotate: [0, 3, -3, 0],
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="flex items-center gap-1 xs:gap-1.5 sm:gap-2"
+          >
+            <span className="font-semibold tracking-wide whitespace-nowrap">FOR COMPLAIN</span>
+          </motion.div>
+        </motion.button>
+      </div>
 
       {/* Floating WhatsApp Button */}
       <motion.div 
