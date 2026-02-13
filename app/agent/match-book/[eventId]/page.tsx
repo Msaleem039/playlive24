@@ -72,29 +72,40 @@ export default function AgentMatchBookPage() {
     marketIds
   )
 
-  // Fetch positions
+  // Extract runner positions from match book data
+  // The match book API provides runners data with net positions for each selectionId
+  const matchOddsPositions = useMemo(() => {
+    if (!matchBookData) return {}
+    
+    // Try to get runners from match level first, then fallback to top level
+    const runners = matchBookData.matches?.[0]?.runners || matchBookData.runners || {}
+    
+    // Transform from { selectionId: { net, name } } to { selectionId: net }
+    const positions: Record<string, number> = {}
+    Object.entries(runners).forEach(([selectionId, runner]: [string, any]) => {
+      if (runner && typeof runner === 'object' && 'net' in runner) {
+        positions[selectionId] = runner.net || 0
+      }
+    })
+    
+    return positions
+  }, [matchBookData])
+
+  // Fetch positions (for fancy markets, if needed)
   const { data: positionsData } = useGetMatchPositionsQuery(
     { eventId: eventId || '' },
     { skip: !eventId, pollingInterval: 10000 }
   )
 
-  // Extract positions by market type
+  // Extract positions by market type (for fancy markets)
   const positionsByMarketType = useMemo(() => {
-    if (!positionsData?.data) return {}
-    
     const positions: Record<string, Record<string, number>> = {}
     
-    // Match Odds positions (by selectionId)
-    if (positionsData.data.matchOddsPosition?.runners) {
-      const matchOddsPositions: Record<string, number> = {}
-      Object.entries(positionsData.data.matchOddsPosition.runners).forEach(([selectionId, runner]: [string, any]) => {
-        matchOddsPositions[selectionId] = runner.net || 0
-      })
-      positions['match'] = matchOddsPositions
-    }
+    // Match Odds positions come from match book data (already extracted above)
+    positions['match'] = matchOddsPositions
     
-    // Fancy positions (by outcome name like "YES", "NO")
-    if (positionsData.data.fancyPosition && Array.isArray(positionsData.data.fancyPosition)) {
+    // Fancy positions (by outcome name like "YES", "NO") - from positions API if available
+    if (positionsData?.data?.fancyPosition && Array.isArray(positionsData.data.fancyPosition)) {
       const fancyPositions: Record<string, number> = {}
       positionsData.data.fancyPosition.forEach((fancy: any) => {
         if (fancy.outcome) {
@@ -105,7 +116,7 @@ export default function AgentMatchBookPage() {
     }
     
     return positions
-  }, [positionsData])
+  }, [matchOddsPositions, positionsData])
 
   // Separate Match Odds and Fancy markets
   const matchOddsMarket = useMemo(() => {
@@ -262,65 +273,10 @@ export default function AgentMatchBookPage() {
         {/* 3-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Left Panel - Summary & Session Pre-Book */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Summary */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Summary</h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Total If Win</p>
-                  <p className={`text-base font-bold ${totals.totalIfWin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {totals.totalIfWin >= 0 ? '+' : ''}{totals.totalIfWin.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Total If Lose</p>
-                  <p className={`text-base font-bold ${totals.totalIfLose >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {totals.totalIfLose >= 0 ? '+' : ''}{totals.totalIfLose.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Fancy Position</p>
-                  <p className="text-base font-bold text-gray-900">
-                    {totals.totalFancyPosition.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Match Odds Position</p>
-                  <p className="text-base font-bold text-gray-900">
-                    {totals.totalMatchOddsPosition.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Total Bets</p>
-                  <p className="text-base font-bold text-gray-900">{totals.totalBets}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Total Clients</p>
-                  <p className="text-base font-bold text-gray-900">{totals.totalClients}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Total Matches</p>
-                  <p className="text-base font-bold text-gray-900">{totals.totalMatches}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Session Pre-Book */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Session Pre-Book</h3>
-              <div className="space-y-2">
-                {fancyMarkets.slice(0, 5).map((market, idx) => (
-                  <div key={idx} className="text-xs text-gray-700 p-2 bg-gray-50 rounded">
-                    {market.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+ 
 
           {/* Center Panel - Match Odds, Scorecard, RUNNER, SESSION */}
-          <div className="lg:col-span-5 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             {/* Match Odds Header */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="bg-[#00A66E] text-white px-4 py-2 flex items-center justify-between">
@@ -414,7 +370,7 @@ export default function AgentMatchBookPage() {
           </div>
 
           {/* Right Panel - Matched Bet & Session Bet */}
-          <div className="lg:col-span-5 space-y-4">
+          <div className="lg:col-span-6 space-y-4">
             {/* Matched Bet */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="bg-gray-100 px-4 py-2 flex items-center justify-between border-b">
@@ -437,15 +393,22 @@ export default function AgentMatchBookPage() {
                   <tbody>
                     {matchedBets.length > 0 ? (
                       matchedBets.slice(0, 10).map((bet, idx) => (
-                        <tr key={bet.id || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <tr 
+                          key={bet.id || idx} 
+                          className={`border-b border-gray-100 ${
+                            bet.betType === 'BACK' 
+                              ? 'bg-blue-50 hover:bg-blue-100' 
+                              : 'bg-pink-50 hover:bg-pink-100'
+                          }`}
+                        >
                           <td className="px-2 py-2 text-gray-900">{idx + 1}</td>
                           <td className="px-2 py-2 text-gray-900">{bet.odds?.toFixed(2) || '-'}</td>
                           <td className="px-2 py-2 text-gray-900">{bet.amount?.toFixed(2) || '0.00'}</td>
                           <td className="px-2 py-2">
                             <span className={`px-2 py-1 rounded text-xs font-semibold ${
                               bet.betType === 'BACK' 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'bg-pink-100 text-pink-700'
+                                ? 'bg-blue-300 text-gray-900 border border-blue-200' 
+                                : 'bg-pink-200 text-gray-900 border border-pink-200'
                             }`}>
                               {bet.betType}
                             </span>
@@ -492,8 +455,10 @@ export default function AgentMatchBookPage() {
                       sessionBets.slice(0, 10).map((bet, idx) => (
                         <tr 
                           key={bet.id || idx} 
-                          className={`border-b border-gray-100 hover:bg-gray-50 ${
-                            bet.displayBetType === 'YES' ? 'bg-blue-50' : 'bg-pink-50'
+                          className={`border-b bg-[#FCE7F3] border-gray-100 ${
+                            bet.displayBetType === 'YES' 
+                              ? 'bg-blue-50 hover:bg-blue-100' 
+                              : 'bg-pink-50 hover:bg-pink-100'
                           }`}
                         >
                           <td className="px-2 py-2 text-gray-900">{idx + 1}</td>
@@ -503,8 +468,8 @@ export default function AgentMatchBookPage() {
                           <td className="px-2 py-2">
                             <span className={`px-2 py-1 rounded text-xs font-semibold ${
                               bet.displayBetType === 'YES' 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'bg-pink-100 text-pink-700'
+                                ? 'bg-blue-300 text-gray-900 border border-blue-200' 
+                                : 'bg-pink-200 text-gray-900 border border-pink-200'
                             }`}>
                               {bet.displayBetType || bet.betType}
                             </span>

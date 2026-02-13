@@ -112,6 +112,7 @@ export const api = SplitApiSettings.injectEndpoints({
     getUser: builder.query({
       query: (params?: { 
         parentId?: string
+        userId?: string
         type?: string
         showCashEntry?: boolean | string
         showMarketPnl?: boolean | string
@@ -122,6 +123,9 @@ export const api = SplitApiSettings.injectEndpoints({
         const queryParams = new URLSearchParams()
         if (params?.parentId) {
           queryParams.append('parentId', params.parentId)
+        }
+        if (params?.userId) {
+          queryParams.append('userId', params.userId)
         }
         if (params?.type) {
           queryParams.append('type', params.type)

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { X, Loader2 } from 'lucide-react'
-import { useGetUserQuery } from '@/app/services/Api'
+import { useLazyGetUserQuery } from '@/app/services/Api'
 
 interface ClientAccountStatementModalProps {
   isOpen: boolean
@@ -23,7 +23,11 @@ export default function ClientAccountStatementModal({
   const [showSessionPnl, setShowSessionPnl] = useState(false)
   const [showTossPnl, setShowTossPnl] = useState(false)
 
-  // Build query params (without parentId for statement type)
+  // Use lazy query for manual triggering
+  const [triggerQuery, { data: statementData, isLoading, error, reset }] = useLazyGetUserQuery()
+
+  // Build query params (without parentId for statement type as per user's previous feedback)
+  // Use userId parameter instead to fetch specific user's statement
   const queryParams = useMemo(() => {
     const params: any = {
       type: 'statement',
@@ -33,14 +37,26 @@ export default function ClientAccountStatementModal({
       showSessionPnl: showSessionPnl,
       showTossPnl: showTossPnl
     }
+    // Include userId to fetch specific user's statement (not parentId as per previous feedback)
+    if (userId) {
+      params.userId = userId
+    }
     return params
-  }, [showCashEntry, showMarketPnl, showMarketCommission, showSessionPnl, showTossPnl])
+  }, [userId, showCashEntry, showMarketPnl, showMarketCommission, showSessionPnl, showTossPnl])
 
-  // Fetch account statement
-  const { data: statementData, isLoading, error, refetch } = useGetUserQuery(
-    queryParams,
-    { skip: !isOpen || !userId }
-  )
+  // Trigger query when modal opens or userId/filters change
+  useEffect(() => {
+    if (isOpen && userId) {
+      triggerQuery(queryParams)
+    }
+  }, [isOpen, userId, queryParams, triggerQuery])
+
+  // Reset data when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      reset()
+    }
+  }, [isOpen, reset])
 
   // Extract user info and transactions from response
   const { userInfo, transactions } = useMemo(() => {
@@ -239,7 +255,7 @@ export default function ClientAccountStatementModal({
               <div className="text-center">
                 <p className="text-red-600 mb-2">Error loading statement</p>
                 <button
-                  onClick={() => refetch()}
+                  onClick={() => triggerQuery(queryParams)}
                   className="px-4 py-2 bg-[#00A66E] text-white rounded hover:bg-[#00b97b]"
                 >
                   Retry
