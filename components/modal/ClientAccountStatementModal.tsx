@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { useLazyGetUserQuery } from '@/app/services/Api'
 
@@ -27,44 +27,64 @@ export default function ClientAccountStatementModal({
   const [triggerQuery, { data: statementData, isLoading, error, reset }] = useLazyGetUserQuery()
 
   // Build query params (without parentId for statement type as per user's previous feedback)
-  // Use userId parameter instead to fetch specific user's statement
+  // The API returns all subordinates' statements, we filter on frontend by userId
   const queryParams = useMemo(() => {
+    if (!userId) return null
+    
     const params: any = {
       type: 'statement',
-      showCashEntry: showCashEntry,
-      showMarketPnl: showMarketPnl,
-      showMarketCommission: showMarketCommission,
-      showSessionPnl: showSessionPnl,
-      showTossPnl: showTossPnl
+      showCashEntry: showCashEntry.toString(),
+      showMarketPnl: showMarketPnl.toString(),
+      showMarketCommission: showMarketCommission.toString(),
+      showSessionPnl: showSessionPnl.toString(),
+      showTossPnl: showTossPnl.toString()
     }
-    // Include userId to fetch specific user's statement (not parentId as per previous feedback)
-    if (userId) {
-      params.userId = userId
-    }
+    // Note: Not using parentId as per user's previous feedback
+    // API returns all subordinates, we filter by userId on frontend
+    
     return params
   }, [userId, showCashEntry, showMarketPnl, showMarketCommission, showSessionPnl, showTossPnl])
 
+  // Track previous userId to detect changes
+  const prevUserIdRef = useRef<string | null>(null)
+
   // Trigger query when modal opens or userId/filters change
   useEffect(() => {
-    if (isOpen && userId) {
-      triggerQuery(queryParams)
+    if (isOpen && userId && queryParams) {
+      // If userId changed, reset first to clear old data
+      if (prevUserIdRef.current !== null && prevUserIdRef.current !== userId) {
+        reset()
+      }
+      prevUserIdRef.current = userId
+      
+      // Trigger query with fresh params
+      triggerQuery(queryParams, true) // forceRefetch = true to bypass cache
     }
-  }, [isOpen, userId, queryParams, triggerQuery])
+  }, [isOpen, userId, queryParams, triggerQuery, reset])
 
-  // Reset data when modal closes
+  // Reset data when modal closes or userId changes
   useEffect(() => {
     if (!isOpen) {
       reset()
+      prevUserIdRef.current = null
     }
   }, [isOpen, reset])
 
   // Extract user info and transactions from response
+  // Filter by userId to ensure we show only the relevant user's data
   const { userInfo, transactions } = useMemo(() => {
-    if (!statementData) return { userInfo: null, transactions: [] }
+    if (!statementData || !userId) return { userInfo: null, transactions: [] }
     
-    // Response is an array with user object containing transactions
+    // Response is an array with user objects containing transactions
     if (Array.isArray(statementData) && statementData.length > 0) {
-      const userData = statementData[0]
+      // Find the user that matches the userId
+      const userData = statementData.find((user: any) => user.id === userId) || statementData[0]
+      
+      // Double-check: only return data if it matches the requested userId
+      if (userData.id !== userId) {
+        return { userInfo: null, transactions: [] }
+      }
+      
       return {
         userInfo: {
           id: userData.id,
@@ -86,21 +106,32 @@ export default function ClientAccountStatementModal({
     // Fallback for other response structures
     if (statementData.data) {
       if (Array.isArray(statementData.data) && statementData.data.length > 0) {
-        const userData = statementData.data[0]
+        // Find the user that matches the userId
+        const userData = statementData.data.find((user: any) => user.id === userId) || statementData.data[0]
+        
+        // Double-check: only return data if it matches the requested userId
+        if (userData.id !== userId) {
+          return { userInfo: null, transactions: [] }
+        }
+        
         return {
           userInfo: userData,
           transactions: userData.transactions || []
         }
       }
       if (statementData.data.transactions) {
-        return {
-          userInfo: statementData.data,
-          transactions: statementData.data.transactions
+        // Single user object
+        if (statementData.data.id === userId) {
+          return {
+            userInfo: statementData.data,
+            transactions: statementData.data.transactions
+          }
         }
       }
     }
     
-    if (statementData.transactions) {
+    // Single user object response
+    if (statementData.transactions && statementData.id === userId) {
       return {
         userInfo: statementData,
         transactions: statementData.transactions
@@ -108,7 +139,7 @@ export default function ClientAccountStatementModal({
     }
     
     return { userInfo: null, transactions: [] }
-  }, [statementData])
+  }, [statementData, userId])
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-'

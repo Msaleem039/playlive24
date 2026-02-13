@@ -21,6 +21,7 @@ interface UserData {
   balance: number
   parentId: string
   commissionPercentage: number
+  isActive?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -89,6 +90,15 @@ export default function UserManagement() {
     
     let filtered = apiUsers as UserData[]
     
+    // Filter by active/inactive status based on selected tab
+    if (userTab === "Close Users") {
+      // Show only inactive users (isActive === false)
+      filtered = filtered.filter((user) => user.isActive === false)
+    } else if (userTab === "Active Users") {
+      // Show only active users (isActive !== false, including undefined/null which we treat as active)
+      filtered = filtered.filter((user) => user.isActive !== false)
+    }
+    
     // Filter by search term
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
@@ -100,10 +110,8 @@ export default function UserManagement() {
       )
     }
     
-    // Show all users in both tabs (you can add filtering logic based on user status if available)
-    
     return filtered.slice(0, showRows)
-  }, [apiUsers, searchTerm, showRows])
+  }, [apiUsers, searchTerm, showRows, userTab])
 
   const handleAddUser = () => {
     setIsAddUserModalOpen(true)

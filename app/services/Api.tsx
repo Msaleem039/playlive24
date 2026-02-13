@@ -523,6 +523,7 @@ export const {
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     useGetUserQuery,
+    useLazyGetUserQuery,
     useGetDashboardDataQuery,
     useGetWalletQuery,
 

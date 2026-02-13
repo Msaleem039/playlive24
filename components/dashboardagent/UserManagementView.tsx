@@ -141,23 +141,25 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     
     let filtered = apiUsers as UserData[]
     
+    // Filter by active/inactive status based on selected tab
+    if (userTab === "Close Users") {
+      // Show only inactive users (isActive === false)
+      filtered = filtered.filter((user) => user.isActive === false)
+    } else if (userTab === "Active Users") {
+      // Show only active users (isActive !== false, including undefined/null which we treat as active)
+      filtered = filtered.filter((user) => user.isActive !== false)
+    }
+    
     // Filter by search term
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (user) =>
           user.name.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
+          user.email?.toLowerCase().includes(searchLower) ||
           user.role.toLowerCase().includes(searchLower)
       )
     }
-    
-    // Filter by active/close users
-    // For now, show all users in both tabs (you can add filtering logic based on user status if available)
-    // If you have a status field in the API response, you can filter like:
-    // if (userTab === "Close Users") {
-    //   filtered = filtered.filter(user => user.status === "inactive" || user.status === "closed")
-    // }
     
     return filtered.slice(0, showRows)
   }, [apiUsers, searchTerm, showRows, userTab])

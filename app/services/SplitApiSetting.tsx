@@ -60,5 +60,5 @@ export const SplitApiSettings = createApi({
     // refetchOnMountOrArgChange: true,
     baseQuery: baseQueryWithReauth,
     endpoints: () => ({}),
-    tagTypes: ['User', 'Wallet', 'Settlement', 'Positions']
+    tagTypes: ['User', 'Wallet', 'Settlement', 'Positions', 'NewsBar', 'AccountStatement', 'BetHistory', 'AgentMatchBook', 'Complaints', 'AdminMatches']
 });
