@@ -164,13 +164,19 @@ body {
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-/* Marquee animation */
+/* Marquee animation - Professional smooth scrolling with seamless loop */
 @keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% { 
+    transform: translateX(0); 
+  }
+  100% { 
+    transform: translateX(-100%); 
+  }
 }
 .animate-marquee {
-  animation: marquee 15s linear infinite;
+  animation: marquee 30s linear infinite;
+  will-change: transform;
+  display: inline-block;
 }
 
 /* Yellow blink animation for odds changes */

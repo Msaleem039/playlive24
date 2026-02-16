@@ -99,10 +99,18 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee */}
-      <div className="bg-black text-emerald-400 py-1 overflow-hidden">
-        <div className="animate-marquee text-[0.70rem] text-white font-medium whitespace-nowrap">
-          {newsBarText}
+      <div className="bg-gradient-to-r from-black via-gray-900 to-black text-emerald-400 py-1.5 sm:py-2 overflow-hidden relative">
+        <div className="flex">
+          {/* Duplicate content for seamless loop */}
+          <div className="animate-marquee text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-emerald-400 font-semibold whitespace-nowrap flex-shrink-0">
+            {newsBarText}
+          </div>
+          <div className="animate-marquee text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-emerald-400 font-semibold whitespace-nowrap flex-shrink-0 ml-8" aria-hidden="true">
+            {newsBarText}
+          </div>
         </div>
+        {/* Gradient fade effect */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black via-transparent to-black z-10"></div>
       </div>
       {/* Nav bar */}
       <div className="bg-[#00A66E]">

@@ -11,6 +11,7 @@ export const API_END_POINTS = {
     login: `${BASE_URL}/auth/login`,
     changePassword: `${BASE_URL}/auth/update-password`,
     toggleUserStatus: `${BASE_URL}/auth/toggle-user-status/:targetUserId`,
+    updateSubordinate: `${BASE_URL}/auth/subordinates/:clientId`,
     topupBalance: `${BASE_URL}/transfer/top-up/:targetUserId`,
     topDownBalance: `${BASE_URL}/transfer/top-down/:targetUserId`,
     // register: BASE_URL + "api/auth/register",

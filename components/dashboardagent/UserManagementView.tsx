@@ -10,8 +10,9 @@ import WithdrawCashModal from "@/components/modal/WithdrawCashModal"
 import UserDetailsModal from "@/components/modal/UserDetailsModal"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import ClientAccountStatementModal from "@/components/modal/ClientAccountStatementModal"
+import EditUserModal from "@/components/modal/EditUserModal"
 import HierarchicalNavigation from "@/components/hierarchical/HierarchicalNavigation"
-import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useDeleteBetMutation } from "@/app/services/Api"
+import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useDeleteBetMutation, useUpdateSubordinateMutation } from "@/app/services/Api"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
 import { toast } from "sonner"
@@ -104,12 +105,26 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     userId: "",
     username: "",
   })
+  const [editUserModal, setEditUserModal] = useState<{
+    isOpen: boolean
+    userId: string
+    username: string
+    name: string
+    commissionPercentage: number
+  }>({
+    isOpen: false,
+    userId: "",
+    username: "",
+    name: "",
+    commissionPercentage: 0,
+  })
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const [dropdownDirection, setDropdownDirection] = useState<{ [key: string]: 'up' | 'down' }>({})
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const dropdownButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
   const [changePassword] = useChangePasswordMutation()
   const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
+  const [updateSubordinate, { isLoading: isUpdatingSubordinate }] = useUpdateSubordinateMutation()
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -261,6 +276,52 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         error?.message ||
         "Failed to change password. Please try again."
       toast.error("Change password failed", {
+        description: errorMessage,
+      })
+      throw error
+    }
+  }
+
+  const handleEditUser = (user: UserData) => {
+    const username = extractUsername(user.name || '', user.email)
+    setEditUserModal({
+      isOpen: true,
+      userId: user.id,
+      username,
+      name: user.name || '',
+      commissionPercentage: user.commissionPercentage || 0,
+    })
+  }
+
+  const handleEditUserSubmit = async (data: {
+    name: string
+    password?: string
+    commissionPercentage: number
+  }) => {
+    try {
+      const payload: any = {
+        name: data.name,
+        commissionPercentage: data.commissionPercentage,
+      }
+      if (data.password && data.password.trim()) {
+        payload.password = data.password
+      }
+      
+      await updateSubordinate({
+        clientId: editUserModal.userId,
+        ...payload,
+      }).unwrap()
+      
+      toast.success("User updated successfully")
+      setEditUserModal({ ...editUserModal, isOpen: false })
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        "Failed to update user. Please try again."
+      toast.error("Update user failed", {
         description: errorMessage,
       })
       throw error
@@ -439,31 +500,31 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                 <table className="min-w-full divide-y divide-gray-200 mx-4">
                   <thead className="bg-[#00A66E]">
                     <tr>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[100px] sm:min-w-[130px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[80px] sm:min-w-[100px] md:min-w-[130px]">
                         Login Name
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         PL+Cash
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Balance
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[40px] sm:min-w-[50px] md:min-w-[60px]">
                         Share
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[60px] sm:min-w-[80px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Liability
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[90px] sm:min-w-[110px]">
-                        Available Balance
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[70px] sm:min-w-[90px] md:min-w-[110px]">
+                        Available
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[35px] sm:min-w-[45px] md:min-w-[55px]">
                         Active
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider min-w-[55px] sm:min-w-[65px]">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px] md:min-w-[65px]">
                         Cash
                       </th>
-                      <th className="px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-left text-[10px] sm:text-xs font-medium text-white uppercase tracking-wider w-auto">
+                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider w-auto">
                         Action
                       </th>
                     </tr>
@@ -471,74 +532,74 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                   <tbody className="bg-white divide-y divide-gray-200">
                     {displayUsers.map((user: UserData, index) => (
                       <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5">
-                          <div className="text-xs sm:text-sm font-medium text-gray-900 break-words leading-tight">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-900 break-words leading-tight">
                             <span className="block sm:inline">{user.name || 'Unknown'}</span>
-                            <span className="text-gray-600 text-[10px] sm:text-xs"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
+                            <span className="text-gray-600 text-[8px] sm:text-[9px] md:text-[10px]"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-green-500">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-green-500">
                             ${formatBalance(user.plCash || 0)}
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-gray-900">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
                             ${formatBalance(user.balance)}
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-gray-900">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
                             ${formatBalance(user?.commissionPercentage || 0)}
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-red-600 font-medium">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-red-600 font-medium">
                             ${formatBalance(user.liability || 0)}
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
-                          <div className="text-xs sm:text-sm text-gray-900">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
                             ${formatBalance(user.availableBalance || 0)}
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
                           <button
                             onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)}
                             disabled={isTogglingStatus}
-                            className="w-4 h-4 sm:w-4 sm:h-4 rounded flex items-center justify-center mx-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center mx-auto transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title={user.isActive === false ? 'Click to activate' : 'Click to deactivate'}
                           >
                             {user.isActive !== false ? (
                               <div className="w-full h-full bg-green-500 rounded flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 text-white" />
+                                <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
                               </div>
                             ) : (
                               <div className="w-full h-full bg-red-500 rounded flex items-center justify-center">
-                                <X className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 text-white" />
+                                <X className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
                               </div>
                             )}
                           </button>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5 whitespace-nowrap">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
                           <div className="flex gap-0.5 sm:gap-1 justify-center sm:justify-start">
                             <button
                               onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
-                              className="w-5 h-5 sm:w-5 sm:h-5 bg-green-600 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center"
+                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-green-600 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center"
                               title="Cash Deposit"
                             >
                               CD
                             </button>
                             <button
                               onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
-                              className="w-5 h-5 sm:w-5 sm:h-5 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center"
+                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-red-600 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center"
                               title="Cash Withdraw"
                             >
                               CW
                             </button>
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-2 md:px-3 py-2 sm:py-2.5">
+                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2">
                           <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start items-center">
                             <button 
                               onClick={() => {
@@ -549,7 +610,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                   username
                                 })
                               }}
-                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
                             >
                               Log
                             </button>
@@ -558,10 +619,20 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                 handleUserDetails(user.name || user.email || '', user.id, user.email)
                                 setOpenDropdownId(null)
                               }}
-                              className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-[#00A66E] text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-[#00A66E] text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
                               title="User Details"
                             >
-                              User Setting
+                              US
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleEditUser(user)
+                                setOpenDropdownId(null)
+                              }}
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-purple-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-purple-600 whitespace-nowrap transition-colors"
+                              title="Edit User"
+                            >
+                              Edit
                             </button>
                             
                             {/* Dropdown Menu */}
@@ -641,6 +712,18 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         username={withdrawModal.username}
         userId={withdrawModal.userId}
         onSubmit={handleWithdrawSubmit}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={editUserModal.isOpen}
+        onClose={() => setEditUserModal({ ...editUserModal, isOpen: false })}
+        userId={editUserModal.userId}
+        username={editUserModal.username}
+        initialName={editUserModal.name}
+        initialCommissionPercentage={editUserModal.commissionPercentage}
+        onSubmit={handleEditUserSubmit}
+        isLoading={isUpdatingSubordinate}
       />
 
       {/* User Details Modal */}

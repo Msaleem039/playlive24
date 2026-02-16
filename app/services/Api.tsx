@@ -39,6 +39,15 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['User'] as any,
     }),
 
+    updateSubordinate: builder.mutation({
+      query: ({ clientId, ...data }) => ({
+        url: API_END_POINTS.updateSubordinate.replace(":clientId", clientId),
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ['User'] as any,
+    }),
+
     // topupBalance: builder.mutation({
     //   query: ({ userId, ...data }) => ({
     //     url: API_END_POINTS.topupBalance.replace(":targetUserId", userId),
@@ -516,6 +525,7 @@ export const {
     useRegisterMutation,
     useChangePasswordMutation,
     useToggleUserStatusMutation,
+    useUpdateSubordinateMutation,
     useTopupBalanceMutation,
     useTopDownBalanceMutation,
     useSuperAdminSelfTopupMutation,
