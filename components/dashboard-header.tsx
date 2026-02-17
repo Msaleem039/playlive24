@@ -99,19 +99,29 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee */}
-      <div className="bg-gradient-to-r from-black via-gray-900 to-black text-emerald-400 py-1.5 sm:py-2 overflow-hidden relative">
-        <div className="flex">
-          {/* Duplicate content for seamless loop */}
-          <div className="animate-marquee text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-emerald-400 font-semibold whitespace-nowrap flex-shrink-0">
-            {newsBarText}
-          </div>
-          <div className="animate-marquee text-[0.65rem] sm:text-[0.70rem] md:text-[0.75rem] text-emerald-400 font-semibold whitespace-nowrap flex-shrink-0 ml-8" aria-hidden="true">
-            {newsBarText}
-          </div>
-        </div>
-        {/* Gradient fade effect */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black via-transparent to-black z-10"></div>
-      </div>
+      <div className="relative overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-y border-emerald-500/30 group">
+  
+  {/* Glow effect */}
+  <div className="absolute inset-0 bg-emerald-500/10 blur-xl opacity-30 pointer-events-none"></div>
+
+  <div className="py-1 whitespace-nowrap">
+    <div className="inline-block min-w-full animate-[marquee_12s_linear_infinite] group-hover:[animation-play-state:paused] text-xs md:text-xs font-semibold tracking-wide text-white">
+      {newsBarText}
+    </div>
+  </div>
+
+  <style jsx>{`
+    @keyframes marquee {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  `}</style>
+
+</div>
       {/* Nav bar */}
       <div className="bg-[#00A66E]">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">
