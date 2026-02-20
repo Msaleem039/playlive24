@@ -65,10 +65,10 @@ export default function FancyDetail({
 
       {/* Betting Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-[10px] sm:text-xs">
+        <table className="w-full text-[12px] sm:text-xs">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-1 sm:px-2 py-1 text-left text-[10px] sm:text-xs font-semibold text-gray-700 w-16 sm:w-20">
+              <th className="px-1 sm:px-2 py-1 text-left text-[12px] sm:text-xs font-bold text-gray-700 w-16 sm:w-12">
                 Team
               </th>
               {Array.from({ length: NO_COLUMNS }).map((_, i) => (
@@ -126,19 +126,19 @@ export default function FancyDetail({
                 <td className="px-0.5 sm:px-1 py-0.5">
                   {shouldSplit ? (
                     // Two-line display for long text on mobile only
-                    <div className="font-medium text-[10px] text-gray-900">
+                    <div className="font-medium text-[12px] text-gray-900">
                       <div className="leading-tight break-words">{firstLine}</div>
                       <div className="leading-tight break-words">{secondLine}</div>
                     </div>
                   ) : (
                     // Single-line display for short text or desktop
-                    <div className="font-medium text-[10px] sm:text-xs text-gray-900 truncate">
+                    <div className="font-medium text-[12px] sm:text-xs text-gray-900 truncate">
                       {row.team}
                     </div>
                   )}
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
                     // Show net value badge - exactly as backend provides
-                    <div className={`inline-flex items-center px-1 py-0.5 rounded text-[9px] font-semibold mt-0.5 border ${
+                    <div className={`inline-flex items-center px-1 py-0.5 rounded text-[11px] font-bold mt-0.5 border ${
                       netValue > 0
                         ? 'bg-green-50 text-green-700 border-green-200' 
                         : netValue < 0
@@ -171,7 +171,7 @@ export default function FancyDetail({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-0.3 sm:px-0.3 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -179,8 +179,8 @@ export default function FancyDetail({
                             : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
@@ -207,7 +207,7 @@ export default function FancyDetail({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-0.3 sm:px-0.3 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -215,8 +215,8 @@ export default function FancyDetail({
                             : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )

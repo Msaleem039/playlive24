@@ -15,13 +15,13 @@ if (typeof window !== 'undefined') {
     if (token && authUserCookie) {
       try {
         const user = JSON.parse(authUserCookie)
-        console.log("ReduxProvider: Loading user from cookie:", user)
-        console.log("ReduxProvider: Balance from cookie:", user.balance)
+        // console.log("ReduxProvider: Loading user from cookie:", user)
+        // console.log("ReduxProvider: Balance from cookie:", user.balance)
         // Check if Redux state is empty before setting
         const currentState = store.getState()
         if (!currentState.auth?.token || !currentState.auth?.user) {
           store.dispatch(setCredentials({ user, token }))
-          console.log("ReduxProvider: Set credentials from cookie")
+          // console.log("ReduxProvider: Set credentials from cookie")
         } else {
           // If Redux already has data, check if cookie data is newer (by updatedAt)
           const existingUser = currentState.auth.user as any
@@ -44,8 +44,8 @@ if (typeof window !== 'undefined') {
         if (userJson) {
           try {
             const user = JSON.parse(userJson)
-            console.log("ReduxProvider: Loading user from localStorage:", user)
-            console.log("ReduxProvider: Balance from localStorage:", user.balance)
+            // console.log("ReduxProvider: Loading user from localStorage:", user)
+            // console.log("ReduxProvider: Balance from localStorage:", user.balance)
             const currentState = store.getState()
             if (!currentState.auth?.token || !currentState.auth?.user) {
               store.dispatch(setCredentials({ user, token }))

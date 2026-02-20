@@ -337,7 +337,7 @@ export default function BetSlipModal({
 
     try {
       const data = await placeBet(payload).unwrap()
-      console.log('Bet placed successfully:', data)
+      // console.log('Bet placed successfully:', data)
       toast.success('Bet placed successfully.')
       onClose()
       setStake('')

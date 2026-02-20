@@ -164,7 +164,7 @@ export default function MatchOdds({
               return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <td className="px-0.5 sm:px-1 py-0.5">
-                  <div className="font-medium text-[10px] sm:text-xs text-gray-900 truncate">
+                  <div className="font-medium text-[12px] sm:text-xs text-gray-900 truncate">
                     {row.team}
                   </div>
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
@@ -201,7 +201,7 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-0.3 sm:px-0.3 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -209,8 +209,8 @@ export default function MatchOdds({
                             : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px]  text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )
@@ -236,7 +236,7 @@ export default function MatchOdds({
                             })
                           }
                         }}
-                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-1.5 rounded transition-all duration-150 ${
+                        className={`w-full flex flex-col items-center justify-center py-1 px-1 sm:py-1 sm:px-1 rounded transition-all duration-150 ${
                           option.odds === '0' || option.amount === '0'
                             ? 'bg-gray-100 cursor-not-allowed'
                             : isBlinking
@@ -244,8 +244,8 @@ export default function MatchOdds({
                             : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-semibold text-[10px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[9px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
                       </div>
                     </td>
                   )

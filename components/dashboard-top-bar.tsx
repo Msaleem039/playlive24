@@ -124,9 +124,9 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
 
     return {
       name:
-        authUser?.username ??
         authUser?.name ??
         authUser?.fullName ??
+        authUser?.username ??
         authUser?.email ??
         "Guest",
       balanceRaw: balanceValue,
@@ -282,6 +282,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
             }}
             className="flex items-center gap-1 sm:gap-1.5 bg-[#00A66E] text-black px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 rounded-full shadow-sm min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] justify-center hover:bg-[#00b97b] transition"
           >
+       
             <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
             <div className="leading-tight text-left min-w-0">
               <div className="text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>

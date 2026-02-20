@@ -81,15 +81,15 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
     setError(null)
     
     try {
-      console.log("Attempting login with:", { username, passwordProvided: Boolean(password) })
+      // console.log("Attempting login with:", { username, passwordProvided: Boolean(password) })
       const result = await login({ username, password }).unwrap()
-      console.log("Login API response:", result)
+      // console.log("Login API response:", result)
       
       // Check if we have the required data (accessToken and user)
       if (result.accessToken && result.user) {
-        console.log("Login successful, storing credentials and redirecting...")
-        console.log("User data from API:", result.user)
-        console.log("Balance from API:", result.user.balance)
+        // console.log("Login successful, storing credentials and redirecting...")
+        // console.log("User data from API:", result.user)
+        // console.log("Balance from API:", result.user.balance)
         
         // Store user data and token in Redux FIRST
         dispatch(setCredentials({
@@ -108,9 +108,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
             if (result.user?.username) {
               sessionStorage.setItem("user_name", result.user.username)
             }
-            console.log("Stored user in localStorage:", JSON.parse(window.localStorage.getItem("auth_user") || "{}"))
+            // console.log("Stored user in localStorage:", JSON.parse(window.localStorage.getItem("auth_user") || "{}"))
           }
-          console.log("Stored user in cookie:", JSON.parse(Cookies.get("auth_user") || "{}"))
+          // console.log("Stored user in cookie:", JSON.parse(Cookies.get("auth_user") || "{}"))
         } catch (storageError) {
           console.warn("Failed to store auth credentials", storageError)
         }

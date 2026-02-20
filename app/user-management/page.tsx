@@ -154,7 +154,7 @@ export default function UserManagement() {
     amount: string
     remarks: string
   }) => {
-    console.log("Deposit Cash for", depositModal.username, ":", data)
+    // console.log("Deposit Cash for", depositModal.username, ":", data)
     // TODO: Implement API call here
     // Example:
     // await depositCashAPI({
@@ -168,7 +168,7 @@ export default function UserManagement() {
     amount: string
     remarks: string
   }) => {
-    console.log("Withdraw Cash for", withdrawModal.username, ":", data)
+    // console.log("Withdraw Cash for", withdrawModal.username, ":", data)
     // TODO: Implement API call here
     // Example:
     // await withdrawCashAPI({
