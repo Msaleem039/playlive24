@@ -280,8 +280,7 @@ export default function BetSlipModal({
       ? 'bookmaker'
       : 'in_play'
 
-    // Log for debugging
-    // console.log('Bet placement - Payload data:', {
+    // Log for debugging  // console.log('Bet placement - Payload data:', {
     //   user_id: String(userId),
     //   match_id: String(matchId ?? ''),
     //   selection_id: selectedBet.selectionId,
