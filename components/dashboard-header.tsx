@@ -99,29 +99,31 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-y border-emerald-500/30 group">
-  
-  {/* Glow effect */}
-  <div className="absolute inset-0 bg-emerald-500/10 blur-xl opacity-30 pointer-events-none"></div>
+      <div className="relative overflow-hidden" style={{ backgroundColor: '#005461' }}>
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"></div>
+        
+        {/* Gradient fade overlays for smooth edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#005461] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#005461] to-transparent z-10 pointer-events-none"></div>
 
-  <div className="py-1 whitespace-nowrap">
-    <div className="inline-block min-w-full animate-[marquee_12s_linear_infinite] group-hover:[animation-play-state:paused] text-xs md:text-xs font-semibold tracking-wide text-white">
-      {newsBarText}
-    </div>
-  </div>
-
-  <style jsx>{`
-    @keyframes marquee {
-      0% {
-        transform: translateX(100%);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
-    }
-  `}</style>
-
-</div>
+        <div className="py-1.5 sm:py-2 overflow-hidden">
+          <div className="flex animate-marquee-slow group-hover:[animation-play-state:paused]">
+            {/* First instance */}
+            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-medium tracking-wide text-white whitespace-nowrap">
+              {newsBarText}
+            </div>
+            {/* Duplicate for seamless loop */}
+            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-medium tracking-wide text-white whitespace-nowrap" aria-hidden="true">
+              {newsBarText}
+            </div>
+            {/* Third instance for extra smoothness on wide screens */}
+            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-medium tracking-wide text-white whitespace-nowrap" aria-hidden="true">
+              {newsBarText}
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Nav bar */}
       <div className="bg-[#00A66E]">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">

@@ -179,6 +179,20 @@ body {
   display: inline-block;
 }
 
+/* Slow professional marquee for dashboard header */
+@keyframes marquee-slow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+.animate-marquee-slow {
+  animation: marquee-slow 45s linear infinite;
+  will-change: transform;
+}
+
 /* Yellow blink animation for odds changes */
 @keyframes blink {
   0%, 100% { background-color: rgb(250 204 21); /* yellow-400 */ }

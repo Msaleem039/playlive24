@@ -11,7 +11,7 @@ const authSlice = createSlice({
                 payload: { user, token },
             },
         ) => {
-            console.log({ user, token })
+            // console.log({ user, token })
             state.user = user
             state.token = token
         },
