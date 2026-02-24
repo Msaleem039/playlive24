@@ -179,7 +179,7 @@ body {
   display: inline-block;
 }
 
-/* Slow professional marquee for dashboard header */
+/* Professional marquee for dashboard header */
 @keyframes marquee-slow {
   0% {
     transform: translateX(0);
@@ -189,7 +189,7 @@ body {
   }
 }
 .animate-marquee-slow {
-  animation: marquee-slow 45s linear infinite;
+  animation: marquee-slow 20s linear infinite;
   will-change: transform;
 }
 

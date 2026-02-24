@@ -35,6 +35,8 @@ export const API_END_POINTS = {
     /////////////////////////////<===SPORTS API===>//////////////////////////////
     // cricketMatches: BASE_URL + "/cricketid/matches/details/4",
     cricketMatches: `${BASE_URL}/cricketid/aggregator/cricket`,
+    soccerMatches: `${BASE_URL}/cricketid/aggregator/matches?sportId=1`,
+    tennisMatches: `${BASE_URL}/cricketid/aggregator/matches?sportId=2`,
     cricketMatchMarkets: `${BASE_URL}/cricketid/markets`,
     cricketMatchOdds: `${BASE_URL}/cricketid/odds`,
     cricketBookmakerFancy: `${BASE_URL}/cricketid/bookmaker-fancy`,

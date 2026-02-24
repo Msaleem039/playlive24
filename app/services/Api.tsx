@@ -515,6 +515,22 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
       providesTags: ['AgentMatchBook'] as any,
     }),
+
+    /////////////////////////////<===SOCCER MATCHES===>//////////////////////////////
+    getSoccerMatches: builder.query({
+      query: () => ({
+        url: API_END_POINTS.soccerMatches,
+        method: "GET",
+      }),
+    }),
+
+    /////////////////////////////<===TENNIS MATCHES===>//////////////////////////////
+    getTennisMatches: builder.query({
+      query: () => ({
+        url: API_END_POINTS.tennisMatches,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -580,6 +596,12 @@ export const {
 
     /////////////////////////////<===AGENT MATCH BOOK===>//////////////////////////////
     useGetAgentMatchBookQuery,
+
+    /////////////////////////////<===SOCCER MATCHES===>//////////////////////////////
+    useGetSoccerMatchesQuery,
+
+    /////////////////////////////<===TENNIS MATCHES===>//////////////////////////////
+    useGetTennisMatchesQuery,
 
     /////////////////////////////<===COMPLAINT===>//////////////////////////////
     useSubmitComplaintMutation,

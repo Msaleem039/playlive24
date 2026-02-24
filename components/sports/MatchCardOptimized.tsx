@@ -4,7 +4,6 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { Tv } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
-import { isMatchLive } from "@/app/hooks/useCricketMatches"
 
 interface MatchCardOptimizedProps {
   match: CricketMatch
@@ -49,31 +48,11 @@ const MatchCardOptimized = memo(({
 
   const matchId = match?.match_id ? String(match.match_id) : ''
 
-  // Check if match is live - only allow navigation for live matches
-  const isLive = (() => {
-    // Use iplay field directly from API response
-    if (typeof match?.iplay === 'boolean') {
-      return match.iplay === true
-    }
-    // Fallback to legacy logic if iplay not available
-    const statusText = (match?.status_str || match?.state || match?.match_status || '')
-      .toString()
-      .toLowerCase()
-    const liveByNumeric = typeof match?.status === 'number' && isMatchLive(match.status)
-    return liveByNumeric || (
-      statusText.includes('live') ||
-      match?.game_state === 3 ||
-      match?.match_status === 'live'
-    )
-  })()
-
   const cardContent = (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`border-b border-gray-200 py-2 transition-colors px-4 ${
-        isLive ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'
-      }`}
+      className="border-b border-gray-200 py-2 hover:bg-gray-50 transition-colors px-4 cursor-pointer"
     >
       <div>
         <div className="flex-1 min-w-0">
@@ -158,8 +137,7 @@ const MatchCardOptimized = memo(({
     </motion.div>
   )
 
-  // Only wrap in Link if match is live and has a valid matchId
-  if (matchId && isLive) {
+  if (matchId) {
     return (
       <Link href={`/live/${matchId}`} className="block">
         {cardContent}
@@ -167,7 +145,6 @@ const MatchCardOptimized = memo(({
     )
   }
 
-  // For upcoming matches or matches without ID, return card without navigation
   return cardContent
 })
 

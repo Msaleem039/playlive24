@@ -151,46 +151,53 @@ export function BetHistoryView() {
                 <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Stack
                 </th>
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+
+                {/* <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Exposure
-                </th>
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                </th> */}
+                {/* <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Profit
-                </th>
+                </th> */}
                 <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   User
                 </th>
                 <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Bet Type
                 </th>
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                {/* <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Ip Address
-                </th>
+                </th> */}
                 <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                {/* <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
                   Status
+                </th> */}
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                  Decision Run
+                </th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-700 uppercase tracking-wider">
+                  Balance
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-8 text-center">
+                  <td colSpan={14} className="px-4 py-8 text-center">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#00A66E]" />
                     <p className="text-gray-500 mt-2">Loading bet history...</p>
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-8 text-center text-red-500">
+                  <td colSpan={14} className="px-4 py-8 text-center text-red-500">
                     Error loading bet history. Please try again.
                   </td>
                 </tr>
               ) : filteredBets.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={14} className="px-4 py-8 text-center text-gray-500">
                     No Record Found
                   </td>
                 </tr>
@@ -212,31 +219,33 @@ export function BetHistoryView() {
                     <td className="px-3 py-2 text-xs text-gray-900">
                       Rs {(bet.betValue || bet.amount || 0).toLocaleString()}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-900">
+                    {/* <td className="px-3 py-2 text-xs text-gray-900">
                       Rs {((bet.winAmount || 0) + (bet.lossAmount || 0)).toLocaleString()}
-                    </td>
-                    <td className={`px-3 py-2 text-xs ${(bet.pnl || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    </td> */}
+                    {/* <td className={`px-3 py-2 text-xs ${(bet.pnl || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {bet.pnl !== undefined && bet.pnl !== null ? `Rs ${bet.pnl.toLocaleString()}` : 'Rs 0'}
-                    </td>
+                    </td> */}
                     <td className="px-3 py-2 text-xs text-gray-900">
                       {bet.user?.name || bet.user?.username || 'N/A'}
                     </td>
                     <td className="px-3 py-2 text-xs">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                         bet.betType === 'BACK' 
-                          ? 'bg-[#AEDBFB]text-blue-800' 
+                          ? 'bg-[#AEDBFB] text-blue-800' 
                           : 'bg-pink-100 text-pink-800'
                       }`}>
                         {bet.betType || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-900">N/A</td>
+                    {/* <td className="px-3 py-2 text-xs text-gray-900">N/A</td> */}
                     <td className="px-3 py-2 text-xs text-gray-900">{formatDate(bet.createdAt)}</td>
-                    <td className="px-3 py-2 text-xs">
+                    {/* <td className="px-3 py-2 text-xs">
                       <span className={getStatusColor(bet.status)}>
                         {bet.status || 'N/A'}
                       </span>
-                    </td>
+                    </td> */}
+                    <td className="px-3 py-2 text-xs text-gray-900">{bet?.decisionRun || 'N/A'}</td>
+                    <td className="px-3 py-2 text-xs text-gray-900">Rs {bet?.balance?.toLocaleString() || 'N/A'}</td>
                   </tr>
                   )
                 })
