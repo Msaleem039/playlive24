@@ -44,6 +44,10 @@ interface UserData {
 }
 
 export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAllUsers }: UserProps) {
+  const authUser = useSelector(selectCurrentUser)
+  const currentRole = (authUser?.role as string) || ''
+  const isSuperAdmin = ['SUPER_ADMIN', 'SUPERADMIN'].includes(currentRole.toUpperCase()) || (currentRole.toUpperCase().includes('SUPER') && currentRole.toUpperCase().includes('ADMIN'))
+
   const [searchTerm, setSearchTerm] = useState("")
   const [showRows, setShowRows] = useState(25)
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
@@ -385,26 +389,26 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const displayUsers = filteredUsers.length > 0 ? filteredUsers : (users || [])
 
   return (
-    <div className="bg-white mt-4">
-      {/* Tabs */}
-      <div className="bg-gray-800 text-white mb-3">
-        <div className="flex">
+    <div className="bg-white mt-2 sm:mt-4 min-w-0 px-4 sm:px-3 md:px-0">
+      {/* Tabs - responsive */}
+      <div className="bg-gray-800 text-white mb-2 sm:mb-3 rounded-t-lg overflow-hidden">
+        <div className="flex min-w-0">
           <button
             onClick={() => setUserTab("Active Users")}
-            className={`px-6 py-2 text-xs sm:text-sm font-semibold relative ${
+            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm sm:text-sm font-semibold relative touch-manipulation ${
               userTab === "Active Users" 
                 ? "text-white" 
-                : "text-gray-400 hover:text-white text-xs sm:text-sm"
+                : "text-gray-400 hover:text-white"
             }`}
           >
             Active Users
             {userTab === "Active Users" && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#00A66E]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-[#00A66E]"></div>
             )}
           </button>
           <button
             onClick={() => setUserTab("Close Users")}
-            className={`px-6 py-2 font-semibold text-xs sm:text-sm relative ${
+            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold relative touch-manipulation ${
               userTab === "Close Users" 
                 ? "text-white" 
                 : "text-gray-400 hover:text-white"
@@ -412,63 +416,62 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           >
             Close Users
             {userTab === "Close Users" && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#00A66E]"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-[#00A66E]"></div>
             )}
           </button>
         </div>
       </div>
 
-      {/* Combined Action Buttons and Table Controls */}
-      <div className="bg-white p-2 sm:p-3 mb-3 rounded-lg shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 justify-between">
-          {/* Left side: Action buttons (only for Active Users) and table controls */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+      {/* Combined Action Buttons and Table Controls - stack on mobile */}
+      <div className="bg-white p-3 sm:p-3 mb-2 sm:mb-3 rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 justify-between">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 min-w-0">
             {userTab === "Active Users" && (
               <>
                 <Button
                   onClick={() => setIsAddUserModalOpen(true)}
-                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm"
+                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-3 sm:px-6 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-initial touch-manipulation"
                 >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Add Client
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Add Client</span>
                 </Button>
                 <Button 
                   onClick={() => setIsAllUsersModalOpen(true)}
-                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 flex items-center gap-2 text-xs sm:text-sm"
+                  className="bg-[#00A66E] hover:bg-[#00A66E]/90 text-white px-3 sm:px-6 py-2.5 sm:py-2 min-h-[44px] sm:min-h-0 flex items-center justify-center gap-2 text-sm flex-1 sm:flex-initial touch-manipulation"
                 >
-                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  All User Sports Settings
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span className="truncate sm:inline hidden">All User Sports Settings</span>
+                  <span className="truncate sm:hidden">Settings</span>
                 </Button>
               </>
             )}
-            <div className="flex gap-1.5 sm:gap-2">
+            <div className="flex gap-2">
               <Button
                 onClick={handleExportExcel}
-                className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm flex items-center gap-1"
+                className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-3 py-2.5 sm:py-1 min-h-[44px] sm:min-h-0 text-sm flex items-center gap-1 touch-manipulation"
               >
-                <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                <Download className="w-4 h-4 shrink-0" />
                 Excel
               </Button>
               <Button
                 onClick={handleExportPDF}
-                className="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm flex items-center gap-1"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-3 py-2.5 sm:py-1 min-h-[44px] sm:min-h-0 text-sm flex items-center gap-1 touch-manipulation"
               >
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                <FileText className="w-4 h-4 shrink-0" />
                 PDF
               </Button>
             </div>
           </div>
-          {/* Right side: Search */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm text-gray-700">Search:</span>
-            <div className="relative">
-              <Search className="hidden sm:block absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+          <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
+            <span className="text-sm text-gray-700 shrink-0">Search:</span>
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <Input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search users..."
-                className="pl-2 sm:pl-8 w-32 sm:w-64 text-xs sm:text-sm"
+                className="pl-9 pr-3 w-full min-w-0 sm:w-64 text-sm py-2.5 sm:py-1.5"
               />
             </div>
           </div>
@@ -476,55 +479,99 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden px-2 sm:px-0">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00A66E]" />
-            <span className="ml-3 text-gray-600">Loading users...</span>
+          <div className="flex items-center justify-center py-12 px-4">
+            <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-[#00A66E]" />
+            <span className="ml-3 text-sm sm:text-base text-gray-600">Loading users...</span>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12 px-4">
             <div className="text-center">
-              <p className="text-red-600 mb-2">Error loading users</p>
+              <p className="text-red-600 mb-2 text-sm sm:text-base font-medium">Error loading users</p>
               <p className="text-sm text-gray-500">Please try again later</p>
             </div>
           </div>
         ) : displayUsers.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-gray-500">No users found</p>
+          <div className="flex items-center justify-center py-12 px-4">
+            <p className="text-gray-500 text-sm sm:text-base">No users found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <>
+          {/* Mobile: card list (no horizontal scroll) */}
+          <div className="md:hidden space-y-4 p-3 pb-5">
+            {displayUsers.map((user: UserData, index) => (
+              <div key={user.id} className={`rounded-lg border border-gray-200 shadow-sm overflow-hidden ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                <div className="p-4 border-b border-gray-100">
+                  <div className="font-semibold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
+                  <div className="text-sm text-gray-500 truncate mt-0.5">[{user.username || user.email?.split("@")[0] || "N/A"}]</div>
+                </div>
+                <div className="p-4 grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600">${formatBalance(user.plCash || 0)}</span></div>
+                  <div><span className="text-gray-500">Balance:</span> <span className="font-semibold">${formatBalance(user.balance)}</span></div>
+                  <div><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600">${formatBalance(user.liability || 0)}</span></div>
+                  <div><span className="text-gray-500">Available:</span> <span className="font-semibold">${formatBalance(user.availableBalance || 0)}</span></div>
+                </div>
+                <div className="p-4 pt-0 flex flex-wrap items-center gap-2">
+                  <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-10 h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50" title={user.isActive === false ? "Activate" : "Deactivate"}>
+                    {user.isActive !== false ? <div className="w-full h-full bg-green-500 rounded flex items-center justify-center"><Check className="w-5 h-5 text-white" /></div> : <div className="w-full h-full bg-red-500 rounded flex items-center justify-center"><X className="w-5 h-5 text-white" /></div>}
+                  </button>
+                  <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-green-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CD</button>
+                  <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-red-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CW</button>
+                  <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-3 py-2.5 bg-orange-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Log</button>
+                  <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-[#00A66E] text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">US</button>
+                  <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-purple-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Edit</button>
+                  {isSuperAdmin && (
+                    <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                      <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded min-h-[40px] flex items-center gap-1 touch-manipulation">
+                        <MoreVertical className="w-4 h-4" /> More
+                      </button>
+                      {openDropdownId === user.id && (
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
+                          <button onClick={() => handleViewSubordinates(user.id, user.name || user.email || "User")} className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                            <ChevronRight className="w-4 h-4" /> View
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table (from md up) */}
+          <div className="hidden md:block overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="inline-block min-w-full align-middle">
               <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200 mx-4">
+                <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-[#00A66E]">
                     <tr>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[80px] sm:min-w-[100px] md:min-w-[130px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[80px] sm:min-w-[100px] md:min-w-[130px]">
                         Login Name
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         PL+Cash
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Balance
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[40px] sm:min-w-[50px] md:min-w-[60px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[40px] sm:min-w-[50px] md:min-w-[60px]">
                         Share
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Liability
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[70px] sm:min-w-[90px] md:min-w-[110px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[70px] sm:min-w-[90px] md:min-w-[110px]">
                         Available
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[35px] sm:min-w-[45px] md:min-w-[55px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[35px] sm:min-w-[45px] md:min-w-[55px]">
                         Active
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px] md:min-w-[65px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px] md:min-w-[65px]">
                         Cash
                       </th>
-                      <th className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 text-left text-[9px] sm:text-[10px] md:text-xs font-medium text-white uppercase tracking-wider w-auto">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider w-auto">
                         Action
                       </th>
                     </tr>
@@ -532,34 +579,34 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                   <tbody className="bg-white divide-y divide-gray-200">
                     {displayUsers.map((user: UserData, index) => (
                       <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-900 break-words leading-tight">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs font-medium text-gray-900 break-words leading-tight">
                             <span className="block sm:inline">{user.name || 'Unknown'}</span>
-                            <span className="text-gray-600 text-[8px] sm:text-[9px] md:text-[10px]"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
+                            <span className="text-gray-600 text-[9px] sm:text-[10px] md:text-[10px]"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-green-500">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-green-500">
                             ${formatBalance(user.plCash || 0)}
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-gray-900">
                             ${formatBalance(user.balance)}
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-gray-900">
                             ${formatBalance(user?.commissionPercentage || 0)}
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-red-600 font-medium">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-red-600 font-medium">
                             ${formatBalance(user.liability || 0)}
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-900">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-gray-900">
                             ${formatBalance(user.availableBalance || 0)}
                           </div>
                         </td>
@@ -581,25 +628,25 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                             )}
                           </button>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2 whitespace-nowrap">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
                           <div className="flex gap-0.5 sm:gap-1 justify-center sm:justify-start">
                             <button
                               onClick={() => handleDepositCash(user.name || user.email || '', user.id, user.email)}
-                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-green-600 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center"
+                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-green-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-green-700 transition-colors flex items-center justify-center"
                               title="Cash Deposit"
                             >
                               CD
                             </button>
                             <button
                               onClick={() => handleWithdrawCash(user.name || user.email || '', user.id, user.email)}
-                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-red-600 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center"
+                              className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 bg-red-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-red-700 transition-colors flex items-center justify-center"
                               title="Cash Withdraw"
                             >
                               CW
                             </button>
                           </div>
                         </td>
-                        <td className="px-1 sm:px-1.5 md:px-2 py-1 sm:py-1.5 md:py-2">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2">
                           <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start items-center">
                             <button 
                               onClick={() => {
@@ -610,7 +657,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                   username
                                 })
                               }}
-                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-orange-600 whitespace-nowrap transition-colors"
                             >
                               Log
                             </button>
@@ -619,7 +666,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                 handleUserDetails(user.name || user.email || '', user.id, user.email)
                                 setOpenDropdownId(null)
                               }}
-                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-[#00A66E] text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-[#00A66E] text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
                               title="User Details"
                             >
                               US
@@ -629,42 +676,43 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                 handleEditUser(user)
                                 setOpenDropdownId(null)
                               }}
-                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-purple-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold rounded hover:bg-purple-600 whitespace-nowrap transition-colors"
+                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-purple-500 text-white text-[10px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-purple-600 whitespace-nowrap transition-colors"
                               title="Edit User"
                             >
                               Edit
                             </button>
                             
-                            {/* Dropdown Menu */}
-                            <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                              <button
-                                ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
-                                onClick={() => toggleDropdown(user.id)}
-                                className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[9px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
-                                title="More Options"
-                              >
-                                <MoreVertical className="w-3 h-3" />
-                                <span className="hidden sm:inline">More</span>
-                              </button>
-                              
-                              {openDropdownId === user.id && (
-                                <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
-                                  dropdownDirection[user.id] === 'up' 
-                                    ? 'bottom-full mb-1' 
-                                    : 'top-full mt-1'
-                                }`}>
-                                  <div className="py-1">
-                                    <button
-                                      onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
-                                      className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
-                                    >
-                                      <ChevronRight className="w-4 h-4" />
-                                      <span>View</span>
-                                    </button>
+                            {/* More button + dropdown: only visible for superadmin */}
+                            {isSuperAdmin && (
+                              <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                                <button
+                                  ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
+                                  onClick={() => toggleDropdown(user.id)}
+                                  className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[10px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
+                                  title="More Options"
+                                >
+                                  <MoreVertical className="w-3 h-3" />
+                                  <span className="hidden sm:inline">More</span>
+                                </button>
+                                {openDropdownId === user.id && (
+                                  <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
+                                    dropdownDirection[user.id] === 'up' 
+                                      ? 'bottom-full mb-1' 
+                                      : 'top-full mt-1'
+                                  }`}>
+                                    <div className="py-1">
+                                      <button
+                                        onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
+                                        className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                      >
+                                        <ChevronRight className="w-4 h-4" />
+                                        <span>View</span>
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -674,6 +722,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
 

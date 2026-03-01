@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/input'
 import { toast } from 'sonner'
 
@@ -32,12 +32,14 @@ export default function EditUserModal({
 }: EditUserModalProps) {
   const [name, setName] = useState(initialName)
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [commissionPercentage, setCommissionPercentage] = useState(initialCommissionPercentage.toString())
 
   useEffect(() => {
     if (isOpen) {
       setName(initialName)
       setPassword('')
+      setShowPassword(false)
       setCommissionPercentage(initialCommissionPercentage.toString())
     }
   }, [isOpen, initialName, initialCommissionPercentage])
@@ -117,14 +119,25 @@ export default function EditUserModal({
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
               Password <span className="text-gray-500 text-[10px] sm:text-xs">(optional)</span>
             </label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter new password"
-              disabled={isLoading}
-              className="text-xs sm:text-sm py-1.5 sm:py-2"
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter new password"
+                disabled={isLoading}
+                className="text-xs sm:text-sm py-1.5 sm:py-2 pr-9"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 focus:outline-none disabled:opacity-50"
+                title={showPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div>

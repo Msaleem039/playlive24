@@ -11,6 +11,8 @@ interface MatchCardOptimizedProps {
   onPin?: (matchId: string) => void
   onBookmark?: (matchId: string) => void
   onFantasy?: (matchId: string) => void
+  /** When true, clicking the card does not navigate to detail page */
+  disableNavigation?: boolean
 }
 
 const MatchCardOptimized = memo(({ 
@@ -18,7 +20,8 @@ const MatchCardOptimized = memo(({
   sport,
   onPin,
   onBookmark,
-  onFantasy
+  onFantasy,
+  disableNavigation = false
 }: MatchCardOptimizedProps) => {
   const formatMatchTime = (dateStart: string) => {
     if (!dateStart) return "--:--"
@@ -137,7 +140,7 @@ const MatchCardOptimized = memo(({
     </motion.div>
   )
 
-  if (matchId) {
+  if (matchId && !disableNavigation) {
     return (
       <Link href={`/live/${matchId}`} className="block">
         {cardContent}

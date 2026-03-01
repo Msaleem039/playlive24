@@ -22,27 +22,24 @@ export default function ClientAccountStatementModal({
   const [showMarketCommission, setShowMarketCommission] = useState(false)
   const [showSessionPnl, setShowSessionPnl] = useState(false)
   const [showTossPnl, setShowTossPnl] = useState(false)
-  const [activeTab, setActiveTab] = useState<'transactions' | 'betHistory'>('transactions')
+  const [betsPopoverIdx, setBetsPopoverIdx] = useState<number | null>(null)
 
   // Use lazy query for manual triggering
   const [triggerQuery, { data: statementData, isLoading, error, reset }] = useLazyGetUserQuery()
 
-  // Build query params (without parentId for statement type as per user's previous feedback)
-  // The API returns all subordinates' statements, we filter on frontend by userId
+  // Build query params for statement (userId passed to fetch specific user's statement)
   const queryParams = useMemo(() => {
     if (!userId) return null
     
     const params: any = {
       type: 'statement',
+      userId,
       showCashEntry: showCashEntry.toString(),
       showMarketPnl: showMarketPnl.toString(),
       showMarketCommission: showMarketCommission.toString(),
       showSessionPnl: showSessionPnl.toString(),
       showTossPnl: showTossPnl.toString()
     }
-    // Note: Not using parentId as per user's previous feedback
-    // API returns all subordinates, we filter by userId on frontend
-    
     return params
   }, [userId, showCashEntry, showMarketPnl, showMarketCommission, showSessionPnl, showTossPnl])
 
@@ -71,80 +68,78 @@ export default function ClientAccountStatementModal({
     }
   }, [isOpen, reset])
 
-  // Extract user info, transactions, and bet history from response
-  // Filter by userId to ensure we show only the relevant user's data
-  const { userInfo, transactions, betHistory } = useMemo(() => {
-    if (!statementData || !userId) return { userInfo: null, transactions: [], betHistory: [] }
+  // Extract user info, statement (transactions), and bet history from response
+  // Supports new format: { success, user: { id, openingBalance }, statement, pagination }
+  const { userInfo, transactions } = useMemo(() => {
+    if (!statementData || !userId) return { userInfo: null, transactions: [] }
     
-    // Response is an array with user objects containing transactions
-    if (Array.isArray(statementData) && statementData.length > 0) {
-      // Find the user that matches the userId
-      const userData = statementData.find((user: any) => user.id === userId) || statementData[0]
-      
-      // Double-check: only return data if it matches the requested userId
-      if (userData.id !== userId) {
-        return { userInfo: null, transactions: [], betHistory: [] }
-      }
+    // New format: { success, user, statement, pagination } or array of [{ success, user, statement, pagination }]
+    const raw = Array.isArray(statementData) ? statementData[0] : statementData
+    const data = raw?.data || raw
+    
+    if (data?.success && data?.user && Array.isArray(data?.statement)) {
+      const u = data.user
+      if (u.id !== userId) return { userInfo: null, transactions: [] }
       
       return {
         userInfo: {
-          id: userData.id,
-          name: userData.name,
-          username: userData.username,
-          role: userData.role,
-          balance: userData.balance,
-          liability: userData.liability,
-          availableBalance: userData.availableBalance,
-          profitLoss: userData.profitLoss,
-          plCash: userData.plCash,
-          commissionPercentage: userData.commissionPercentage,
-          isActive: userData.isActive
+          id: u.id,
+          name: u.name || username,
+          username: u.username || username,
+          openingBalance: u.openingBalance,
+          balance: u.openingBalance
         },
-        transactions: userData.transactions || [],
-        betHistory: userData.betHistory?.data || userData.betHistory || []
+        transactions: data.statement
       }
     }
     
-    // Fallback for other response structures
+    // Legacy: array of user objects
+    if (Array.isArray(statementData) && statementData.length > 0) {
+      const userData = statementData.find((u: any) => u.id === userId) || statementData[0]
+      if (userData.id !== userId) return { userInfo: null, transactions: [] }
+      return {
+        userInfo: userData,
+        transactions: userData.transactions || []
+      }
+    }
+    
+    // Legacy: statementData.data
     if (statementData.data) {
-      if (Array.isArray(statementData.data) && statementData.data.length > 0) {
-        // Find the user that matches the userId
-        const userData = statementData.data.find((user: any) => user.id === userId) || statementData.data[0]
-        
-        // Double-check: only return data if it matches the requested userId
-        if (userData.id !== userId) {
-          return { userInfo: null, transactions: [], betHistory: [] }
-        }
-        
+      const d = statementData.data
+      if (Array.isArray(d)) {
+        const userData = d.find((u: any) => u.id === userId) || d[0]
+        if (userData?.id !== userId) return { userInfo: null, transactions: [] }
         return {
           userInfo: userData,
-          transactions: userData.transactions || [],
-          betHistory: userData.betHistory?.data || userData.betHistory || []
+          transactions: userData.transactions || []
         }
       }
-      if (statementData.data.transactions) {
-        // Single user object
-        if (statementData.data.id === userId) {
-          return {
-            userInfo: statementData.data,
-            transactions: statementData.data.transactions,
-            betHistory: statementData.data.betHistory?.data || statementData.data.betHistory || []
-          }
+      if (d.user && d.statement) {
+        if (d.user.id !== userId) return { userInfo: null, transactions: [] }
+        return {
+          userInfo: { ...d.user, balance: d.user.openingBalance || d.user.balance },
+          transactions: d.statement
+        }
+      }
+      
+      if (d.id === userId) {
+        return {
+          userInfo: d,
+          transactions: d.transactions || []
         }
       }
     }
     
-    // Single user object response
+    // Legacy: single user object
     if (statementData.transactions && statementData.id === userId) {
       return {
         userInfo: statementData,
-        transactions: statementData.transactions,
-        betHistory: statementData.betHistory?.data || statementData.betHistory || []
+        transactions: statementData.transactions
       }
     }
     
-    return { userInfo: null, transactions: [], betHistory: [] }
-  }, [statementData, userId])
+      return { userInfo: null, transactions: [] }
+  }, [statementData, userId, username])
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '-'
@@ -167,13 +162,21 @@ export default function ClientAccountStatementModal({
     return numValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  // Derive type from description: "Match Odds" -> MATCH, "Normal" -> SESSION
+  const getStatementType = (description: string) => {
+    const d = (description || '').toLowerCase()
+    if (d.includes('match odds') || d.includes('match com')) return 'MATCH'
+    if (d.includes('normal') || d.includes('fancy') || d.includes('session')) return 'SESSION'
+    return d.includes('match') ? 'MATCH' : 'SESSION'
+  }
+
   const getTypeColor = (type: string) => {
     const typeUpper = type?.toUpperCase() || ''
-    if (typeUpper === 'MATCH') return 'bg-green-100 text-green-700'
-    if (typeUpper === 'SESSION') return 'bg-green-100 text-green-700'
-    if (typeUpper === 'CASHIN') return 'bg-blue-100 text-blue-700'
-    if (typeUpper === 'CASHOUT') return 'bg-red-100 text-red-700'
-    return 'bg-gray-100 text-gray-700'
+    if (typeUpper === 'MATCH') return 'bg-green-600 text-white'
+    if (typeUpper === 'SESSION') return 'bg-amber-800 text-white'
+    if (typeUpper === 'CASHIN') return 'bg-blue-600 text-white'
+    if (typeUpper === 'CASHOUT') return 'bg-red-700 text-white'
+    return 'bg-gray-600 text-white'
   }
 
   const getStatusColor = (status: string) => {
@@ -207,9 +210,18 @@ export default function ClientAccountStatementModal({
           </button>
         </div>
 
-        {/* Filters */}
+        {/* Filters - match screenshot layout */}
         <div className="p-2 sm:p-3 md:p-4 border-b bg-gray-50 overflow-x-auto">
           <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 items-center min-w-max">
+            <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={showCashEntry && showMarketPnl}
+                onChange={(e) => { setShowCashEntry(e.target.checked); setShowMarketPnl(e.target.checked) }}
+                className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
+              />
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Show Cash Entry &amp; Market Profit &amp; Loss</span>
+            </label>
             <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
               <input
                 type="checkbox"
@@ -217,16 +229,7 @@ export default function ClientAccountStatementModal({
                 onChange={(e) => setShowCashEntry(e.target.checked)}
                 className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Cash Entry</span>
-            </label>
-            <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
-              <input
-                type="checkbox"
-                checked={showMarketPnl}
-                onChange={(e) => setShowMarketPnl(e.target.checked)}
-                className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
-              />
-              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Market P/L</span>
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Show Cash Entry</span>
             </label>
             <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
               <input
@@ -235,7 +238,7 @@ export default function ClientAccountStatementModal({
                 onChange={(e) => setShowMarketCommission(e.target.checked)}
                 className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Market Comm</span>
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Market Commision</span>
             </label>
             <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
               <input
@@ -244,7 +247,7 @@ export default function ClientAccountStatementModal({
                 onChange={(e) => setShowSessionPnl(e.target.checked)}
                 className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Session P/L</span>
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Session Profit &amp; Loss</span>
             </label>
             <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
               <input
@@ -253,7 +256,16 @@ export default function ClientAccountStatementModal({
                 onChange={(e) => setShowTossPnl(e.target.checked)}
                 className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Toss P/L</span>
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Toss Profit &amp; Loss</span>
+            </label>
+            <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={showMarketPnl}
+                onChange={(e) => setShowMarketPnl(e.target.checked)}
+                className="w-3 h-3 sm:w-4 sm:h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
+              />
+              <span className="text-[10px] sm:text-xs md:text-sm text-gray-700">Market Profit &amp; Loss</span>
             </label>
           </div>
         </div>
@@ -271,12 +283,12 @@ export default function ClientAccountStatementModal({
                 <span className="ml-1 sm:ml-2 font-semibold truncate block">{userInfo.username || username}</span>
               </div>
               <div className="truncate">
-                <span className="text-gray-600">Balance:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.balance)}</span>
+                <span className="text-gray-600">Opening Balance:</span>
+                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.openingBalance ?? userInfo.balance)}</span>
               </div>
               <div className="truncate">
-                <span className="text-gray-600">Available:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.availableBalance)}</span>
+                <span className="text-gray-600">Balance:</span>
+                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.balance ?? userInfo.availableBalance)}</span>
               </div>
             </div>
           </div>
@@ -303,147 +315,73 @@ export default function ClientAccountStatementModal({
             </div>
           ) : (
             <div className="flex flex-col h-full">
-              {/* Tabs */}
-              <div className="flex border-b bg-gray-50">
-                <button
-                  onClick={() => setActiveTab('transactions')}
-                  className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
-                    activeTab === 'transactions' ? 'border-[#00A66E] text-[#00A66E]' : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Transactions
-                </button>
-                <button
-                  onClick={() => setActiveTab('betHistory')}
-                  className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
-                    activeTab === 'betHistory' ? 'border-[#00A66E] text-[#00A66E]' : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Bet History ({betHistory.length})
-                </button>
-              </div>
-
-              {/* Transactions Table */}
-              {activeTab === 'transactions' && (
-              <div className="overflow-x-auto flex-1">
-                <table className="w-full text-sm">
+              {/* Transactions Table - matches screenshot columns */}
+              <div className="overflow-x-auto flex-1 relative">
+                <table className="w-full text-[10px] sm:text-xs md:text-sm">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Date</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Description</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Result</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">CR</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">DR</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">Balance</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Date</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Type</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Description</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Result</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">CR</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">DR</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">Balance</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-semibold text-gray-700">Bets</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {transactions.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                           No transactions found
                         </td>
                       </tr>
                     ) : (
                       transactions.map((transaction: any, idx: number) => {
-                        const credit = transaction.credit || transaction.cr || 0
-                        const debit = transaction.debit || transaction.dr || 0
-                        const balance = transaction.balance || 0
+                        // New format: totalCredit, totalDebit, runningBalance, latestSettledAt, description, result, bets
+                        const credit = transaction.totalCredit ?? transaction.credit ?? transaction.cr ?? 0
+                        const debit = transaction.totalDebit ?? transaction.debit ?? transaction.dr ?? 0
+                        const balance = transaction.runningBalance ?? transaction.balance ?? 0
+                        const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
+                        const typeVal = transaction.type ?? getStatementType(transaction.description || '')
+                        const bets = transaction.bets || []
                         
                         return (
-                          <tr key={transaction.id || idx} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-gray-900 whitespace-nowrap">
-                              {formatDate(transaction.date || transaction.createdAt)}
+                          <tr key={transaction.marketId + '-' + transaction.selectionId + '-' + idx || idx} className="hover:bg-gray-50">
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-900 whitespace-nowrap">
+                              {formatDate(dateVal)}
                             </td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getTypeColor(transaction.type)}`}>
-                                {transaction.type || '-'}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
+                              <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-semibold ${getTypeColor(typeVal)}`}>
+                                {typeVal || '-'}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700 max-w-[120px] sm:max-w-[200px] truncate" title={transaction.description || '-'}>
                               {transaction.description || transaction.desc || '-'}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
-                              {transaction.result !== null && transaction.result !== undefined ? transaction.result : '-'}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700">
+                              {transaction.result !== null && transaction.result !== undefined ? String(transaction.result) : '-'}
                             </td>
-                            <td className="px-4 py-3 text-right text-green-600 font-semibold whitespace-nowrap">
-                              {credit > 0 ? formatCurrency(credit) : credit === 0 ? '0.00' : ''}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap text-green-600">
+                              {credit > 0 ? formatCurrency(credit) : '0.00'}
                             </td>
-                            <td className="px-4 py-3 text-right text-red-600 font-semibold whitespace-nowrap">
-                              {debit > 0 ? formatCurrency(debit) : debit === 0 ? '0.00' : ''}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap text-red-600">
+                              {debit > 0 ? `-${formatCurrency(debit)}` : '0.00'}
                             </td>
-                            <td className={`px-4 py-3 text-right font-semibold whitespace-nowrap ${
+                            <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap ${
                               balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
                               {formatCurrency(balance)}
                             </td>
-                          </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              )}
-
-              {/* Bet History Table */}
-              {activeTab === 'betHistory' && (
-              <div className="overflow-x-auto flex-1">
-                <table className="w-full text-[10px] sm:text-xs md:text-sm">
-                  <thead className="bg-gray-100 sticky top-0">
-                    <tr>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-left font-semibold text-gray-700 whitespace-nowrap">Date</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-left font-semibold text-gray-700 whitespace-nowrap">Bet Name</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-left font-semibold text-gray-700 whitespace-nowrap">Type</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-left font-semibold text-gray-700 whitespace-nowrap">Market</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-gray-700 whitespace-nowrap">Amount</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-gray-700 whitespace-nowrap">Odds</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-left font-semibold text-gray-700 whitespace-nowrap">Status</th>
-                      <th className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-3 text-right font-semibold text-gray-700 whitespace-nowrap">P/L</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {betHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 text-center text-gray-500 text-xs sm:text-sm">
-                          No bet history found
-                        </td>
-                      </tr>
-                    ) : (
-                      betHistory.map((bet: any, idx: number) => {
-                        const pnl = bet.pnl || 0
-                        return (
-                          <tr key={bet.id || idx} className="hover:bg-gray-50">
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-gray-900 whitespace-nowrap">
-                              <span className="text-[9px] sm:text-[10px] md:text-xs">{formatDate(bet.createdAt || bet.settledAt)}</span>
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-gray-700 max-w-[80px] sm:max-w-[120px] md:max-w-none truncate">
-                              {bet.betName || '-'}
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2">
-                              <span className={`px-1 sm:px-1.5 md:px-2 py-0.5 sm:py-1 rounded text-[9px] sm:text-[10px] md:text-xs font-semibold ${getBetTypeColor(bet.betType)}`}>
-                                {bet.betType || '-'}
-                              </span>
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-gray-700 max-w-[60px] sm:max-w-[100px] md:max-w-none truncate">
-                              {bet.marketName || bet.marketType || '-'}
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-right font-semibold whitespace-nowrap">
-                              {formatCurrency(bet.amount || bet.betValue)}
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-right font-semibold whitespace-nowrap">
-                              {bet.odds || bet.betRate || '-'}
-                            </td>
-                            <td className="px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2">
-                              <span className={`px-1 sm:px-1.5 md:px-2 py-0.5 sm:py-1 rounded text-[9px] sm:text-[10px] md:text-xs font-semibold ${getStatusColor(bet.status)}`}>
-                                {bet.status || '-'}
-                              </span>
-                            </td>
-                            <td className={`px-1 sm:px-2 md:px-3 py-1 sm:py-1.5 md:py-2 text-right font-semibold whitespace-nowrap ${
-                              pnl >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {formatCurrency(pnl)}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setBetsPopoverIdx(betsPopoverIdx === idx ? null : idx)}
+                                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[9px] sm:text-[10px] font-medium rounded transition-colors"
+                              >
+                                Bets
+                              </button>
                             </td>
                           </tr>
                         )
@@ -452,10 +390,44 @@ export default function ClientAccountStatementModal({
                   </tbody>
                 </table>
               </div>
-              )}
             </div>
           )}
         </div>
+
+        {/* Bets detail modal - shows all bets for this marketId */}
+        {betsPopoverIdx !== null && transactions[betsPopoverIdx] && (
+          <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setBetsPopoverIdx(null)}>
+            <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 py-3 border-b flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-800">
+                  Bets for Market ID: {transactions[betsPopoverIdx]?.marketId || '—'}
+                </h3>
+                <button onClick={() => setBetsPopoverIdx(null)} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[60vh]">
+                {(transactions[betsPopoverIdx]?.bets || []).length === 0 ? (
+                  <p className="text-sm text-gray-500">No bets for this entry</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(transactions[betsPopoverIdx]?.bets || []).map((bet: any, bi: number) => (
+                      <div key={bet.id || bi} className="text-xs p-2 bg-gray-50 rounded border border-gray-100">
+                        <span className={`px-2 py-0.5 rounded font-semibold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
+                        <div className="mt-1.5 grid grid-cols-2 gap-1 text-gray-700">
+                          <span>Odds: {bet.odds}</span>
+                          <span>Stake: {formatCurrency(bet.stake)}</span>
+                          <span>P/L: <span className={bet.pnl >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{formatCurrency(bet.pnl)}</span></span>
+                          <span>Status: {bet.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
