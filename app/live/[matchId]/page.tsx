@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
 import LiveScorecard from '@/components/scorecard/LiveScorecard'
 import DashboardHeader from '@/components/dashboard-header'
@@ -24,7 +24,10 @@ import { useUserPendingBets } from './hooks/useUserPendingBets'
 export default function LiveMatchDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const matchId = params?.matchId as string
+  const sportParam = searchParams?.get('sport') || (typeof window !== 'undefined' ? sessionStorage.getItem('liveSport') : null)
+  const isSoccer = sportParam === 'soccer'
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isClient = userRole === 'CLIENT'
@@ -123,7 +126,8 @@ export default function LiveMatchDetailPage() {
     bookmakerFancyData,
     eventId,
     numericMatchId,
-    marketIds
+    marketIds,
+    isSoccer
   )
 
   // Fetch match positions for profit/loss calculation

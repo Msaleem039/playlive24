@@ -4,13 +4,16 @@ import type { BettingMarket, MarketRow, BettingOption, MarketResponse, OddsRespo
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
 
+const SOCCER_MATCH_ODDS_LABELS = ['Home', 'Draw', 'Away'] as const
+
 export function useMatchMarkets(
   marketsData: any,
   oddsData: any,
   bookmakerFancyData: any,
   eventId: string,
   numericMatchId: number | null,
-  marketIds: string[]
+  marketIds: string[],
+  isSoccer: boolean = false
 ) {
   // Extract all markets - use new markets API with odds from direct API polling
   // Also merge bookmaker-fancy markets from the dedicated endpoint
@@ -35,14 +38,33 @@ export function useMatchMarkets(
       })
       
       markets = combinedMarkets
-      
+    }
+
+    // Soccer: if we have odds with 3 runners but no matching market (e.g. odds-only response), add a synthetic market so Match Odds can render
+    if (isSoccer && oddsData?.status && Array.isArray(oddsData.data)) {
+      const existingMarketIds = new Set(markets.map((m: any) => m.marketId))
+      oddsData.data.forEach((oddsItem: any) => {
+        if (oddsItem.runners?.length === 3 && !existingMarketIds.has(oddsItem.marketId)) {
+          markets.push({
+            marketId: oddsItem.marketId,
+            marketName: 'MATCH_ODDS',
+            runners: [],
+            odds: oddsItem
+          })
+          existingMarketIds.add(oddsItem.marketId)
+        }
+      })
+    }
+    
+    if (markets.length > 0) {
       console.log('[MatchDetail] Markets with odds (API polling):', {
         eventId,
-        totalMarkets: combinedMarkets.length,
-        marketsWithOdds: combinedMarkets.filter((m: any) => m.odds).length,
+        totalMarkets: markets.length,
+        marketsWithOdds: markets.filter((m: any) => m.odds).length,
         hasApiOdds: !!oddsData?.status,
         pollingActive: marketIds.length > 0,
-        markets: combinedMarkets.map((m: any) => ({ 
+        isSoccer,
+        markets: markets.map((m: any) => ({ 
           marketId: m.marketId, 
           hasOdds: !!m.odds,
           isLive: m.odds?.inplay || false
@@ -140,7 +162,7 @@ export function useMatchMarkets(
     })
     
     return filteredMarkets
-  }, [marketsData, oddsData, bookmakerFancyData, numericMatchId, eventId, marketIds])
+  }, [marketsData, oddsData, bookmakerFancyData, numericMatchId, eventId, marketIds, isSoccer])
 
   // Transform betting markets from new API or legacy API response
   const bettingMarkets: BettingMarket[] = useMemo(() => {
@@ -157,11 +179,51 @@ export function useMatchMarkets(
         const marketName = market.marketName || 'MATCH_ODDS'
         const rows: MarketRow[] = []
 
+        // Soccer: support 3-runner match odds (Home, Draw, Away) from odds response - prefer odds when API returns 3 runners
+        const oddsRunners = market.odds?.runners && Array.isArray(market.odds.runners) ? market.odds.runners : []
+        const hasThreeOddsRunners = isSoccer && oddsRunners.length === 3
+        const marketRunners = market.runners && Array.isArray(market.runners) ? market.runners : []
+
+        if (hasThreeOddsRunners) {
+          // Build 3 rows from odds (soccer match odds API response format: Home, Draw, Away)
+          oddsRunners.forEach((oddsRunner: OddsRunner, idx: number) => {
+            const label = SOCCER_MATCH_ODDS_LABELS[idx] ?? `Runner ${idx + 1}`
+            const backOdds: BettingOption[] = []
+            const layOdds: BettingOption[] = []
+            if (oddsRunner.ex?.availableToBack && Array.isArray(oddsRunner.ex.availableToBack)) {
+              const sortedBack = [...oddsRunner.ex.availableToBack].sort((a, b) => b.price - a.price).slice(0, BACK_COLUMNS)
+              sortedBack.forEach((odd) => {
+                backOdds.push({
+                  odds: odd.price.toString(),
+                  amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                })
+              })
+            }
+            if (oddsRunner.ex?.availableToLay && Array.isArray(oddsRunner.ex.availableToLay)) {
+              const sortedLay = [...oddsRunner.ex.availableToLay].sort((a, b) => a.price - b.price).slice(0, LAY_COLUMNS)
+              sortedLay.forEach((odd) => {
+                layOdds.push({
+                  odds: odd.price.toString(),
+                  amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                })
+              })
+            }
+            while (backOdds.length < BACK_COLUMNS) backOdds.push({ odds: '0', amount: '0' })
+            while (layOdds.length < LAY_COLUMNS) layOdds.push({ odds: '0', amount: '0' })
+            rows.push({
+              team: label,
+              selectionId: oddsRunner.selectionId,
+              back: backOdds,
+              lay: layOdds
+            })
+          })
+        } else if (marketRunners.length > 0) {
         // DEBUG: Log all runners and their selectionIds before processing
         console.log('📊 [Market Transform] ========== PROCESSING MARKET RUNNERS ==========', {
           marketName,
           marketId: market.marketId,
           runnersCount: market.runners?.length || 0,
+          isSoccer,
           allRunners: market.runners?.map((r: MarketRunner, idx: number) => ({
             index: idx,
             team: r.runnerName,
@@ -172,10 +234,9 @@ export function useMatchMarkets(
           note: 'These selectionIds MUST match position API keys for positions to display'
         })
 
-        // Process each runner from the market
+        // Process each runner from the market (for soccer: show all 3 including Draw; for cricket: skip Tie)
         market.runners.forEach((runner: MarketRunner, runnerIndex: number) => {
-          // Skip runners with "Tie" as runnerName
-          if (runner.runnerName === 'Tie' || runner.runnerName?.toLowerCase() === 'tie') {
+          if (!isSoccer && (runner.runnerName === 'Tie' || runner.runnerName?.toLowerCase() === 'tie')) {
             return
           }
           
@@ -329,6 +390,7 @@ export function useMatchMarkets(
             }
           })
         })
+        }
 
         if (rows.length > 0) {
           const marketData = {
@@ -337,7 +399,7 @@ export function useMatchMarkets(
             max: 500000, // Default max
             rows,
             gtype: 'match', // Default type
-            marketId: parseInt(market.marketId.split('.')[1]) || undefined, // Extract numeric part for legacy compatibility
+            marketId: parseInt(String(market.marketId).split('.')[1], 10) || undefined, // Extract numeric part for legacy compatibility
             marketIdString: market.marketId // Store full string for API calls
           }
           
@@ -348,6 +410,7 @@ export function useMatchMarkets(
               marketId: marketData.marketId,
               marketIdString: marketData.marketIdString,
               rowsCount: marketData.rows.length,
+              isSoccer,
               rows: marketData.rows.map((r: any) => ({
                 team: r.team,
                 selectionId: r.selectionId,
@@ -483,7 +546,7 @@ export function useMatchMarkets(
     })
 
     return sortedMarkets
-  }, [allMarkets])
+  }, [allMarkets, isSoccer])
 
   return { allMarkets, bettingMarkets }
 }

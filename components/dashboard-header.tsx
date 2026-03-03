@@ -128,31 +128,38 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       <div className="bg-[#00A66E]">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">
           <ul className="flex items-center h-10 gap-4 sm:gap-6 whitespace-nowrap py-1 no-scrollbar">
-            {tabsWithLiveCounts.map((tab) => (
-              <li key={tab.name} className="shrink-0 relative group">
-                <button
-                  onClick={() => onSelectTab(tab.name)}
-                  className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded transition-colors ${
-                    active === tab.name ? "text-black" : "text-black/80 hover:text-white"
-                  }`}
-                >
-                  {tab.name}
-                </button>
-                
-                {/* Live Count Badge with Signal Icon */}
-                {tab.hasLiveCount && tab.liveCount > 0 && (
-                  <div className="absolute -top-1 -right-1 flex items-center gap-1">
-                    <div className="w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border border-white font-bold">
-                      {tab.liveCount}
+            {tabsWithLiveCounts.map((tab) => {
+              const isActive = active === tab.name
+              return (
+                <li key={tab.name} className="shrink-0 relative group">
+                  <button
+                    onClick={() => onSelectTab(tab.name)}
+                    className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded transition-colors ${
+                      isActive
+                        ? "bg-white/25 text-white shadow-sm border-b-2 border-white"
+                        : "text-white/90 hover:text-white hover:bg-white/15"
+                    }`}
+                  >
+                    {tab.name}
+                  </button>
+                  
+                  {/* Live Count Badge with Signal Icon */}
+                  {tab.hasLiveCount && tab.liveCount > 0 && (
+                    <div className="absolute -top-1 -right-1 flex items-center gap-1">
+                      <div className="w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border border-white font-bold">
+                        {tab.liveCount}
+                      </div>
+                      <Radio className="w-3 h-3 text-red-500" />
                     </div>
-                    <Radio className="w-3 h-3 text-red-500" />
-                  </div>
-                )}
-                
-                {/* Hover line indicator */}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
-              </li>
-            ))}
+                  )}
+                  
+                  {/* Hover line indicator - only when not active */}
+                  {!isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </nav>
       </div>

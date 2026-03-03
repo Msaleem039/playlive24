@@ -37,8 +37,32 @@ export default function TennisTab() {
     setCurrentPage(1)
   }, [activeSubTab])
 
-  const liveMatches = matchesData?.live || []
-  const upcomingMatches = matchesData?.upcoming || []
+  // Normalize API response: raw array, or wrapped in { data: [] } / { matches: [] }, or { live: [], upcoming: [] }
+  const { liveMatches, upcomingMatches } = useMemo(() => {
+    const raw = matchesData
+    if (!raw) return { liveMatches: [], upcomingMatches: [] }
+
+    let list: any[] = []
+    if (Array.isArray(raw)) {
+      list = raw
+    } else if (Array.isArray((raw as any)?.data)) {
+      list = (raw as any).data
+    } else if (Array.isArray((raw as any)?.matches)) {
+      list = (raw as any).matches
+    } else if (Array.isArray((raw as any)?.live) || Array.isArray((raw as any)?.upcoming)) {
+      return {
+        liveMatches: (raw as any).live || [],
+        upcomingMatches: (raw as any).upcoming || [],
+      }
+    }
+
+    const isLive = (m: any) => m?.live === true || m?.live === "true" || m?.live === 1
+    const isUpcoming = (m: any) => m?.upcoming === true || m?.upcoming === "true" || m?.upcoming === 1
+    return {
+      liveMatches: list.filter(isLive),
+      upcomingMatches: list.filter(isUpcoming),
+    }
+  }, [matchesData])
 
   // Filter matches based on active sub-tab
   const filteredMatches = activeSubTab === 'live' ? liveMatches : upcomingMatches

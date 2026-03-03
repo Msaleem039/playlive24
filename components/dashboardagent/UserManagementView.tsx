@@ -123,6 +123,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     commissionPercentage: 0,
   })
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+  const [expandedMobileUserId, setExpandedMobileUserId] = useState<string | null>(null)
   const [dropdownDirection, setDropdownDirection] = useState<{ [key: string]: 'up' | 'down' }>({})
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const dropdownButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
@@ -498,46 +499,62 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           </div>
         ) : (
           <>
-          {/* Mobile: card list (no horizontal scroll) */}
+          {/* Mobile: card list – show name + More button; expand to show details on click */}
           <div className="md:hidden space-y-4 p-3 pb-5">
-            {displayUsers.map((user: UserData, index) => (
+            {displayUsers.map((user: UserData, index) => {
+              const isExpanded = expandedMobileUserId === user.id
+              return (
               <div key={user.id} className={`rounded-lg border border-gray-200 shadow-sm overflow-hidden ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                <div className="p-4 border-b border-gray-100">
-                  <div className="font-semibold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
-                  <div className="text-sm text-gray-500 truncate mt-0.5">[{user.username || user.email?.split("@")[0] || "N/A"}]</div>
-                </div>
-                <div className="p-4 grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600">${formatBalance(user.plCash || 0)}</span></div>
-                  <div><span className="text-gray-500">Balance:</span> <span className="font-semibold">${formatBalance(user.balance)}</span></div>
-                  <div><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600">${formatBalance(user.liability || 0)}</span></div>
-                  <div><span className="text-gray-500">Available:</span> <span className="font-semibold">${formatBalance(user.availableBalance || 0)}</span></div>
-                </div>
-                <div className="p-4 pt-0 flex flex-wrap items-center gap-2">
-                  <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-10 h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50" title={user.isActive === false ? "Activate" : "Deactivate"}>
-                    {user.isActive !== false ? <div className="w-full h-full bg-green-500 rounded flex items-center justify-center"><Check className="w-5 h-5 text-white" /></div> : <div className="w-full h-full bg-red-500 rounded flex items-center justify-center"><X className="w-5 h-5 text-white" /></div>}
+                <div className="p-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
+                    <div className="text-sm text-gray-500 truncate mt-0.5">[{user.username || user.email?.split("@")[0] || "N/A"}]</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMobileUserId((prev) => (prev === user.id ? null : user.id))}
+                    className="shrink-0 flex items-center gap-1 px-3 py-2 bg-[#00A66E] text-white text-xs font-bold rounded touch-manipulation"
+                    aria-expanded={isExpanded}
+                  >
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    More
                   </button>
-                  <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-green-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CD</button>
-                  <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-red-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CW</button>
-                  <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-3 py-2.5 bg-orange-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Log</button>
-                  <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-[#00A66E] text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">US</button>
-                  <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-purple-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Edit</button>
-                  {isSuperAdmin && (
-                    <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                      <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded min-h-[40px] flex items-center gap-1 touch-manipulation">
-                        <MoreVertical className="w-4 h-4" /> More
-                      </button>
-                      {openDropdownId === user.id && (
-                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
-                          <button onClick={() => handleViewSubordinates(user.id, user.name || user.email || "User")} className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                            <ChevronRight className="w-4 h-4" /> View
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
+                {isExpanded && (
+                  <>
+                    <div className="px-4 pb-4 grid grid-cols-2 gap-3 text-sm border-t border-gray-100 pt-3">
+                      <div><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600">${formatBalance(user.plCash || 0)}</span></div>
+                      <div><span className="text-gray-500">Balance:</span> <span className="font-semibold">${formatBalance(user.balance)}</span></div>
+                      <div><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600">${formatBalance(user.liability || 0)}</span></div>
+                      <div><span className="text-gray-500">Available:</span> <span className="font-semibold">${formatBalance(user.availableBalance || 0)}</span></div>
+                    </div>
+                    <div className="px-4 pb-4 flex flex-wrap items-center gap-2">
+                      <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-10 h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50" title={user.isActive === false ? "Activate" : "Deactivate"}>
+                        {user.isActive !== false ? <div className="w-full h-full bg-green-500 rounded flex items-center justify-center"><Check className="w-5 h-5 text-white" /></div> : <div className="w-full h-full bg-red-500 rounded flex items-center justify-center"><X className="w-5 h-5 text-white" /></div>}
+                      </button>
+                      <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-green-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CD</button>
+                      <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-red-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CW</button>
+                      <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-3 py-2.5 bg-orange-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Log</button>
+                      <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-[#00A66E] text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">US</button>
+                      <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-purple-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Edit</button>
+                      <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                        <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded min-h-[40px] flex items-center gap-1 touch-manipulation">
+                          <MoreVertical className="w-4 h-4" /> More
+                        </button>
+                        {openDropdownId === user.id && (
+                          <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
+                            <button onClick={() => handleViewSubordinates(user.id, user.name || user.email || "User")} className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4" /> View
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-            ))}
+            );
+            })}
           </div>
 
           {/* Desktop: table (from md up) */}
@@ -682,37 +699,35 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                               Edit
                             </button>
                             
-                            {/* More button + dropdown: only visible for superadmin */}
-                            {isSuperAdmin && (
-                              <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                                <button
-                                  ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
-                                  onClick={() => toggleDropdown(user.id)}
-                                  className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[10px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
-                                  title="More Options"
-                                >
-                                  <MoreVertical className="w-3 h-3" />
-                                  <span className="hidden sm:inline">More</span>
-                                </button>
-                                {openDropdownId === user.id && (
-                                  <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
-                                    dropdownDirection[user.id] === 'up' 
-                                      ? 'bottom-full mb-1' 
-                                      : 'top-full mt-1'
-                                  }`}>
-                                    <div className="py-1">
-                                      <button
-                                        onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
-                                        className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
-                                      >
-                                        <ChevronRight className="w-4 h-4" />
-                                        <span>View</span>
-                                      </button>
-                                    </div>
+                            {/* More button + dropdown: visible for all users */}
+                            <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                              <button
+                                ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
+                                onClick={() => toggleDropdown(user.id)}
+                                className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[10px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
+                                title="More Options"
+                              >
+                                <MoreVertical className="w-3 h-3" />
+                                <span className="hidden sm:inline">More</span>
+                              </button>
+                              {openDropdownId === user.id && (
+                                <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
+                                  dropdownDirection[user.id] === 'up' 
+                                    ? 'bottom-full mb-1' 
+                                    : 'top-full mt-1'
+                                }`}>
+                                  <div className="py-1">
+                                    <button
+                                      onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
+                                      className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                    >
+                                      <ChevronRight className="w-4 h-4" />
+                                      <span>View</span>
+                                    </button>
                                   </div>
-                                )}
-                              </div>
-                            )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
