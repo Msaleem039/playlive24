@@ -4,7 +4,19 @@ import type { BettingMarket, MarketRow, BettingOption, MarketResponse, OddsRespo
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
 
+/** Labels for 3-runner match odds when building from odds-only (no market runner names). */
 const SOCCER_MATCH_ODDS_LABELS = ['Home', 'Draw', 'Away'] as const
+/** Generic 3-runner labels (e.g. Test cricket: Team A, Team B, Draw). */
+const THREE_RUNNER_LABELS = ['Runner 1', 'Runner 2', 'Draw'] as const
+
+/**
+ * Get display label for a 3-runner market row when using odds-only data.
+ * Soccer: Home / Draw / Away; others (e.g. Test cricket): Runner 1 / Runner 2 / Draw.
+ */
+function getThreeRunnerLabel(idx: number, isSoccer: boolean): string {
+  if (isSoccer) return SOCCER_MATCH_ODDS_LABELS[idx] ?? `Runner ${idx + 1}`
+  return THREE_RUNNER_LABELS[idx] ?? `Runner ${idx + 1}`
+}
 
 export function useMatchMarkets(
   marketsData: any,
@@ -40,11 +52,13 @@ export function useMatchMarkets(
       markets = combinedMarkets
     }
 
-    // Soccer: if we have odds with 3 runners but no matching market (e.g. odds-only response), add a synthetic market so Match Odds can render
-    if (isSoccer && oddsData?.status && Array.isArray(oddsData.data)) {
+    // 3-runner markets: if we have odds with 3 runners but no matching market (e.g. odds-only response),
+    // add a synthetic market so Match Odds can render (soccer Home/Draw/Away, Test cricket Team A/Team B/Draw, etc.)
+    if (oddsData?.status && Array.isArray(oddsData.data)) {
       const existingMarketIds = new Set(markets.map((m: any) => m.marketId))
       oddsData.data.forEach((oddsItem: any) => {
-        if (oddsItem.runners?.length === 3 && !existingMarketIds.has(oddsItem.marketId)) {
+        const runnerCount = oddsItem.runners?.length ?? 0
+        if (runnerCount === 3 && !existingMarketIds.has(oddsItem.marketId)) {
           markets.push({
             marketId: oddsItem.marketId,
             marketName: 'MATCH_ODDS',
@@ -179,15 +193,32 @@ export function useMatchMarkets(
         const marketName = market.marketName || 'MATCH_ODDS'
         const rows: MarketRow[] = []
 
-        // Soccer: support 3-runner match odds (Home, Draw, Away) from odds response - prefer odds when API returns 3 runners
+        // Detect runner count from vendor API: prefer market.runners, fallback to market.odds.runners
         const oddsRunners = market.odds?.runners && Array.isArray(market.odds.runners) ? market.odds.runners : []
-        const hasThreeOddsRunners = isSoccer && oddsRunners.length === 3
         const marketRunners = market.runners && Array.isArray(market.runners) ? market.runners : []
+        const runnerCountFromMarket = marketRunners.length
+        const runnerCountFromOdds = oddsRunners.length
+        const isThreeRunnerMarket = runnerCountFromMarket === 3 || runnerCountFromOdds === 3
 
-        if (hasThreeOddsRunners) {
-          // Build 3 rows from odds (soccer match odds API response format: Home, Draw, Away)
+        // Log market type and runner info for debugging
+        if (marketName.toUpperCase().trim() === 'MATCH_ODDS' || marketName.toUpperCase().trim() === 'MATCH ODDS') {
+          console.log('[Market Transform] MATCH_ODDS runner detection', {
+            marketId: market.marketId,
+            runnerCountFromMarket,
+            runnerCountFromOdds,
+            marketType: isThreeRunnerMarket ? '3-runner' : '2-runner',
+            runnerNames: marketRunners.length > 0
+              ? marketRunners.map((r: MarketRunner) => r.runnerName)
+              : (runnerCountFromOdds === 3 ? getThreeRunnerLabel(0, isSoccer) + ' / ' + getThreeRunnerLabel(1, isSoccer) + ' / ' + getThreeRunnerLabel(2, isSoccer) : 'N/A'),
+            isSoccer
+          })
+        }
+
+        // 3-runner path: build from odds when we have 3 odds runners (soccer Home/Draw/Away, Test cricket or other 3-way)
+        if (runnerCountFromOdds === 3 && marketRunners.length === 0) {
+          // Odds-only (synthetic market): build 3 rows from odds
           oddsRunners.forEach((oddsRunner: OddsRunner, idx: number) => {
-            const label = SOCCER_MATCH_ODDS_LABELS[idx] ?? `Runner ${idx + 1}`
+            const label = getThreeRunnerLabel(idx, isSoccer)
             const backOdds: BettingOption[] = []
             const layOdds: BettingOption[] = []
             if (oddsRunner.ex?.availableToBack && Array.isArray(oddsRunner.ex.availableToBack)) {
@@ -218,11 +249,15 @@ export function useMatchMarkets(
             })
           })
         } else if (marketRunners.length > 0) {
-        // DEBUG: Log all runners and their selectionIds before processing
+        // Process market runners: supports 2-runner (T20/ODI) and 3-runner (Test cricket, soccer) markets.
+        // Only skip "Tie" in cricket 2-runner markets; include "Draw" in 3-runner markets.
+        const runnersCount = market.runners?.length || 0
         console.log('📊 [Market Transform] ========== PROCESSING MARKET RUNNERS ==========', {
           marketName,
           marketId: market.marketId,
-          runnersCount: market.runners?.length || 0,
+          runnersCount,
+          marketType: runnersCount === 3 ? '3-runner (e.g. Draw/Test/Soccer)' : '2-runner',
+          runnerNames: market.runners?.map((r: MarketRunner) => r.runnerName) ?? [],
           isSoccer,
           allRunners: market.runners?.map((r: MarketRunner, idx: number) => ({
             index: idx,
@@ -231,11 +266,11 @@ export function useMatchMarkets(
             selectionIdType: typeof r.selectionId,
             runnerData: r
           })) || [],
-          note: 'These selectionIds MUST match position API keys for positions to display'
+          note: 'SelectionIds must match position API keys for positions to display'
         })
 
-        // Process each runner from the market (for soccer: show all 3 including Draw; for cricket: skip Tie)
         market.runners.forEach((runner: MarketRunner, runnerIndex: number) => {
+          // Skip only "Tie" in cricket (2-runner markets); never skip "Draw" in 3-runner markets
           if (!isSoccer && (runner.runnerName === 'Tie' || runner.runnerName?.toLowerCase() === 'tie')) {
             return
           }

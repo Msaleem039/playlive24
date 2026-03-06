@@ -41,6 +41,10 @@ export default function MarketList({
         // Determine if this is a match odds market or fancy market
         const marketName = (market.name || '').toUpperCase().trim()
         const marketType = (market.gtype || '').toLowerCase()
+
+        // Hide bookmaker markets (gtype match1, mname "Bookmaker")
+        const isBookmaker = marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch' || marketName === 'BOOKMAKER'
+        if (isBookmaker) return null
         // STRICT check: Only "MATCH_ODDS" or "MATCH ODDS" by name, not by type
         const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
         const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'

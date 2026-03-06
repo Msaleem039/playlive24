@@ -127,6 +127,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const [dropdownDirection, setDropdownDirection] = useState<{ [key: string]: 'up' | 'down' }>({})
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const dropdownButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
+  const mobileCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [changePassword] = useChangePasswordMutation()
   const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
   const [updateSubordinate, { isLoading: isUpdatingSubordinate }] = useUpdateSubordinateMutation()
@@ -146,6 +147,19 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [openDropdownId])
+
+  // Scroll expanded mobile card into view so "more detail" is visible (especially for last user)
+  useEffect(() => {
+    if (expandedMobileUserId && mobileCardRefs.current[expandedMobileUserId]) {
+      const el = mobileCardRefs.current[expandedMobileUserId]
+      if (el) {
+        const timer = setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' })
+        }, 150)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [expandedMobileUserId])
 
   // Format balance helper
   const formatBalance = (balance: number | string | undefined | null) => {
@@ -480,7 +494,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden px-2 sm:px-0">
+      <div className="bg-white rounded-lg shadow-sm overflow-x-hidden overflow-y-visible px-2 sm:px-0 md:overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12 px-4">
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-[#00A66E]" />
@@ -500,11 +514,15 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         ) : (
           <>
           {/* Mobile: card list – show name + More button; expand to show details on click */}
-          <div className="md:hidden space-y-4 p-3 pb-5">
+          <div className="md:hidden space-y-4 p-3 pb-24 min-h-0 overflow-visible">
             {displayUsers.map((user: UserData, index) => {
               const isExpanded = expandedMobileUserId === user.id
               return (
-              <div key={user.id} className={`rounded-lg border border-gray-200 shadow-sm overflow-hidden ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+              <div
+                key={user.id}
+                ref={(el) => { mobileCardRefs.current[user.id] = el }}
+                className={`rounded-lg border border-gray-200 shadow-sm overflow-visible ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+              >
                 <div className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
@@ -522,24 +540,24 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                 </div>
                 {isExpanded && (
                   <>
-                    <div className="px-4 pb-4 grid grid-cols-2 gap-3 text-sm border-t border-gray-100 pt-3">
-                      <div><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600">${formatBalance(user.plCash || 0)}</span></div>
-                      <div><span className="text-gray-500">Balance:</span> <span className="font-semibold">${formatBalance(user.balance)}</span></div>
-                      <div><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600">${formatBalance(user.liability || 0)}</span></div>
-                      <div><span className="text-gray-500">Available:</span> <span className="font-semibold">${formatBalance(user.availableBalance || 0)}</span></div>
+                    <div className="px-4 pb-3 grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm border-t border-gray-100 pt-3">
+                      <div className="min-w-0"><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600 break-all">${formatBalance(user.plCash || 0)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Balance:</span> <span className="font-semibold break-all">${formatBalance(user.balance)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600 break-all">${formatBalance(user.liability || 0)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Available:</span> <span className="font-semibold break-all">${formatBalance(user.availableBalance || 0)}</span></div>
                     </div>
-                    <div className="px-4 pb-4 flex flex-wrap items-center gap-2">
-                      <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-10 h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50" title={user.isActive === false ? "Activate" : "Deactivate"}>
-                        {user.isActive !== false ? <div className="w-full h-full bg-green-500 rounded flex items-center justify-center"><Check className="w-5 h-5 text-white" /></div> : <div className="w-full h-full bg-red-500 rounded flex items-center justify-center"><X className="w-5 h-5 text-white" /></div>}
+                    <div className="px-4 pb-5 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-9 h-9 sm:w-10 sm:h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50 touch-manipulation" title={user.isActive === false ? "Activate" : "Deactivate"}>
+                        {user.isActive !== false ? <div className="w-full h-full bg-green-500 rounded flex items-center justify-center"><Check className="w-4 h-4 sm:w-5 sm:h-5 text-white" /></div> : <div className="w-full h-full bg-red-500 rounded flex items-center justify-center"><X className="w-4 h-4 sm:w-5 sm:h-5 text-white" /></div>}
                       </button>
-                      <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-green-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CD</button>
-                      <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-3 py-2.5 bg-red-600 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">CW</button>
-                      <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-3 py-2.5 bg-orange-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Log</button>
-                      <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-[#00A66E] text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">US</button>
-                      <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-3 py-2.5 bg-purple-500 text-white text-xs font-bold rounded min-h-[40px] touch-manipulation">Edit</button>
+                      <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-green-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">CD</button>
+                      <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-red-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">CW</button>
+                      <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Log</button>
+                      <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-[#00A66E] text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">US</button>
+                      <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-purple-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Edit</button>
                       <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                        <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-3 py-2.5 bg-blue-500 text-white text-xs font-bold rounded min-h-[40px] flex items-center gap-1 touch-manipulation">
-                          <MoreVertical className="w-4 h-4" /> More
+                        <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-blue-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] flex items-center gap-1 touch-manipulation">
+                          <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">More</span>
                         </button>
                         {openDropdownId === user.id && (
                           <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
