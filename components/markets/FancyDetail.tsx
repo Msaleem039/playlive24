@@ -33,6 +33,10 @@ export default function FancyDetail({
   onBetSelect,
   positions
 }: FancyDetailProps) {
+  const marketType = (market.gtype || '').toLowerCase()
+  const isBookmaker = marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch'
+  if (isBookmaker) return null
+
   return (
     <div 
       className={`border-b border-gray-200 relative ${marketIndex === 0 ? 'border-t-0' : ''}`}

@@ -473,28 +473,29 @@ export function useMatchMarkets(
           const backOdds: BettingOption[] = []
           const layOdds: BettingOption[] = []
 
-          // Separate back and lay odds, sort them appropriately
+          // Separate back and lay odds, sort them appropriately (otype may be 'back'/'lay' or 'Back'/'Lay')
           const sortedOdds = [...(section.odds || [])].sort((a: any, b: any) => {
-            // For back odds, sort descending (highest first - better for bettor)
-            // For lay odds, sort ascending (lowest first - lower liability)
-            if (a.otype === b.otype) {
-              return a.otype === 'back' ? b.odds - a.odds : a.odds - b.odds
+            const aType = (a.otype || '').toString().toLowerCase()
+            const bType = (b.otype || '').toString().toLowerCase()
+            if (aType === bType) {
+              return aType === 'back' ? b.odds - a.odds : a.odds - b.odds
             }
             return 0
           })
 
           sortedOdds.forEach((odd: any) => {
+            const otype = (odd.otype || '').toString().toLowerCase()
             const formattedOdd = odd.odds === 0 ? '0' : odd.odds.toString()
             const formattedSize = odd.size >= 1000 
               ? `${(odd.size / 1000).toFixed(1)}k` 
               : odd.size === 0 ? '0' : odd.size.toFixed(2)
 
-            if (odd.otype === 'back') {
+            if (otype === 'back') {
               backOdds.push({
                 odds: formattedOdd,
                 amount: formattedSize
               })
-            } else if (odd.otype === 'lay') {
+            } else if (otype === 'lay') {
               layOdds.push({
                 odds: formattedOdd,
                 amount: formattedSize
@@ -503,8 +504,14 @@ export function useMatchMarkets(
           })
 
           // Only keep the primary Back/Lay columns (best available odds)
-          const normalizedBackOdds = backOdds.slice(0, BACK_COLUMNS)
-          const normalizedLayOdds = layOdds.slice(0, LAY_COLUMNS)
+          // For back: take best (highest) odds; for lay: prefer first non-zero so lay column is visible
+          const normalizedBackOdds = backOdds.filter((o) => o.odds !== '0').length > 0
+            ? backOdds.filter((o) => o.odds !== '0').slice(0, BACK_COLUMNS)
+            : backOdds.slice(0, BACK_COLUMNS)
+          const bestLay = layOdds.find((o) => o.odds !== '0' && o.amount !== '0')
+          const normalizedLayOdds = bestLay
+            ? [bestLay, ...layOdds.filter((o) => o !== bestLay)].slice(0, LAY_COLUMNS)
+            : layOdds.slice(0, LAY_COLUMNS)
 
           while (normalizedBackOdds.length < BACK_COLUMNS) {
             normalizedBackOdds.push({ odds: '0', amount: '0' })

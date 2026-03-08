@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2, Check, X, MoreVertical, Eye, ChevronRight, ChevronLeft, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2, Check, X, MoreVertical, Eye, ChevronRight, ChevronLeft, Trash2, Ban, CircleCheck } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
 import { AddClientModal, AllUsersModal } from "./index"
@@ -12,7 +12,7 @@ import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import ClientAccountStatementModal from "@/components/modal/ClientAccountStatementModal"
 import EditUserModal from "@/components/modal/EditUserModal"
 import HierarchicalNavigation from "@/components/hierarchical/HierarchicalNavigation"
-import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useDeleteBetMutation, useUpdateSubordinateMutation } from "@/app/services/Api"
+import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useSetBettingEnabledMutation, useDeleteBetMutation, useUpdateSubordinateMutation } from "@/app/services/Api"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
 import { toast } from "sonner"
@@ -39,6 +39,7 @@ interface UserData {
   parentId: string
   commissionPercentage: number
   isActive?: boolean
+  bettingEnabled?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -47,6 +48,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const authUser = useSelector(selectCurrentUser)
   const currentRole = (authUser?.role as string) || ''
   const isSuperAdmin = ['SUPER_ADMIN', 'SUPERADMIN'].includes(currentRole.toUpperCase()) || (currentRole.toUpperCase().includes('SUPER') && currentRole.toUpperCase().includes('ADMIN'))
+  const isAgent = currentRole.toUpperCase() === 'AGENT'
 
   const [searchTerm, setSearchTerm] = useState("")
   const [showRows, setShowRows] = useState(25)
@@ -130,6 +132,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const mobileCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [changePassword] = useChangePasswordMutation()
   const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
+  const [setBettingEnabled, { isLoading: isSettingBetting }] = useSetBettingEnabledMutation()
   const [updateSubordinate, { isLoading: isUpdatingSubordinate }] = useUpdateSubordinateMutation()
 
   // Close dropdown when clicking outside
@@ -367,6 +370,28 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     }
   }
 
+  const handleSetBettingEnabled = async (userId: string, bettingEnabled: boolean, includeDownline: boolean) => {
+    setOpenDropdownId(null)
+    try {
+      await setBettingEnabled({
+        userId,
+        bettingEnabled,
+        includeDownline,
+      }).unwrap()
+      toast.success(bettingEnabled ? 'Betting enabled successfully' : 'Betting disabled successfully')
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.error?.data?.message ||
+        error?.message ||
+        (bettingEnabled ? "Failed to enable betting." : "Failed to disable betting.")
+      toast.error(bettingEnabled ? "Enable betting failed" : "Disable betting failed", {
+        description: errorMessage,
+      })
+    }
+  }
+
   const handleViewSubordinates = (userId: string, userName: string) => {
     setSubordinatesModal({
       isOpen: true,
@@ -553,20 +578,27 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                       <button onClick={() => handleDepositCash(user.name || user.email || "", user.id, user.email)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-green-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">CD</button>
                       <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-red-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">CW</button>
                       <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Log</button>
-                      <button onClick={() => { handleUserDetails(user.name || user.email || "", user.id, user.email); setOpenDropdownId(null) }} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-[#00A66E] text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">US</button>
+                      {!isAgent && (
+                        <>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, true, true) }} disabled={isSettingBetting} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-green-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation disabled:opacity-50">Enable</button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, false, false) }} disabled={isSettingBetting} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-red-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation disabled:opacity-50">Disable</button>
+                        </>
+                      )}
                       <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-purple-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Edit</button>
-                      <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                        <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-blue-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] flex items-center gap-1 touch-manipulation">
-                          <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">More</span>
-                        </button>
-                        {openDropdownId === user.id && (
-                          <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
-                            <button onClick={() => handleViewSubordinates(user.id, user.name || user.email || "User")} className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                              <ChevronRight className="w-4 h-4" /> View
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {!isAgent && (
+                        <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                          <button ref={(el) => { dropdownButtonRefs.current[user.id] = el }} onClick={() => toggleDropdown(user.id)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-blue-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] flex items-center gap-1 touch-manipulation">
+                            <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">More</span>
+                          </button>
+                          {openDropdownId === user.id && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 py-1">
+                              <button type="button" onClick={() => handleViewSubordinates(user.id, user.name || user.email || "User")} className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                <ChevronRight className="w-4 h-4" /> View
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -696,16 +728,28 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                             >
                               Log
                             </button>
-                            <button
-                              onClick={() => {
-                                handleUserDetails(user.name || user.email || '', user.id, user.email)
-                                setOpenDropdownId(null)
-                              }}
-                              className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-[#00A66E] text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-[#008a5a] whitespace-nowrap transition-colors"
-                              title="User Details"
-                            >
-                              US
-                            </button>
+                            {!isAgent && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, true, true) }}
+                                  disabled={isSettingBetting}
+                                  className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-green-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-green-700 whitespace-nowrap transition-colors disabled:opacity-50"
+                                  title="Enable betting"
+                                >
+                                  Enable
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, false, false) }}
+                                  disabled={isSettingBetting}
+                                  className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-red-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-red-700 whitespace-nowrap transition-colors disabled:opacity-50"
+                                  title="Disable betting"
+                                >
+                                  Disable
+                                </button>
+                              </>
+                            )}
                             <button
                               onClick={() => {
                                 handleEditUser(user)
@@ -716,36 +760,37 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                             >
                               Edit
                             </button>
-                            
-                            {/* More button + dropdown: visible for all users */}
-                            <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
-                              <button
-                                ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
-                                onClick={() => toggleDropdown(user.id)}
-                                className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[10px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
-                                title="More Options"
-                              >
-                                <MoreVertical className="w-3 h-3" />
-                                <span className="hidden sm:inline">More</span>
-                              </button>
-                              {openDropdownId === user.id && (
-                                <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
-                                  dropdownDirection[user.id] === 'up' 
-                                    ? 'bottom-full mb-1' 
-                                    : 'top-full mt-1'
-                                }`}>
-                                  <div className="py-1">
-                                    <button
-                                      onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
-                                      className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
-                                    >
-                                      <ChevronRight className="w-4 h-4" />
-                                      <span>View</span>
-                                    </button>
+                            {!isAgent && (
+                              <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                                <button
+                                  ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
+                                  onClick={() => toggleDropdown(user.id)}
+                                  className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-blue-500 text-white text-[10px] sm:text-[10px] font-bold rounded hover:bg-blue-600 whitespace-nowrap transition-colors flex items-center gap-1"
+                                  title="More Options"
+                                >
+                                  <MoreVertical className="w-3 h-3" />
+                                  <span className="hidden sm:inline">More</span>
+                                </button>
+                                {openDropdownId === user.id && (
+                                  <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
+                                    dropdownDirection[user.id] === 'up' 
+                                      ? 'bottom-full mb-1' 
+                                      : 'top-full mt-1'
+                                  }`}>
+                                    <div className="py-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleViewSubordinates(user.id, user.name || user.email || 'User')}
+                                        className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                      >
+                                        <ChevronRight className="w-4 h-4" />
+                                        <span>View</span>
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>

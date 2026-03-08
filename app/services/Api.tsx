@@ -39,6 +39,15 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['User'] as any,
     }),
 
+    setBettingEnabled: builder.mutation({
+      query: ({ userId, bettingEnabled, includeDownline }) => ({
+        url: API_END_POINTS.setBettingEnabled.replace(":userId", userId),
+        method: "PATCH",
+        body: { bettingEnabled, includeDownline },
+      }),
+      invalidatesTags: ['User'] as any,
+    }),
+
     updateSubordinate: builder.mutation({
       query: ({ clientId, ...data }) => ({
         url: API_END_POINTS.updateSubordinate.replace(":clientId", clientId),
@@ -531,6 +540,22 @@ export const api = SplitApiSettings.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    /////////////////////////////<===MATCHES BY COMPETITION (cricketid/matches?sportId=&competitionId=)===>//////////////////////////////
+    getMatchesByCompetition: builder.query({
+      query: ({ sportId, competitionId }: { sportId: number | string; competitionId: string }) => ({
+        url: `${API_END_POINTS.getMatchesByCompetition}?sportId=${encodeURIComponent(String(sportId))}&competitionId=${encodeURIComponent(competitionId)}`,
+        method: "GET",
+      }),
+    }),
+
+    /////////////////////////////<===SERIES (competitions list: cricketid/series?sportId=1|2)===>//////////////////////////////
+    getSeries: builder.query({
+      query: (sportId: number | string) => ({
+        url: `${API_END_POINTS.getSeries}?sportId=${encodeURIComponent(String(sportId))}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -541,6 +566,7 @@ export const {
     useRegisterMutation,
     useChangePasswordMutation,
     useToggleUserStatusMutation,
+    useSetBettingEnabledMutation,
     useUpdateSubordinateMutation,
     useTopupBalanceMutation,
     useTopDownBalanceMutation,
@@ -602,6 +628,12 @@ export const {
 
     /////////////////////////////<===TENNIS MATCHES===>//////////////////////////////
     useGetTennisMatchesQuery,
+
+    /////////////////////////////<===MATCHES BY COMPETITION===>//////////////////////////////
+    useGetMatchesByCompetitionQuery,
+
+    /////////////////////////////<===SERIES (competitions)===>//////////////////////////////
+    useGetSeriesQuery,
 
     /////////////////////////////<===COMPLAINT===>//////////////////////////////
     useSubmitComplaintMutation,

@@ -107,22 +107,13 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
 
-        <div className="py-1.5 sm:py-2 overflow-hidden">
-          <div className="flex animate-marquee-slow group-hover:[animation-play-state:paused]">
-            {/* First instance */}
-            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-semibold tracking-wide text-white whitespace-nowrap">
-              {newsBarText}
-            </div>
-            {/* Duplicate for seamless loop */}
-            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-semibold tracking-wide text-white whitespace-nowrap" aria-hidden="true">
-              {newsBarText}
-            </div>
-            {/* Third instance for extra smoothness on wide screens */}
-            <div className="flex-shrink-0 px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-semibold tracking-wide text-white whitespace-nowrap" aria-hidden="true">
-              {newsBarText}
-            </div>
-          </div>
-        </div>
+      <div className="py-1.5 sm:py-2 overflow-hidden">
+  <div className="whitespace-nowrap animate-marquee-slow group-hover:[animation-play-state:paused]">
+    <span className="px-8 text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] font-semibold tracking-wide text-white">
+      {newsBarText}
+    </span>
+  </div>
+</div>
       </div>
       {/* Nav bar */}
       <div className="bg-[#00A66E]">

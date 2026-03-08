@@ -182,15 +182,15 @@ body {
 /* Professional marquee for dashboard header */
 @keyframes marquee-slow {
   0% {
-    transform: translateX(0);
+    transform: translateX(100%);
   }
   100% {
-    transform: translateX(-33.333%);
+    transform: translateX(-100%);
   }
 }
+
 .animate-marquee-slow {
-  animation: marquee-slow 20s linear infinite;
-  will-change: transform;
+  animation: marquee-slow 22s linear infinite;
 }
 
 /* Yellow blink animation for odds changes */

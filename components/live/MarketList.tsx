@@ -35,16 +35,18 @@ export default function MarketList({
   onRefresh,
   positionsByMarketType
 }: MarketListProps) {
+  const isBookmakerType = (gtype: string) => {
+    const t = (gtype || '').toLowerCase()
+    return t === 'match1' || t === 'bookmaker' || t === 'bookmatch'
+  }
+  const marketsToShow = markets.filter((m) => !isBookmakerType(m.gtype || ''))
+
   return (
     <>
-      {markets.map((market, marketIndex) => {
+      {marketsToShow.map((market, marketIndex) => {
         // Determine if this is a match odds market or fancy market
         const marketName = (market.name || '').toUpperCase().trim()
         const marketType = (market.gtype || '').toLowerCase()
-
-        // Hide bookmaker markets (gtype match1, mname "Bookmaker")
-        const isBookmaker = marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch' || marketName === 'BOOKMAKER'
-        if (isBookmaker) return null
         // STRICT check: Only "MATCH_ODDS" or "MATCH ODDS" by name, not by type
         const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
         const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
@@ -80,26 +82,26 @@ export default function MarketList({
               const willMatch = positionValue !== undefined || positionValueAlt !== undefined
               
               // Log match prediction
-              if (willMatch) {
-                console.log('✅ [MarketList] PREDICTED MATCH for row:', {
-                  team: r.team,
-                  rowSelectionId,
-                  rowSelectionIdStr,
-                  positionValue,
-                  positionValueAlt,
-                  matchedKey: positionValue !== undefined ? rowSelectionIdStr : String(rowSelectionIdNum)
-                })
-              } else {
-                console.warn('⚠️ [MarketList] PREDICTED NO MATCH for row:', {
-                  team: r.team,
-                  rowSelectionId,
-                  rowSelectionIdStr,
-                  availableKeys: positionsForMarket ? Object.keys(positionsForMarket) : [],
-                  reason: positionsForMarket && Object.keys(positionsForMarket).length > 0
-                    ? `Row selectionId "${rowSelectionIdStr}" not found in position keys: ${Object.keys(positionsForMarket).join(', ')}`
-                    : 'No positions available'
-                })
-              }
+              // if (willMatch) {
+              //   console.log('✅ [MarketList] PREDICTED MATCH for row:', {
+              //     team: r.team,
+              //     rowSelectionId,
+              //     rowSelectionIdStr,
+              //     positionValue,
+              //     positionValueAlt,
+              //     matchedKey: positionValue !== undefined ? rowSelectionIdStr : String(rowSelectionIdNum)
+              //   })
+              // } else {
+              //   console.warn('⚠️ [MarketList] PREDICTED NO MATCH for row:', {
+              //     team: r.team,
+              //     rowSelectionId,
+              //     rowSelectionIdStr,
+              //     availableKeys: positionsForMarket ? Object.keys(positionsForMarket) : [],
+              //     reason: positionsForMarket && Object.keys(positionsForMarket).length > 0
+              //       ? `Row selectionId "${rowSelectionIdStr}" not found in position keys: ${Object.keys(positionsForMarket).join(', ')}`
+              //       : 'No positions available'
+              //   })
+              // }
               
               return {
                 team: r.team,
@@ -123,16 +125,6 @@ export default function MarketList({
                 } : null
               }
             })
-          })
-        } else if (marketType === 'match1' || marketType === 'bookmaker' || marketType === 'bookmatch') {
-          // Bookmaker: Same normalized structure
-          positionsForMarket = positionsByMarketType.bookmaker
-          
-          console.log('[Positions] Passing to Bookmaker component:', {
-            marketName: market.name,
-            marketIndex,
-            positions: positionsForMarket,
-            positionsKeys: positionsForMarket ? Object.keys(positionsForMarket) : []
           })
         }
         // Fancy markets: Do NOT pass positions (positions only in MatchOdds)
@@ -167,7 +159,7 @@ export default function MarketList({
           )
         }
 
-        // Fallback to MatchOdds for other markets (bookmaker, 1st Innings, Completed, etc.)
+        // Fallback to MatchOdds for other markets (1st Innings, Completed, etc.). Bookmaker is excluded above.
         return (
           <MatchOdds
             key={marketIndex}

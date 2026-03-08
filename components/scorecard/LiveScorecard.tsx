@@ -247,18 +247,15 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             {data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
-                  const ballUpper = ball.toUpperCase().trim()
-                  const ballOriginal = ball.trim()
+                  const ballUpper = (ball || '').toString().toUpperCase().trim()
+                  const ballOriginal = (ball || '').toString().trim()
                   
-                  // Detect ball type - check in order of priority
-                  // 1. Wide ball (Wd, Wd1, Wd2, etc.) - starts with "WD" or contains "WD"
-                  const isWide = ballUpper.startsWith('WD') || ballUpper.includes('WD')
-                  
-                  // 2. No ball (Nb, Nb1, Nb2, etc.) - starts with "NB" or contains "NB"
+                  // 1. Wicket: only single letter "W" (API: "W" = wicket)
+                  const isWicket = ballUpper === 'W'
+                  // 2. Wide: "Wd", "WD", "Wd1", "Wd2" etc. (must have W+d so "W" alone is not wide)
+                  const isWide = !isWicket && (ballUpper.startsWith('WD') || ballUpper.includes('WD'))
+                  // 3. No ball (Nb, Nb1, Nb2, etc.)
                   const isNoBall = ballUpper.startsWith('NB') || ballUpper.includes('NB')
-                  
-                  // 3. Wicket (W, W1, W2, etc.) - exact "W" or starts with "W" but not "WD"
-                  const isWicket = ballUpper === 'W' || (ballUpper.startsWith('W') && !isWide)
                   
                   // Extract numeric value for runs (remove W, WD, NB, D, etc.)
                   let ballValue = ballUpper

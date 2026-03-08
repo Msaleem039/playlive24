@@ -20,10 +20,18 @@ interface MatchOddsProps {
   }) => void
   onRefresh?: () => void
   positions?: Record<string, number> // selectionId -> net (final P/L if that runner wins)
+  /** When true (e.g. bookmaker markets), display odds and amount divided by 100. Bet placement still uses original values. */
+  displayOddsDivideBy100?: boolean
 }
 
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
+
+function displayValue(value: string | number, divideBy100: boolean): string {
+  const num = typeof value === 'number' ? value : parseFloat(String(value))
+  if (divideBy100 && !isNaN(num)) return (num / 100).toFixed(2)
+  return String(value)
+}
 
 export default function MatchOdds({
   market,
@@ -32,7 +40,8 @@ export default function MatchOdds({
   isMobile,
   onBetSelect,
   onRefresh,
-  positions
+  positions,
+  displayOddsDivideBy100 = false
 }: MatchOddsProps) {
 
   return (
@@ -209,8 +218,8 @@ export default function MatchOdds({
                             : 'bg-blue-300 hover:bg-blue-100 cursor-pointer border border-blue-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-bold text-[12px]  text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px]  text-gray-900 leading-tight">{displayValue(option.odds, displayOddsDivideBy100)}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{displayValue(option.amount, displayOddsDivideBy100)}</div>
                       </div>
                     </td>
                   )
@@ -244,8 +253,8 @@ export default function MatchOdds({
                             : 'bg-pink-200 hover:bg-pink-100 cursor-pointer border border-pink-200 hover:border-pink-300 hover:shadow-sm'
                         }`}
                       >
-                        <div className="font-bold text-[12px] sm:text-xs text-gray-900 leading-tight">{option.odds}</div>
-                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{option.amount}</div>
+                        <div className="font-bold text-[12px] sm:text-xs text-gray-900 leading-tight">{displayValue(option.odds, displayOddsDivideBy100)}</div>
+                        <div className="text-[12px] text-gray-600 leading-tight mt-0.5">{displayValue(option.amount, displayOddsDivideBy100)}</div>
                       </div>
                     </td>
                   )
