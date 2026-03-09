@@ -60,7 +60,6 @@ const roleNavigationItems = {
     'User List',
     'My Market',
     'Casino Analysis',
-    'Game Controls',
     'Chip Summary',
     'Game List',
     'Detail Report'

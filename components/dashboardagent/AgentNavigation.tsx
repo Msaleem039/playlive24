@@ -1,12 +1,16 @@
+'use client'
+
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/app/store/slices/authSlice'
 
 interface AgentNavigationProps {
   activeTab?: string
   onTabChange?: (tab: string) => void
 }
 
-const navigationItems = [
+const allNavigationItems = [
   'Dashboard',
   'User List',
   'Matches',
@@ -19,6 +23,11 @@ const navigationItems = [
 ]
 
 export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentNavigationProps) {
+  const authUser = useSelector(selectCurrentUser)
+  const currentRole = (authUser?.role as string) || ''
+  const isSuperAdmin = ['SUPER_ADMIN', 'SUPERADMIN'].includes(currentRole.toUpperCase()) || (currentRole.toUpperCase().includes('SUPER') && currentRole.toUpperCase().includes('ADMIN'))
+  const navigationItems = isSuperAdmin ? allNavigationItems : allNavigationItems.filter((item) => item !== 'Game Controls')
+
   return (
     <>
       {/* Main Navigation Header */}
