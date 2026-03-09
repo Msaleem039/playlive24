@@ -70,15 +70,17 @@ export default function ClientAccountStatementModal({
 
   // Extract user info, statement (transactions), and bet history from response
   // Supports new format: { success, user: { id, openingBalance }, statement, pagination }
+  // API returns array of [{ success, user, statement, pagination }, ...] - find the one matching userId
   const { userInfo, transactions } = useMemo(() => {
     if (!statementData || !userId) return { userInfo: null, transactions: [] }
     
-    // New format: { success, user, statement, pagination } or array of [{ success, user, statement, pagination }]
-    const raw = Array.isArray(statementData) ? statementData[0] : statementData
-    const data = raw?.data || raw
+    // New format: array of [{ success, user, statement, pagination }] - find matching user
+    const items = Array.isArray(statementData) ? statementData : (statementData?.data && Array.isArray(statementData.data) ? statementData.data : [statementData])
+    const resolved = items.find((item: any) => (item?.user?.id ?? item?.data?.user?.id) === userId)
+    const data = resolved?.data || resolved
     
-    if (data?.success && data?.user && Array.isArray(data?.statement)) {
-      const u = data.user
+    if (resolved?.success && resolved?.user && Array.isArray(resolved?.statement)) {
+      const u = resolved.user
       if (u.id !== userId) return { userInfo: null, transactions: [] }
       
       return {
@@ -89,7 +91,7 @@ export default function ClientAccountStatementModal({
           openingBalance: u.openingBalance,
           balance: u.openingBalance
         },
-        transactions: data.statement
+        transactions: resolved.statement
       }
     }
     
