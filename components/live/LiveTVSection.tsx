@@ -140,25 +140,12 @@ export default function LiveTVSection({
             </div>
           )}
           
-          {/* Video Overlay - Score and Match Info */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3 text-white">
-            {/* Current Score Bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm font-semibold gap-1">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span className="truncate">{(scorecard?.team1?.shortName || matchData?.ename?.split(/\s+v\s+/i)[0] || 'Team A')?.toUpperCase()}</span>
-                <span>{scorecard?.team1?.score || '0-0'}</span>
-                <span className="text-[5px] sm:text-xs font-normal text-gray-300">{scorecard?.team1?.overs || '0'}</span>
-              </div>
-              <div className="text-[5px] sm:text-xs text-gray-300 truncate">
-                {(scorecard?.team2?.shortName || matchData?.ename?.split(/\s+v\s+/i)[1] || 'Team B')?.toUpperCase()}
-              </div>
-            </div>
-          </div>
+      
           
           {/* Stream Branding (Top Right) */}
-          <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-semibold">
+          {/* <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-semibold">
             CANAL+ SPORT 360
-          </div>
+          </div> */}
         </div>
       )}
     </div>
