@@ -1,5 +1,5 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+//export const BASE_URL = 'https://api.playlive24.com'
+export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
 
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
@@ -44,7 +44,8 @@ export const API_END_POINTS = {
     cricketMatchOdds: `${BASE_URL}/cricketid/odds`,
     cricketBookmakerFancy: `${BASE_URL}/cricketid/bookmaker-fancy`,
     // cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventId`,
-    cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventIdNew`,
+    // cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventIdNew`,
+    cricketScorecard: `${BASE_URL}/cricketid/score`,
     getAllSports: `${BASE_URL}/cricketid/sports`,
     // loginUser: BASE_URL + "api/auth/login",
     getUser: `${BASE_URL}/auth/subordinates`,

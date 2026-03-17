@@ -265,7 +265,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
             className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
             <span className="md:hidden text-yellow-400 font-bold">
-              <Image src="/images/logop.png" alt="PlayLIve" width={60} height={60} className="w-15 h-15" />
+              <Image src="/images/logo1.jpeg" alt="PlayLIve" width={60} height={60} className="w-15 h-15" />
             </span>
             <span className="hidden md:block">
               <Logo/>

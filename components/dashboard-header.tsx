@@ -3,6 +3,7 @@ import { useMemo, useState } from "react"
 import { Radio } from "lucide-react"
 import { Sidebar } from "@/components/sidebar"
 import DashboardTopBar from "./dashboard-top-bar"
+import ComplaintModal from "./modal/ComplaintModal"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
 import { useGetNewsBarQuery } from "@/app/services/Api"
@@ -33,6 +34,7 @@ const TABS = [
 export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardHeaderProps) {
   const active = useMemo(() => selectedTab, [selectedTab])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false)
   
   // WebSocket for live cricket updates
   const {
@@ -101,7 +103,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
     <div className="sticky top-0 z-50">
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
-      {/* Marquee */}
+      {/* Marquee + Complain button */}
       <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-y border-gray-700/30">
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"></div>
@@ -110,13 +112,22 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
 
- 
-        <Marquee className="whitespace-nowrap">
-          <span className="px-8 text-[0.7rem] sm:text-[0.70rem] md:text-[0.8rem] font-semibold tracking-wide text-white">
-            {newsBarText}
-          </span>
-        </Marquee>
-      
+        <div className="relative flex items-center justify-between py-1 sm:py-1 px-2 sm:px-4">
+          <div className="flex-1 overflow-hidden">
+            <Marquee className="whitespace-nowrap">
+              <span className="px-8 text-[0.7rem] sm:text-[0.70rem] md:text-[0.8rem] font-semibold tracking-wide text-white">
+                {newsBarText}
+              </span>
+            </Marquee>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsComplaintModalOpen(true)}
+            className="ml-3 px-3 sm:px-2 py-1 rounded-full border border-red-400 bg-red-500/90 hover:bg-red-600 text-[0.65rem] sm:text-xs font-semibold tracking-wide text-white whitespace-nowrap shadow-sm"
+          >
+            COMPLAIN
+          </button>
+        </div>
       </div>
       {/* Nav bar */}
       <div className="bg-[#00A66E]">
@@ -157,6 +168,12 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
           </ul>
         </nav>
       </div>
+
+      {/* Complaint modal */}
+      <ComplaintModal
+        isOpen={isComplaintModalOpen}
+        onClose={() => setIsComplaintModalOpen(false)}
+      />
 
       {/* Sidebar */}
       <Sidebar
