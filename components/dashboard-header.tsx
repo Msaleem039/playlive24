@@ -104,18 +104,12 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee + Complain button */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-y border-gray-700/30">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none"></div>
-        
-        {/* Gradient fade overlays for smooth edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-900 via-gray-900/80 to-transparent z-10 pointer-events-none"></div>
+      <div className="relative overflow-hidden bg-gray-900 border-y border-gray-700/40">
 
-        <div className="relative flex items-center justify-between py-1 sm:py-1 px-2 sm:px-4">
+        <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4">
           <div className="flex-1 overflow-hidden">
             <Marquee className="whitespace-nowrap">
-              <span className="px-8 text-[0.7rem] sm:text-[0.70rem] md:text-[0.8rem] font-semibold tracking-wide text-white">
+              <span className="px-4 text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] font-semibold tracking-wide text-white">
                 {newsBarText}
               </span>
             </Marquee>
@@ -123,7 +117,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
           <button
             type="button"
             onClick={() => setIsComplaintModalOpen(true)}
-            className="ml-3 px-3 sm:px-2 py-1 rounded-full border border-red-400 bg-red-500/90 hover:bg-red-600 text-[0.65rem] sm:text-xs font-semibold tracking-wide text-white whitespace-nowrap shadow-sm"
+            className="ml-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-2 ring-red-300/80 hover:ring-red-200 transition-colors"
           >
             COMPLAIN
           </button>
