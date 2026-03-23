@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
+import { useGetTabBannersQuery } from "@/app/services/Api"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
@@ -23,6 +24,8 @@ export default function CricketTab() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
+  const { data: tabBannersData } = useGetTabBannersQuery(undefined)
+  const bannerUrl = (tabBannersData as any)?.cricket?.imageUrl as string | undefined
   
   // WebSocket for live updates - only on client
   const {
@@ -390,7 +393,7 @@ export default function CricketTab() {
 
 
       {/* Sport Header */}
-      <div className="bg-[#00A66E] text-white px-2 sm:px-4 py-1 font-semibold flex items-center justify-between gap-2">
+      <div className="bg-[#005461] text-white px-2 sm:px-4 py-1 font-semibold flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           <span className="text-[0.7rem] sm:text-[0.75rem]">Cricket</span>
           {/* Live Count with Signal Icon */}
@@ -428,6 +431,15 @@ export default function CricketTab() {
           </button>
         </div>
       </div>
+      {bannerUrl && (
+  <div className="w-full border-b border-gray-200 bg-black/5">
+    <img
+      src={bannerUrl}
+      alt="Cricket banner"
+      className="w-full h-auto object-cover"
+    />
+  </div>
+)}
 
       {/* Sub-tabs for Live and Upcoming */}
       <div className="bg-gray-100 border-b border-gray-200">

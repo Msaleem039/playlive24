@@ -208,3 +208,20 @@ body {
 .animate-blink-3colors {
   animation: blink-3colors 1.5s ease-in-out infinite;
 }
+
+/* Global brand color override:
+   Force old green backgrounds to #297370 with white text */
+[class*="bg-[#00A66E]"],
+[class*="bg-[#008f5a]"],
+[class*="from-[#00A66E]"],
+[class*="to-[#008f5a]"] {
+  background-color: #297370 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+[class*="hover:bg-[#00A66E]"]:hover,
+[class*="hover:bg-[#008f5a]"]:hover {
+  background-color: #297370 !important;
+  color: #ffffff !important;
+}

@@ -479,6 +479,21 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['NewsBar'] as any,
     }),
 
+    /////////////////////////////<===TAB BANNERS===>//////////////////////////////
+    getTabBanners: builder.query({
+      query: () => ({
+        url: API_END_POINTS.getTabBanners,
+        method: "GET",
+      }),
+    }),
+    uploadTabBanner: builder.mutation({
+      query: ({ tab, formData }: { tab: string; formData: FormData }) => ({
+        url: API_END_POINTS.uploadTabBanner.replace(":tab", encodeURIComponent(tab.toLowerCase())),
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
     /////////////////////////////<===POSITIONS QUERIES===>//////////////////////////////
     getMatchPositions: builder.query({
       query: (params?: { matchId?: string; eventId?: string }) => {
@@ -642,5 +657,7 @@ export const {
     /////////////////////////////<===NEWS BAR===>//////////////////////////////
     useGetNewsBarQuery,
     useUpdateNewsBarMutation,
+    useGetTabBannersQuery,
+    useUploadTabBannerMutation,
     
 } = api;

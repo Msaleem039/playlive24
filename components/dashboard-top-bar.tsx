@@ -245,8 +245,8 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   }
 
   return (
-    <div className="bg-[#334443]">
-      <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-1 sm:gap-2">
+    <div className="bg-[#297370]">
+      <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
           {/* Hamburger icon - Hidden on small screens, shown from md breakpoint */}
           <button

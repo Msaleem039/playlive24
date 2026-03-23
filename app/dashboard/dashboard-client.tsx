@@ -55,7 +55,7 @@ export default function DashboardPageClient() {
         ref={mainRef} 
         className="flex-1 relative z-10 overflow-x-hidden overflow-y-auto"
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-5 py-4">
+        <div className="max-w-[1400px] mx-auto px-2 sm:px-2 lg:px-2 py-4">
           <ErrorBoundary>
             <DashboardContentOptimized tab={tab} />
           </ErrorBoundary>

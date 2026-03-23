@@ -23,6 +23,7 @@ import {
   Settings,
   Edit3,
   AlertCircle,
+  Image as ImageIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -37,6 +38,7 @@ import SelfTopupModal from "@/components/modal/SelfTopupModal"
 import VideoUploadModal from "@/components/modal/VideoUploadModal"
 import ComplaintsModal from "@/components/modal/ComplaintsModal"
 import NewsBarModal from "@/components/modal/NewsBarModal"
+import TabBannerModal from "@/components/modal/TabBannerModal"
 import { toast } from "sonner"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
@@ -112,6 +114,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
   const [isVideoUploadModalOpen, setIsVideoUploadModalOpen] = useState(false)
   const [isComplaintsModalOpen, setIsComplaintsModalOpen] = useState(false)
   const [isNewsBarModalOpen, setIsNewsBarModalOpen] = useState(false)
+  const [isTabBannerModalOpen, setIsTabBannerModalOpen] = useState(false)
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const adminDropdownRef = useRef<HTMLDivElement | null>(null)
@@ -579,6 +582,16 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                           <Edit3 className="w-4 h-4 text-blue-500" />
                           <span>News Bar</span>
                         </button>
+                        <button
+                          onClick={() => {
+                            setIsTabBannerModalOpen(true)
+                            setIsAdminDropdownOpen(false)
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        >
+                          <ImageIcon className="w-4 h-4 text-emerald-500" />
+                          <span>Tab Banner</span>
+                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -820,6 +833,10 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
           <NewsBarModal
             isOpen={isNewsBarModalOpen}
             onClose={() => setIsNewsBarModalOpen(false)}
+          />
+          <TabBannerModal
+            isOpen={isTabBannerModalOpen}
+            onClose={() => setIsTabBannerModalOpen(false)}
           />
         </>
       )}

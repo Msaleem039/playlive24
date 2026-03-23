@@ -7,7 +7,7 @@ import ComplaintModal from "./modal/ComplaintModal"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { useCricketMatches } from "@/app/hooks/useCricketMatches"
 import { useGetNewsBarQuery } from "@/app/services/Api"
-
+import FastMarquee from "react-fast-marquee";
 type DashboardHeaderProps = {
   selectedTab: string
   onSelectTab: (tab: string) => void
@@ -107,13 +107,13 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       <div className="relative overflow-hidden bg-gray-900 border-y border-gray-700/40">
 
         <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4">
-          <div className="flex-1 overflow-hidden">
-            <Marquee className="whitespace-nowrap">
-              <span className="px-4 text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] font-semibold tracking-wide text-white">
-                {newsBarText}
-              </span>
-            </Marquee>
-          </div>
+        <div className="w-full overflow-hidden bg-black">
+  <FastMarquee speed={50} gradient={false} pauseOnHover>
+    <span className="px-4 text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] font-semibold tracking-wide text-white">
+      {newsBarText}
+    </span>
+  </FastMarquee>
+</div>
           <button
             type="button"
             onClick={() => setIsComplaintModalOpen(true)}
