@@ -9,7 +9,6 @@ import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
-import Image from "next/image"
 
 export default function CricketTab() {
   const [useLiveUpdates, setUseLiveUpdates] = useState(true)
@@ -24,9 +23,13 @@ export default function CricketTab() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
-  const { data: tabBannersData } = useGetTabBannersQuery(undefined)
-  const bannerUrl = (tabBannersData as any)?.cricket?.imageUrl as string | undefined
-  
+  const { data } = useGetTabBannersQuery(undefined)
+  console.log("data", data)
+  // const bannerSource = ((tabBannersData as any)?.data ?? tabBannersData) as any
+  // const bannerUrl =
+  //   bannerSource?.cricket?.imageUrl ||
+  //   bannerSource?.CRICKET?.imageUrl ||
+  //   undefined
   // WebSocket for live updates - only on client
   const {
     isConnected,
@@ -38,7 +41,7 @@ export default function CricketTab() {
     url: 'http://localhost:3000',
     autoConnect: useLiveUpdates && mounted
   })
-  
+  // console.log("bannerUrl", bannerUrl)
   // Fetch cricket matches from API - only on client
   const { 
     matches: apiMatches,
@@ -381,19 +384,8 @@ export default function CricketTab() {
 
   return (
     <div className="bg-white">
-      {/* Fancy Header Section */}
-    {/* <div className="relative w-full h-[500px]">
-  <Image
-    src="https://e0.365dm.com/22/07/2048x1152/skysports-england-sri-lanka_5850215.jpg?20220730194242"
-    alt="Cricket Header"
-    fill
-    className="object-cover"
-  />
-</div>   */}
-
-
       {/* Sport Header */}
-      <div className="bg-[#005461] text-white px-2 sm:px-4 py-1 font-semibold flex items-center justify-between gap-2">
+      <div className="bg-[#297370] text-white px-2 sm:px-4 py-1 font-semibold flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           <span className="text-[0.7rem] sm:text-[0.75rem]">Cricket</span>
           {/* Live Count with Signal Icon */}
@@ -431,10 +423,10 @@ export default function CricketTab() {
           </button>
         </div>
       </div>
-      {bannerUrl && (
+      {data?.cricket?.imageUrl && (
   <div className="w-full border-b border-gray-200 bg-black/5">
     <img
-      src={bannerUrl}
+      src={data?.cricket?.imageUrl}
       alt="Cricket banner"
       className="w-full h-auto object-cover"
     />

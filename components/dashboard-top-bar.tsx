@@ -245,7 +245,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   }
 
   return (
-    <div className="bg-[#297370]">
+    <div className="bg-[#334443]">
       <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
           {/* Hamburger icon - Hidden on small screens, shown from md breakpoint */}
@@ -264,12 +264,14 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
             animate={{ opacity: 1, x: 0 }} 
             className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <span className="md:hidden text-yellow-400 font-bold">
-              <Image src="/images/logo1.jpeg" alt="PlayLIve" width={60} height={60} className="w-15 h-15" />
-            </span>
-            <span className="hidden md:block">
-              <Logo/>
-            </span>
+           <div className="relative w-24 sm:w-28 md:w-32 lg:w-40 aspect-square">
+  <Image
+    src="/images/logo12.png"
+    alt="Logo"
+    fill
+    className="object-contain"
+  />
+</div>
           </motion.button>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">

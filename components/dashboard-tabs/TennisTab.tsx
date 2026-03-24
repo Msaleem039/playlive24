@@ -15,7 +15,11 @@ export default function TennisTab() {
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
   const { data: tabBannersData } = useGetTabBannersQuery(undefined)
-  const bannerUrl = (tabBannersData as any)?.tennis?.imageUrl as string | undefined
+  const bannerSource = ((tabBannersData as any)?.data ?? tabBannersData) as any
+  const bannerUrl =
+    bannerSource?.tennis?.imageUrl ||
+    bannerSource?.TENNIS?.imageUrl ||
+    undefined
 
   const handleMatchSelect = (eventId: string) => {
     if (typeof window !== 'undefined') {
