@@ -23,13 +23,14 @@ export default function CricketTab() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
-  const { data } = useGetTabBannersQuery(undefined)
-  console.log("data", data)
-  // const bannerSource = ((tabBannersData as any)?.data ?? tabBannersData) as any
-  // const bannerUrl =
-  //   bannerSource?.cricket?.imageUrl ||
-  //   bannerSource?.CRICKET?.imageUrl ||
-  //   undefined
+  const { data: tabBannersData } = useGetTabBannersQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  })
+  const bannerSource = ((tabBannersData as any)?.data ?? tabBannersData) as any
+  const bannerUrl =
+    bannerSource?.cricket?.imageUrl ||
+    bannerSource?.CRICKET?.imageUrl ||
+    undefined
   // WebSocket for live updates - only on client
   const {
     isConnected,
@@ -385,7 +386,7 @@ export default function CricketTab() {
   return (
     <div className="bg-white">
       {/* Sport Header */}
-      <div className="bg-[#297370] text-white px-2 sm:px-4 py-1 font-semibold flex items-center justify-between gap-2">
+      <div className="bg-[#01411C] text-white px-2 sm:px-4 py-1 font-bold flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           <span className="text-[0.7rem] sm:text-[0.75rem]">Cricket</span>
           {/* Live Count with Signal Icon */}
@@ -423,10 +424,10 @@ export default function CricketTab() {
           </button>
         </div>
       </div>
-      {data?.cricket?.imageUrl && (
+      {bannerUrl && (
   <div className="w-full border-b border-gray-200 bg-black/5">
     <img
-      src={data?.cricket?.imageUrl}
+      src={bannerUrl}
       alt="Cricket banner"
       className="w-full h-auto object-cover"
     />
@@ -438,9 +439,9 @@ export default function CricketTab() {
         <div className="flex">
           <button
             onClick={() => setActiveSubTab('live')}
-            className={`flex-1 px-1 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
+            className={`flex-1 px-1 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition-colors ${
               activeSubTab === 'live'
-                ? 'bg-[#005461] text-white border-b-2 border-[#00A66E]'
+                ? 'bg-[#01411C] text-white px-4 py-1 rounded-t-lg] text-white border-b-2 border-[#00A66E]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
             }`}
           >
@@ -455,7 +456,7 @@ export default function CricketTab() {
             onClick={() => setActiveSubTab('upcoming')}
             className={`flex-1 px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-normal transition-colors ${
               activeSubTab === 'upcoming'
-                ? 'bg-[#005461] text-white border-b-2 border-[#00A66E]'
+                ? 'bg-[#01411C] text-white border-b-2 border-[#00A66E]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
             }`}
           >
@@ -482,16 +483,16 @@ export default function CricketTab() {
           <div className="divide-y divide-gray-200">
             {/* Column Headings (Match details left, fancy/odds right) */}
             {/* <div className="grid grid-cols-[minmax(220px,1fr)_28px_34px_34px_80px_80px_80px_80px_80px_80px] gap-2 px-2 py-2 bg-gray-50 border-b"> */}
-              {/* <div className="text-xs font-semibold text-gray-700">Match Details</div> */}
-              {/* <div className="text-xs font-semibold text-gray-700 text-center"></div> */}
-              {/* <div className="text-xs font-semibold text-gray-700 text-center">BM</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">F</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Team 1</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Team 2</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Over</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Under</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Total 1</div>
-              <div className="text-xs font-semibold text-gray-700 text-center">Total 2</div>
+              {/* <div className="text-xs font-bold text-gray-700">Match Details</div> */}
+              {/* <div className="text-xs font-bold text-gray-700 text-center"></div> */}
+              {/* <div className="text-xs font-bold text-gray-700 text-center">BM</div>
+              <div className="text-xs font-bold text-gray-700 text-center">F</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Team 1</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Team 2</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Over</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Under</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Total 1</div>
+              <div className="text-xs font-bold text-gray-700 text-center">Total 2</div>
             </div> */}
 
             {paginatedMatchesWithOdds.map((match: any, index: number) => {
@@ -534,6 +535,7 @@ export default function CricketTab() {
                 // Use gmid first (from new API), then match_id, then id
                 const matchId = match.gmid ?? match.match_id ?? match.id
                 if (!matchId) return
+                const marketId = match.marketId ?? match.markets?.[0]?.marketId ?? match.markets?.[0]?.mid
 
                 // For agents, navigate to agent match book detail page
                 if (isAgent) {
@@ -549,7 +551,8 @@ export default function CricketTab() {
                 if (typeof window !== 'undefined') {
                   sessionStorage.setItem('fromMainPage', 'true')
                 }
-                router.push(`/live/${matchId}`)
+                const marketQuery = marketId ? `?marketid=${encodeURIComponent(String(marketId))}` : ''
+                router.push(`/live/${matchId}${marketQuery}`)
               }
 
               return (
@@ -566,16 +569,16 @@ export default function CricketTab() {
                   {/* Match Details Section - Mobile: Top, Desktop: Left */}
                   <div className="flex flex-col gap-1 text-xs sm:text-sm sm:pr-4 min-w-0 sm:col-span-1">
                     <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-[12px] flex-wrap">
-                      <span className="font-semibold truncate">{formatMatchDateLabel(match.date_start_ist || match.date_start)}</span>
+                      <span className="font-bold truncate">{formatMatchDateLabel(match.date_start_ist || match.date_start)}</span>
                       <span className="text-gray-300 hidden sm:inline">|</span>
                       {isLive && (
                         <>
                           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
-                          <span className="text-red-600 font-medium text-[10px] sm:text-xs">Live</span>
+                          <span className="text-red-600 font-bold text-[10px] sm:text-xs">Live</span>
                         </>
                       )}
                       {!isLive && (
-                        <span className="text-blue-600 font-medium text-[10px] sm:text-xs">Upcoming</span>
+                        <span className="text-blue-600 font-bold text-[10px] sm:text-xs">Upcoming</span>
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
@@ -605,10 +608,10 @@ export default function CricketTab() {
                         
                         return (
                           <>
-                            <span className="font-medium truncate">{teamAName || 'Team A'}</span>
+                            <span className="font-bold truncate">{teamAName || 'Team A'}</span>
                             {(match.teama?.scores) && <span className="text-gray-600 text-[10px] sm:text-xs">{match.teama.scores}</span>}
                             <span className="text-gray-400">vs</span>
-                            <span className="font-medium truncate">{teamBName || 'Team B'}</span>
+                            <span className="font-bold truncate">{teamBName || 'Team B'}</span>
                             {(match.teamb?.scores) && <span className="text-gray-600 text-[10px] sm:text-xs">{match.teamb.scores}</span>}
                           </>
                         )
@@ -650,42 +653,42 @@ export default function CricketTab() {
                   {/* All odds display removed from mobile view */}
 
                   {/* Desktop: Fancy/Odds (right) */}
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.team1)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#AEDBFB]'
                   }`}>
                     {team1Odds !== '-' ? team1Odds : '-'}
                   </div>
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.team2)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-[#AEDBFB]' : 'bg-pink-100'
                   }`}>
                     {team2Odds !== '-' ? team2Odds : '-'}
                   </div>
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.over)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#AEDBFB]'
                   }`}>
                     {overOdds !== '-' ? overOdds : '-'}
                   </div>
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.under)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-[#AEDBFB]' : 'bg-pink-100'
                   }`}>
                     {underOdds !== '-' ? underOdds : '-'}
                   </div>
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.total1)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-pink-100' : 'bg-[#AEDBFB]'
                   }`}>
                     {total1Odds !== '-' ? total1Odds : '-'}
                   </div>
-                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-medium transition-colors ${
+                  <div className={`hidden sm:flex w-full h-7 items-center justify-center text-xs font-bold transition-colors ${
                     blinkingOdds.has(oddKeys.total2)
                       ? 'bg-yellow-400 animate-[blink_0.5s_ease-in-out_4]'
                       : index % 2 === 0 ? 'bg-[#AEDBFB]' : 'bg-pink-100'

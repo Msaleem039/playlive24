@@ -55,7 +55,7 @@ export default function TabBannerModal({ isOpen, onClose }: TabBannerModalProps)
 
         <form onSubmit={onSubmit} className="p-4 sm:p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tab</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">Tab</label>
             <select
               value={tab}
               onChange={(e) => setTab(e.target.value as (typeof TABS)[number])}
@@ -70,7 +70,7 @@ export default function TabBannerModal({ isOpen, onClose }: TabBannerModalProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Banner Image</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">Banner Image</label>
             <input
               type="file"
               accept="image/*"

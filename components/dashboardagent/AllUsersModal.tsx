@@ -201,25 +201,25 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Role
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Balance
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Commission
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -233,7 +233,7 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
                             {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{user?.name || user?.email || 'Unknown User'}</div>
+                            <div className="text-sm font-bold text-gray-900">{user?.name || user?.email || 'Unknown User'}</div>
                             <div className="text-xs text-gray-500">{user?.id?.slice(0, 8) || 'N/A'}...</div>
                           </div>
                         </div>
@@ -242,12 +242,12 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
                         <div className="text-sm text-gray-900">{user?.email || 'N/A'}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(user?.role || '')}`}>
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(user?.role || '')}`}>
                           {user?.role || 'N/A'}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-bold text-gray-900">
                           ${formatBalance(user?.balance)}
                         </div>
                       </td>
@@ -440,7 +440,7 @@ function SubordinatesView({ userId }: { userId: string }) {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => handleBreadcrumbClick(-1)}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+            className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
           >
             Root
           </button>
@@ -449,7 +449,7 @@ function SubordinatesView({ userId }: { userId: string }) {
               <ChevronRight className="w-4 h-4 text-gray-400" />
               <button
                 onClick={() => handleBreadcrumbClick(index)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
               >
                 {path.name}
               </button>
@@ -458,7 +458,7 @@ function SubordinatesView({ userId }: { userId: string }) {
           {viewMode === 'bets' && (
             <>
               <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Bet History</span>
+              <span className="text-sm font-bold text-gray-900">Bet History</span>
             </>
           )}
         </div>
@@ -468,7 +468,7 @@ function SubordinatesView({ userId }: { userId: string }) {
       {viewMode === 'users' ? (
         <>
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-bold text-gray-900">
               {navigationPath.length === 0 ? 'Subordinates' : 'Subordinates'}
             </h3>
           </div>
@@ -490,11 +490,11 @@ function SubordinatesView({ userId }: { userId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Username</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Role</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Balance</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Name</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Username</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Role</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Balance</th>
+                    <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -509,7 +509,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                         onClick={() => handleItemClick(userItem)}
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">
+                          <div className="font-bold text-gray-900">
                             {userItem.name || userItem.username || 'Unknown'}
                           </div>
                         </td>
@@ -517,7 +517,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                           {userItem.username || userItem.name || '--'}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                          <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${
                             itemRole === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
                             itemRole === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
                             itemRole === 'AGENT' ? 'bg-green-100 text-green-800' :
@@ -526,7 +526,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                             {itemRole || '--'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           Rs {userItem.balance?.toLocaleString() || '0.00'}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -555,14 +555,14 @@ function SubordinatesView({ userId }: { userId: string }) {
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Bet History</h3>
+            <h3 className="text-lg font-bold text-gray-900">Bet History</h3>
             <button
               onClick={() => {
                 setViewMode('users')
                 setNavigationPath(navigationPath.slice(0, -1))
                 setSelectedParentId(navigationPath.length > 1 ? navigationPath[navigationPath.length - 2].id : userId)
               }}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
@@ -586,13 +586,13 @@ function SubordinatesView({ userId }: { userId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Type</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Name</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Odds</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Stake</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Net Profit</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Created At</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Market Type</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Market Name</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Odds</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Stake</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Net Profit</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Created At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -620,20 +620,20 @@ function SubordinatesView({ userId }: { userId: string }) {
                     return (
                       <tr key={betItem.id || betItem.betId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-bold text-gray-900">
                             {betItem.marketType || '--'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-600">
                           {displayName}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           {betItem.odds?.toFixed(2) || '--'}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           Rs {stake.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium">
+                        <td className="px-4 py-3 text-right font-bold">
                           <span className={betItem.netProfit && betItem.netProfit > 0 ? 'text-green-600' : betItem.netProfit && betItem.netProfit < 0 ? 'text-red-600' : 'text-gray-600'}>
                             {betItem.netProfit !== null && betItem.netProfit !== undefined 
                               ? `Rs ${betItem.netProfit.toFixed(2)}`
@@ -641,7 +641,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`font-medium ${status.color}`}>
+                          <span className={`font-bold ${status.color}`}>
                             {status.text}
                           </span>
                         </td>

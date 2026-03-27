@@ -17,7 +17,7 @@ export function SportsSelector({
   return (
     <div className={`bg-white rounded-lg shadow-sm overflow-hidden ${className}`}>
       <div className="bg-black text-white px-4 py-2">
-        <h3 className="font-semibold text-sm">SPORTS GAMEPLAY DETAILS</h3>
+        <h3 className="font-bold text-sm">SPORTS GAMEPLAY DETAILS</h3>
       </div>
       <div className="p-4">
         <div className="relative">

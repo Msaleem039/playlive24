@@ -201,7 +201,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
           <div className="space-y-2 mb-3">
             {/* Name Field */}
             <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
                 Name
               </label>
               <Input
@@ -216,7 +216,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
             {/* Username Field */}
             <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
                 Username
               </label>
               <Input
@@ -231,7 +231,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
             {/* Password Field with Eye Icon */}
             <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
                 Password
               </label>
               <div className="flex-1 relative">
@@ -260,7 +260,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
             {/* Role Field */}
             <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
                 Role
               </label>
               <select
@@ -279,7 +279,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
 
             {/* Commission Percentage Field */}
             <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide md:w-48">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
                 Share Percentage %
               </label>
               <Input

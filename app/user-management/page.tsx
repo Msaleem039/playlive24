@@ -226,7 +226,7 @@ export default function UserManagement() {
               <div className="flex">
                 <button
                   onClick={() => setUserTab("Active Users")}
-                  className={`px-6 py-3 font-semibold border-b-2 ${
+                  className={`px-6 py-3 font-bold border-b-2 ${
                     userTab === "Active Users" 
                       ? "border-white text-white" 
                       : "border-transparent text-gray-300 hover:text-white"
@@ -236,7 +236,7 @@ export default function UserManagement() {
                 </button>
                 <button
                   onClick={() => setUserTab("Close Users")}
-                  className={`px-6 py-3 font-semibold border-b-2 ${
+                  className={`px-6 py-3 font-bold border-b-2 ${
                     userTab === "Close Users" 
                       ? "border-white text-white" 
                       : "border-transparent text-gray-300 hover:text-white"
@@ -323,28 +323,28 @@ export default function UserManagement() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     <ChevronUp className="w-4 h-4" />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Balance
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Commission
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Created At
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -386,7 +386,7 @@ export default function UserManagement() {
                             {(user.name || user.email || 'U').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{user.name || user.email || 'Unknown User'}</div>
+                            <div className="text-sm font-bold text-gray-900">{user.name || user.email || 'Unknown User'}</div>
                             <div className="text-xs text-gray-500">{user.id?.slice(0, 8) || 'N/A'}...</div>
                           </div>
                         </div>
@@ -395,7 +395,7 @@ export default function UserManagement() {
                         {user.email || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${
                           (user.role || '').toUpperCase() === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
                           (user.role || '').toUpperCase() === 'AGENT' ? 'bg-[#AEDBFB]text-blue-800' :
                           (user.role || '').toUpperCase() === 'CLIENT' ? 'bg-green-100 text-green-800' :
@@ -474,19 +474,19 @@ export default function UserManagement() {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredUsers.length}</span> of{' '}
-                    <span className="font-medium">{apiUsers?.length || 0}</span> entries
+                    Showing <span className="font-bold">1</span> to <span className="font-bold">{filteredUsers.length}</span> of{' '}
+                    <span className="font-bold">{apiUsers?.length || 0}</span> entries
                   </p>
                 </div>
                 <div>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-bold text-gray-500 hover:bg-gray-50">
                       <ChevronUp className="h-5 w-5" />
                     </button>
-                    <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50">
                       1
                     </button>
-                    <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-bold text-gray-500 hover:bg-gray-50">
                       <ChevronDown className="h-5 w-5" />
                     </button>
                   </nav>

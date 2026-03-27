@@ -35,12 +35,13 @@ export const API_END_POINTS = {
     
     /////////////////////////////<===SPORTS API===>//////////////////////////////
     // cricketMatches: BASE_URL + "/cricketid/matches/details/4",
-    cricketMatches: `${BASE_URL}/cricketid/aggregator/cricket`,
-    soccerMatches: `${BASE_URL}/cricketid/series?sportId=1`,
-    tennisMatches: `${BASE_URL}/cricketid/series?sportId=2`,
+    cricketMatches: `${BASE_URL}/cricketid/events-by-sport?sportId=4`,
+    soccerMatches: `${BASE_URL}/cricketid/events-by-sport?sportId=1`,
+    tennisMatches: `${BASE_URL}/cricketid/events-by-sport?sportId=2`,
     getMatchesByCompetition: `${BASE_URL}/cricketid/matches`,
     getSeries: `${BASE_URL}/cricketid/series`,
     cricketMatchMarkets: `${BASE_URL}/cricketid/markets`,
+    cricketMatchDetail: `${BASE_URL}/cricketid/match-detail`,
     cricketMatchOdds: `${BASE_URL}/cricketid/odds`,
     cricketBookmakerFancy: `${BASE_URL}/cricketid/bookmaker-fancy`,
     // cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventId`,

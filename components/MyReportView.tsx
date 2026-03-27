@@ -126,7 +126,7 @@ export function MyReportView() {
       {/* <div className="bg-white p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 space-y-4 sm:space-y-0">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">From Date</label>
+            <label className="text-sm font-bold text-gray-700">From Date</label>
             <CalendarDatePicker
               value={fromDate}
               onValueChange={setFromDate}
@@ -136,7 +136,7 @@ export function MyReportView() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">To Date</label>
+            <label className="text-sm font-bold text-gray-700">To Date</label>
             <CalendarDatePicker
               value={toDate}
               onValueChange={setToDate}

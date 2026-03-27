@@ -203,7 +203,7 @@ export default function ClientAccountStatementModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-0 z-10">
-          <h2 className="text-xs sm:text-sm md:text-base font-semibold">Client Account Statement</h2>
+          <h2 className="text-xs sm:text-sm md:text-base font-bold">Client Account Statement</h2>
           <button
             onClick={onClose}
             className="text-white hover:text-gray-300 transition-colors"
@@ -278,19 +278,19 @@ export default function ClientAccountStatementModal({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-[10px] sm:text-xs md:text-sm">
               <div className="truncate">
                 <span className="text-gray-600">Name:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{userInfo.name || username}</span>
+                <span className="ml-1 sm:ml-2 font-bold truncate block">{userInfo.name || username}</span>
               </div>
               <div className="truncate">
                 <span className="text-gray-600">User:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{userInfo.username || username}</span>
+                <span className="ml-1 sm:ml-2 font-bold truncate block">{userInfo.username || username}</span>
               </div>
               <div className="truncate">
                 <span className="text-gray-600">Opening Balance:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.openingBalance ?? userInfo.balance)}</span>
+                <span className="ml-1 sm:ml-2 font-bold truncate block">{formatCurrency(userInfo.openingBalance ?? userInfo.balance)}</span>
               </div>
               <div className="truncate">
                 <span className="text-gray-600">Balance:</span>
-                <span className="ml-1 sm:ml-2 font-semibold truncate block">{formatCurrency(userInfo.balance ?? userInfo.availableBalance)}</span>
+                <span className="ml-1 sm:ml-2 font-bold truncate block">{formatCurrency(userInfo.balance ?? userInfo.availableBalance)}</span>
               </div>
             </div>
           </div>
@@ -322,14 +322,14 @@ export default function ClientAccountStatementModal({
                 <table className="w-full text-[10px] sm:text-xs md:text-sm">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Date</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Type</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Description</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-semibold text-gray-700">Result</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">CR</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">DR</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold text-gray-700">Balance</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-semibold text-gray-700">Bets</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Date</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Type</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Description</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Result</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">CR</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">DR</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Balance</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-gray-700">Bets</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
@@ -355,7 +355,7 @@ export default function ClientAccountStatementModal({
                               {formatDate(dateVal)}
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
-                              <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-semibold ${getTypeColor(typeVal)}`}>
+                              <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(typeVal)}`}>
                                 {typeVal || '-'}
                               </span>
                             </td>
@@ -365,13 +365,13 @@ export default function ClientAccountStatementModal({
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700">
                               {transaction.result !== null && transaction.result !== undefined ? String(transaction.result) : '-'}
                             </td>
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap text-green-600">
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
                               {credit > 0 ? formatCurrency(credit) : '0.00'}
                             </td>
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap text-red-600">
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-red-600">
                               {debit > 0 ? `-${formatCurrency(debit)}` : '0.00'}
                             </td>
-                            <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-semibold whitespace-nowrap ${
+                            <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
                               balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
                               {formatCurrency(balance)}
@@ -380,7 +380,7 @@ export default function ClientAccountStatementModal({
                               <button
                                 type="button"
                                 onClick={() => setBetsPopoverIdx(betsPopoverIdx === idx ? null : idx)}
-                                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[9px] sm:text-[10px] font-medium rounded transition-colors"
+                                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[9px] sm:text-[10px] font-bold rounded transition-colors"
                               >
                                 Bets
                               </button>
@@ -401,7 +401,7 @@ export default function ClientAccountStatementModal({
           <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setBetsPopoverIdx(null)}>
             <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 py-3 border-b flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-800">
+                <h3 className="text-sm font-bold text-gray-800">
                   Bets for Market ID: {transactions[betsPopoverIdx]?.marketId || '—'}
                 </h3>
                 <button onClick={() => setBetsPopoverIdx(null)} className="text-gray-500 hover:text-gray-700">
@@ -415,11 +415,11 @@ export default function ClientAccountStatementModal({
                   <div className="space-y-3">
                     {(transactions[betsPopoverIdx]?.bets || []).map((bet: any, bi: number) => (
                       <div key={bet.id || bi} className="text-xs p-2 bg-gray-50 rounded border border-gray-100">
-                        <span className={`px-2 py-0.5 rounded font-semibold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
+                        <span className={`px-2 py-0.5 rounded font-bold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
                         <div className="mt-1.5 grid grid-cols-2 gap-1 text-gray-700">
                           <span>Odds: {bet.odds}</span>
                           <span>Stake: {formatCurrency(bet.stake)}</span>
-                          <span>P/L: <span className={bet.pnl >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{formatCurrency(bet.pnl)}</span></span>
+                          <span>P/L: <span className={bet.pnl >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{formatCurrency(bet.pnl)}</span></span>
                           <span>Status: {bet.status}</span>
                         </div>
                       </div>

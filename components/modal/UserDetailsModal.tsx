@@ -139,7 +139,7 @@ export default function UserDetailsModal({
               <div className="px-4 py-3 space-y-3">
                 {/* Exposure Field - Single field at top */}
                 <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                     Exposure
                   </label>
                   <Input
@@ -157,7 +157,7 @@ export default function UserDetailsModal({
                 <div className="grid grid-cols-2 gap-3">
                   {/* User Status */}
                   <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                       User Status
                     </label>
                     <div className="flex flex-wrap items-center gap-3 mt-1">
@@ -188,7 +188,7 @@ export default function UserDetailsModal({
 
                   {/* Market Bet Status */}
                   <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                       Market Bet Status
                     </label>
                     <div className="flex flex-wrap items-center gap-3 mt-1">
@@ -219,7 +219,7 @@ export default function UserDetailsModal({
 
                   {/* Fancy Bet Status */}
                   <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                       Fancy Bet Status
                     </label>
                     <div className="flex flex-wrap items-center gap-3 mt-1">
@@ -250,7 +250,7 @@ export default function UserDetailsModal({
 
                   {/* Casino Bet Status */}
                   <div className="p-3 border border-dashed border-gray-200 rounded-lg bg-gray-50 flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                       Casino Bet Status
                     </label>
                     <div className="flex flex-wrap items-center gap-3 mt-1">
@@ -285,7 +285,7 @@ export default function UserDetailsModal({
               <div className="px-4 py-3 flex justify-end border-t border-gray-100">
                 <button
                   type="submit"
-                  className="px-5 py-1.5 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-1.5 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-bold text-sm rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading || !exposure.trim()}
                 >
                   {isLoading ? "Updating..." : "Update"}

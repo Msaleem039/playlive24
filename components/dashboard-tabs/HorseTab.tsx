@@ -14,7 +14,7 @@ export default function HorseTab() {
       <div className="flex items-center justify-center py-16 px-4">
         <div className="text-center">
           <Gamepad2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">No Horse Racing</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-gray-600 mb-2">No Horse Racing</h3>
           <p className="text-sm sm:text-base text-gray-500 max-w-md">
             No horse racing events are currently available. Check back later for live races and upcoming events.
           </p>

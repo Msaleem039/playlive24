@@ -138,7 +138,7 @@ const SportCategoryButton = memo(({
       </div>
       
       <div className="flex items-center gap-1">
-        <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+        <span className="text-xs font-bold text-gray-700 text-center leading-tight">
           {category.name}
         </span>
         {/* Signal icon next to text for live sports */}
@@ -168,12 +168,14 @@ const MatchRow = memo(({ match }: { match: any }) => {
     if (isLive) {
       // Use gmid first (from new API), then match_id, then id
       const matchId = match.gmid ?? match.match_id ?? match.id
+      const marketId = match.marketId ?? match.markets?.[0]?.marketId ?? match.markets?.[0]?.mid
       if (matchId) {
         // Set flag to auto-open TV when navigating from main page
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('fromMainPage', 'true')
         }
-        router.push(`/live/${matchId}`)
+        const marketQuery = marketId ? `?marketid=${encodeURIComponent(String(marketId))}` : ''
+        router.push(`/live/${matchId}${marketQuery}`)
       }
     }
   }, [isLive, match, router])
@@ -193,11 +195,11 @@ const MatchRow = memo(({ match }: { match: any }) => {
             {isLive && (
               <>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-red-600 font-medium">Live Now</span>
+                <span className="text-sm text-red-600 font-bold">Live Now</span>
               </>
             )}
             {isUpcoming && (
-              <span className="text-sm text-blue-600 font-medium">Upcoming</span>
+              <span className="text-sm text-blue-600 font-bold">Upcoming</span>
             )}
             <span className="text-sm text-gray-600">{match.title}</span>
           </div>
@@ -219,9 +221,9 @@ const MatchRow = memo(({ match }: { match: any }) => {
                   {match.teama?.short_name?.charAt(0) || 'T'}
                 </div>
               )}
-              <span className="font-medium">{match.teama?.short_name}</span>
+              <span className="font-bold">{match.teama?.short_name}</span>
               {match.teama?.scores && (
-                <span className="text-gray-600 font-semibold">{match.teama.scores}</span>
+                <span className="text-gray-600 font-bold">{match.teama.scores}</span>
               )}
             </div>
             <span className="text-gray-400 font-bold">vs</span>
@@ -240,9 +242,9 @@ const MatchRow = memo(({ match }: { match: any }) => {
                   {match.teamb?.short_name?.charAt(0) || 'T'}
                 </div>
               )}
-              <span className="font-medium">{match.teamb?.short_name}</span>
+              <span className="font-bold">{match.teamb?.short_name}</span>
               {match.teamb?.scores && (
-                <span className="text-gray-600 font-semibold">{match.teamb.scores}</span>
+                <span className="text-gray-600 font-bold">{match.teamb.scores}</span>
               )}
             </div>
           </div>
@@ -308,7 +310,7 @@ const SportSection = memo(({
   if (loading) {
     return (
       <div className="border-b border-gray-200">
-        <div className="bg-[#00A66E] text-white px-4 py-1 text-[0.75rem] font-semibold">
+        <div className="bg-[#00A66E] text-white px-4 py-1 text-[0.75rem] font-bold">
           {title}
         </div>
         <div className="p-4 text-center text-gray-600">
@@ -334,7 +336,7 @@ const SportSection = memo(({
   if (matches.length === 0) {
     return (
       <div className="border-b border-gray-200">
-        <div className="bg-[#00A66E] text-white px-4 py-1 text-[0.75rem] font-semibold">
+        <div className="bg-[#00A66E] text-white px-4 py-1 text-[0.75rem] font-bold">
           {title}
         </div>
         <div className="p-4 text-center text-gray-600">
@@ -346,7 +348,7 @@ const SportSection = memo(({
 
   return (
     <div className="border-b border-gray-200">
-      <div className="bg-[#00A66E] text-white px-4 py-2 text-[0.75rem] font-semibold">
+      <div className="bg-[#00A66E] text-white px-4 py-2 text-[0.75rem] font-bold">
         <span className="text-[0.75rem]">{title}</span>
       </div>
       <div className="divide-y divide-gray-200">
@@ -496,7 +498,7 @@ const InPlayTab = memo(() => {
   return (
     <div className="bg-white">
       {/* In-Play Header */}
-      <div className="bg-[#00A66E] text-white px-4 py-1 font-semibold">
+      <div className="bg-[#00A66E] text-white px-4 py-1 font-bold">
         <span className="text-[0.75rem]">In-Play</span>
       </div>
 

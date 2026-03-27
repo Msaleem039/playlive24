@@ -100,9 +100,10 @@ const roleNavigationItems = {
 interface CommonHeaderProps {
   activeTab?: string
   onTabChange?: (tab: string) => void
+  disableLiveFetch?: boolean
 }
 
-export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderProps = {}) {
+export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch = false }: CommonHeaderProps = {}) {
   // Default to 'Matches' if not provided
   const currentActiveTab = activeTab || 'Matches'
   const router = useRouter()
@@ -134,7 +135,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
     url: process.env.NEXT_PUBLIC_SOCKET_URL
       ? `${process.env.NEXT_PUBLIC_SOCKET_URL}/entitysport`
       : 'http://localhost:3000/entitysport',
-    autoConnect: true,
+    autoConnect: !disableLiveFetch,
     realtimeEvent: 'entitySportRealtimeData',
     listEvent: 'entitySportLiveData',
   })
@@ -143,6 +144,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
   const { matches: cricketMatches } = useCricketMatches({
     page: 1,
     per_page: 20,
+    enabled: !disableLiveFetch,
   })
 
   // Use live matches if available and connected, otherwise use API data
@@ -491,9 +493,9 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
   }
 
   return (
-    <div className="bg-gray-100">
+    <div className="bg-[#25C9A0]">
       {/* Top bar */}
-      <div className="bg-[#334443]">
+      <div className="bg-[#2DE8B7] border-b border-[#22d7a8]">
         <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-1 xs:gap-2">
           <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 min-w-0 flex-1">
             <button
@@ -516,24 +518,24 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
             </motion.div>
           </div>
           <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 bg-[#00A66E] text-black px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1.5 rounded-full shadow-sm min-w-[65px] xs:min-w-[75px] sm:min-w-[90px] md:min-w-[110px] lg:min-w-[120px] justify-center">
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 bg-[#01411C] text-white px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1.5 rounded-md shadow-sm min-w-[65px] xs:min-w-[75px] sm:min-w-[90px] md:min-w-[110px] lg:min-w-[120px] justify-center">
               <Coins className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-[#FFD949] flex-shrink-0" />
               <div className="leading-tight text-left min-w-0">
-                <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-medium truncate">{userInfo.balance}</div>
+                <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-bold truncate">{userInfo.balance}</div>
               </div>
             </div>
             {isSuperAdmin && (
               <>
                 <button
                   onClick={() => setIsSelfTopupModalOpen(true)}
-                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors"
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all"
                   title="Top up super admin balance"
                 >
                   Top Up
                 </button>
                 <button
                   onClick={() => setIsVideoUploadModalOpen(true)}
-                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors flex items-center gap-1"
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all flex items-center gap-1"
                   title="Upload site video"
                 >
                   <Video className="w-3 h-3" />
@@ -543,7 +545,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                 <div className="relative" ref={adminDropdownRef}>
                   <button
                     onClick={() => setIsAdminDropdownOpen((prev) => !prev)}
-                    className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-semibold rounded-full bg-white/10 text-white border border-white/30 hover:bg-white/20 transition-colors flex items-center gap-1"
+                    className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all flex items-center gap-1"
                     title="Admin Settings"
                   >
                     <Settings className="w-3 h-3" />
@@ -560,14 +562,14 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
+                        className="absolute right-0 mt-2 w-48 bg-[#0F172A]/95 backdrop-blur-md rounded-lg border border-[#117044]/40 shadow-[0_0_20px_rgba(0,255,157,0.12)] overflow-hidden z-[60]"
                       >
                         <button
                           onClick={() => {
                             setIsComplaintsModalOpen(true)
                             setIsAdminDropdownOpen(false)
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#E5E7EB] hover:bg-[#117044]/25 transition-colors flex items-center gap-2"
                         >
                           <AlertCircle className="w-4 h-4 text-red-500" />
                           <span>Complaints</span>
@@ -577,7 +579,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                             setIsNewsBarModalOpen(true)
                             setIsAdminDropdownOpen(false)
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#E5E7EB] hover:bg-[#117044]/25 transition-colors flex items-center gap-2"
                         >
                           <Edit3 className="w-4 h-4 text-blue-500" />
                           <span>News Bar</span>
@@ -587,7 +589,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                             setIsTabBannerModalOpen(true)
                             setIsAdminDropdownOpen(false)
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                          className="w-full px-4 py-2.5 text-left text-sm text-[#E5E7EB] hover:bg-[#117044]/25 transition-colors flex items-center gap-2"
                         >
                           <ImageIcon className="w-4 h-4 text-emerald-500" />
                           <span>Tab Banner</span>
@@ -602,7 +604,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#00A66E] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition text-[10px] xs:text-xs sm:text-sm min-w-0"
+                className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#01411C] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-md text-white font-bold shadow-sm hover:bg-black transition-all text-[10px] xs:text-xs sm:text-sm min-w-0"
               >
                 <User className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="truncate max-w-[50px] xs:max-w-[60px] sm:max-w-[80px] md:max-w-none">{userInfo.name || <span className="text-[10px] xs:text-xs sm:text-sm">User</span>}</span>
@@ -618,15 +620,15 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[280px] xs:w-56 sm:w-64 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-[60]"
+                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[280px] xs:w-56 sm:w-64 bg-[#0F172A]/95 backdrop-blur-md rounded-lg border border-[#117044]/40 shadow-[0_0_20px_rgba(0,255,157,0.12)] overflow-hidden z-[60]"
                   >
-                    <div className="px-3 xs:px-4 py-2 xs:py-3 bg-gray-100 text-[10px] xs:text-xs font-semibold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
+                    <div className="px-3 xs:px-4 py-2 xs:py-3 bg-gray-100 text-[10px] xs:text-xs font-bold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
                       <div className="flex items-center gap-1.5 xs:gap-2">
                         <ClockIcon className="w-3 h-3 xs:w-3.5 xs:h-3.5 flex-shrink-0" />
                         <span className="truncate">{userInfo.timezone}</span>
                       </div>
                       <div className="flex items-center gap-1 text-[9px] xs:text-[10px] sm:text-[11px] text-gray-600">
-                        <Shield className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E] flex-shrink-0" />
+                        <Shield className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00FF9D] flex-shrink-0" />
                         <span>{userInfo.roleLabel}</span>
                       </div>
                     </div>
@@ -636,9 +638,9 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                         {userInfo.email && (
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
-                              <Mail className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E]" /> Email
+                              <Mail className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00FF9D]" /> Email
                             </span>
-                            <span className="font-medium text-gray-800 truncate max-w-[120px] xs:max-w-[140px] sm:max-w-[160px] text-right">
+                            <span className="font-bold text-gray-800 truncate max-w-[120px] xs:max-w-[140px] sm:max-w-[160px] text-right">
                               {userInfo.email}
                             </span>
                           </div>
@@ -646,21 +648,21 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                         {userInfo.exposure && (
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500">Exposure</span>
-                            <span className="font-semibold text-gray-800 truncate">{userInfo.exposure}</span>
+                            <span className="font-bold text-gray-800 truncate">{userInfo.exposure}</span>
                           </div>
                         )}
                         {userInfo.creditLimit && (
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500">Credit Limit</span>
-                            <span className="font-semibold text-gray-800 truncate">{userInfo.creditLimit}</span>
+                            <span className="font-bold text-gray-800 truncate">{userInfo.creditLimit}</span>
                           </div>
                         )}
                         {userInfo.createdAtLabel && (
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-500 flex items-center gap-1 flex-shrink-0">
-                              <CalendarDays className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00A66E]" /> Joined
+                              <CalendarDays className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-[#00FF9D]" /> Joined
                             </span>
-                            <span className="font-medium text-gray-800 text-right max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] text-[9px] xs:text-[10px] sm:text-xs">
+                            <span className="font-bold text-gray-800 text-right max-w-[140px] xs:max-w-[160px] sm:max-w-[180px] text-[9px] xs:text-[10px] sm:text-xs">
                               {userInfo.createdAtLabel}
                             </span>
                           </div>
@@ -685,7 +687,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                               }}
                               className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                             >
-                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />
                               <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                             </button>
                           )
@@ -701,7 +703,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                               }}
                               className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                             >
-                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                              <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />
                               <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                             </button>
                           )
@@ -713,7 +715,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                             className="flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 hover:bg-[#f4f7f6] transition"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                            <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />
                             <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
                           </Link>
                         )
@@ -726,7 +728,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
                         className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
                         title="Refresh balance (balance updates automatically after deposit/withdraw)"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00A66E] flex-shrink-0" />
+                        <RefreshCw className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />
                         <span className="text-[11px] xs:text-xs sm:text-sm">Refresh Balance</span>
                       </button>
                       <button
@@ -746,7 +748,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
       </div>
       {/* Marquee */}
       {/* <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
-        <div className="animate-marquee text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.70rem] lg:text-[0.75rem] text-white font-medium whitespace-nowrap">
+        <div className="animate-marquee text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.70rem] lg:text-[0.75rem] text-white font-bold whitespace-nowrap">
           Welcome to Playlive7! If you have any queries, contact us +923254353
         </div>
       </div> */}
@@ -755,19 +757,19 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
       {onTabChange && (
         <div className="relative z-[20]">
           {/* Main Navigation Header */}
-          <div className="bg-[#00A66E] text-black">
+          <div className="bg-[#2DE8B7] text-black">
             <div className="px-1 xs:px-1.5 sm:px-3 md:px-4 lg:px-4 py-1 xs:py-1.5 sm:py-2 md:py-2.5 lg:py-3">
               <div className="flex justify-start sm:justify-center items-center space-x-0.5 xs:space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-3 xl:space-x-4 overflow-x-auto no-scrollbar scroll-smooth">
                 {navigationItems.map((item) => (
                   <button
                     key={item}
                     onClick={() => onTabChange?.(item)}
-                    className={`font-semibold flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 whitespace-nowrap text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] lg:text-[0.75rem] xl:text-[0.8rem] transition-colors min-h-[20px] xs:min-h-[22px] sm:min-h-[24px] md:min-h-[26px] lg:min-h-[28px] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-1 sm:py-1.5 md:py-2 ${
+                    className={`font-bold flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 whitespace-nowrap text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] lg:text-[0.75rem] xl:text-[0.8rem] transition-all duration-300 min-h-[20px] xs:min-h-[22px] sm:min-h-[24px] md:min-h-[26px] lg:min-h-[28px] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-1 sm:py-1.5 md:py-2 ${
                       item === 'Game Controls' ? 'hover:text-gray-200' : ''
                     } ${
                       item === currentActiveTab 
-                        ? 'bg-white text-black rounded font-bold shadow-sm' 
-                        : 'hover:text-gray-200 hover:bg-black/10 rounded'
+                        ? 'bg-black/15 text-black rounded-lg font-bold border-b-2 border-[#00A66E] shadow-sm' 
+                        : 'hover:text-black hover:bg-black/10 rounded-lg'
                     }`}
                   >
                     <span className="truncate">{item}</span>
@@ -789,7 +791,7 @@ export default function CommonHeader({ activeTab, onTabChange }: CommonHeaderPro
 
           {/* Section Header */}
           {/* <div className="bg-black text-white px-4 sm:px-6 py-2">
-            <h1 className="text-lg font-semibold">{activeTab}</h1>
+            <h1 className="text-lg font-bold">{activeTab}</h1>
           </div> */}
         </div>
       )}

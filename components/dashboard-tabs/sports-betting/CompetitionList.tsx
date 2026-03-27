@@ -62,7 +62,7 @@ export function CompetitionList({ sportId, sportName, onMatchSelect }: Competiti
       <div className="py-6 px-4">
         <div className="flex flex-col items-center justify-center gap-2 rounded-lg bg-red-50 border border-red-200 py-6 px-4 text-center">
           <AlertCircle className="w-8 h-8 text-red-500" />
-          <p className="text-sm font-medium text-red-800">Failed to load competitions</p>
+          <p className="text-sm font-bold text-red-800">Failed to load competitions</p>
           <p className="text-xs text-red-600">{(error as any)?.data?.message ?? (error as Error)?.message ?? 'Unknown error'}</p>
           <button
             type="button"
@@ -121,7 +121,7 @@ function CompetitionListItem({
         className="w-full flex items-center justify-between gap-2 px-3 py-3 text-left hover:bg-gray-50 transition-colors rounded-none"
         aria-expanded={expanded}
       >
-        <span className="font-medium text-sm truncate">{competition.name}</span>
+        <span className="font-bold text-sm truncate">{competition.name}</span>
         <ChevronRight
           className={`w-4 h-4 flex-shrink-0 text-gray-500 transition-transform ${expanded ? 'rotate-90' : ''}`}
         />

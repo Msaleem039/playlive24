@@ -257,14 +257,14 @@ export default function DepositCashModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-6 py-2 bg-[#E74C3C] hover:bg-[#C0392B] text-white font-semibold rounded-md transition-colors"
+                  className="px-6 py-2 bg-[#E74C3C] hover:bg-[#C0392B] text-white font-bold rounded-md transition-colors"
                   disabled={isLoading}
                 >
                   No
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-bold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading || !amount.trim() || !userId}
                 >
                   {isLoading ? "Processing..." : "Submit"}

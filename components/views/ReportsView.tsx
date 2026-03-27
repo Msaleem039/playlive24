@@ -68,7 +68,7 @@ export default function ReportsView() {
                   <Download className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{report.name}</h3>
+              <h3 className="font-bold text-gray-900 mb-1">{report.name}</h3>
               <p className="text-xs text-gray-600">{report.description}</p>
             </div>
           ))}
@@ -87,13 +87,13 @@ export default function ReportsView() {
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Eye className="w-5 h-5 text-[#00A66E]" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900">
                 {reports.find(r => r.id === selectedReport)?.name || "Report Details"}
               </h2>
             </div>
             <button
               onClick={() => handleExport(selectedReport)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-bold rounded-lg transition-colors"
             >
               <Download className="w-4 h-4" />
               Export

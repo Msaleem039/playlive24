@@ -66,7 +66,7 @@ export default function ComplaintModal({ isOpen, onClose }: ComplaintModalProps)
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">
               Name <span className="text-red-500">*</span>
             </label>
             <Input
@@ -80,7 +80,7 @@ export default function ComplaintModal({ isOpen, onClose }: ComplaintModalProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">
               Contact Number <span className="text-red-500">*</span>
             </label>
             <Input
@@ -94,7 +94,7 @@ export default function ComplaintModal({ isOpen, onClose }: ComplaintModalProps)
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">
               Message <span className="text-red-500">*</span>
             </label>
             <textarea

@@ -26,6 +26,7 @@ export default function LiveMatchDetailPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const matchId = params?.matchId as string
+  const marketIdParam = searchParams?.get('marketid')
   const sportParam = searchParams?.get('sport') || (typeof window !== 'undefined' ? sessionStorage.getItem('liveSport') : null)
   const isSoccer = sportParam === 'soccer'
   const authUser = useSelector(selectCurrentUser)
@@ -108,7 +109,7 @@ export default function LiveMatchDetailPage() {
     error, 
     isLoadingScorecard, 
     refetch 
-  } = useMatchData(eventId)
+  } = useMatchData(eventId, marketIdParam)
 
   const { isMobile, isTablet, getMainLayoutClass, getLeftPanelClass, getRightPanelClass } = useResponsiveLayout()
 
@@ -277,6 +278,7 @@ export default function LiveMatchDetailPage() {
         <DashboardHeader 
           selectedTab={dashboardTab} 
           onSelectTab={handleTabChange} 
+          disableLiveFetch={true}
         />
       )}
       
@@ -286,6 +288,7 @@ export default function LiveMatchDetailPage() {
           <CommonHeader 
             activeTab={commonHeaderTab} 
             onTabChange={handleCommonHeaderTabChange} 
+            disableLiveFetch={true}
           />
         </div>
       )}

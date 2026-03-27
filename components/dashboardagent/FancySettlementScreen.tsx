@@ -406,7 +406,7 @@ export function FancySettlementScreen() {
         {selectedMatch && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-3 md:mb-4">
             <div className="p-3 md:p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Select Selection ID <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
@@ -425,7 +425,7 @@ export function FancySettlementScreen() {
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="font-semibold text-xs md:text-sm truncate">{selData.betName || `Selection ${selData.selectionId}`}</div>
+                    <div className="font-bold text-xs md:text-sm truncate">{selData.betName || `Selection ${selData.selectionId}`}</div>
                     <div className="text-xs text-gray-500 mt-1 break-words">
                       ID: {selData.selectionId} | {selData.count} bet{selData.count !== 1 ? 's' : ''} | Rs{selData.totalAmount.toLocaleString()}
                     </div>
@@ -439,7 +439,7 @@ export function FancySettlementScreen() {
         {selectedSelectionId && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4 md:mb-6">
             <div className="bg-gray-50 px-3 md:px-6 py-3 md:py-4 border-b border-gray-200">
-              <h3 className="font-semibold text-base md:text-lg truncate">
+              <h3 className="font-bold text-base md:text-lg truncate">
                 Fancy Settlements - {getAvailableSelectionIds(selectedMatch).find(s => s.selectionId === selectedSelectionId)?.betName || `Selection ID: ${selectedSelectionId}`}
               </h3>
             </div>
@@ -458,11 +458,11 @@ export function FancySettlementScreen() {
                   {groupedSettlements.length > 0 ? (
                     groupedSettlements.map((group: any, index: number) => (
                       <tr key={group.settlementId || index} className="hover:bg-gray-50">
-                        <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-semibold">
+                        <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-bold">
                           {group.betName || group.settlementId || "N/A"}
                         </td>
                         <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                          <span className="text-xs md:text-sm font-semibold text-purple-600">
+                          <span className="text-xs md:text-sm font-bold text-purple-600">
                             {group.count} {group.count === 1 ? 'bet' : 'bets'}
                           </span>
                         </td>
@@ -476,7 +476,7 @@ export function FancySettlementScreen() {
                   ) : (
                     <tr>
                       <td colSpan={3} className="px-4 md:px-6 py-8 md:py-12 text-center">
-                        <p className="text-gray-500 font-medium text-sm md:text-base">No fancy bets found for this selection ID</p>
+                        <p className="text-gray-500 font-bold text-sm md:text-base">No fancy bets found for this selection ID</p>
                       </td>
                     </tr>
                   )}
@@ -489,13 +489,13 @@ export function FancySettlementScreen() {
               {groupedSettlements.length > 0 ? (
                 groupedSettlements.map((group: any, index: number) => (
                   <div key={group.settlementId || index} className="p-4">
-                    <div className="font-semibold text-sm text-gray-900 mb-2">
+                    <div className="font-bold text-sm text-gray-900 mb-2">
                       {group.betName || group.settlementId || "N/A"}
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-xs text-gray-500 mb-0.5">Bets Count</div>
-                        <span className="text-sm font-semibold text-purple-600">
+                        <span className="text-sm font-bold text-purple-600">
                           {group.count} {group.count === 1 ? 'bet' : 'bets'}
                         </span>
                       </div>
@@ -510,7 +510,7 @@ export function FancySettlementScreen() {
                 ))
               ) : (
                 <div className="px-4 py-8 text-center">
-                  <p className="text-gray-500 font-medium text-sm">No fancy bets found for this selection ID</p>
+                  <p className="text-gray-500 font-bold text-sm">No fancy bets found for this selection ID</p>
                 </div>
               )}
             </div>
@@ -521,14 +521,14 @@ export function FancySettlementScreen() {
         {selectedSelectionId && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-3 md:px-6 py-3 md:py-4">
-              <h3 className="font-semibold text-base md:text-lg flex items-center gap-2">
+              <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
                 <Zap className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="truncate">Settlement Details - Selection ID: {selectedSelectionId}</span>
               </h3>
             </div>
             <div className="p-3 md:p-6 space-y-3 md:space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Event ID <span className="text-red-500">*</span>
               </label>
               <Input
@@ -542,7 +542,7 @@ export function FancySettlementScreen() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Selection ID <span className="text-red-500">*</span>
               </label>
               <Input
@@ -556,7 +556,7 @@ export function FancySettlementScreen() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Market ID <span className={isCancel ? "text-red-500" : "text-gray-500"}>{isCancel ? "*" : "(Optional)"}</span>
               </label>
               <Input
@@ -577,14 +577,14 @@ export function FancySettlementScreen() {
                 onChange={(e) => setIsCancel(e.target.checked)}
                 className="w-4 h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <label htmlFor="isCancel" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="isCancel" className="text-sm font-bold text-gray-700 cursor-pointer">
                 Cancel/Refund all bets
               </label>
             </div>
 
             {!isCancel && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   Decision Run <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -619,7 +619,7 @@ export function FancySettlementScreen() {
                   !selectedSelectionId || 
                   (isCancel ? !canCancelBets : (!eventId.trim() || !selectionId.trim() || !decisionRun.trim()))
                 }
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
+                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-bold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
               >
                 {(isSettling || isCancelling) ? (
                   <>
@@ -677,10 +677,10 @@ export function FancySettlementScreen() {
           <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-purple-50 px-3 md:px-6 py-2 md:py-3 border-b border-purple-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm md:text-base font-semibold text-purple-900">
+                <h3 className="text-sm md:text-base font-bold text-purple-900">
                   Fancy Pending Settlements
                 </h3>
-                <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold">
                   {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
                 </span>
               </div>
@@ -704,7 +704,7 @@ export function FancySettlementScreen() {
                         {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
                       </td>
                       <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs xl:text-sm font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs xl:text-sm font-bold">
                           <Target className="w-3 h-3" />
                           {match.fancy?.count || 0} Fancy bet{match.fancy?.count !== 1 ? 's' : ''}
                         </span>
@@ -717,7 +717,7 @@ export function FancySettlementScreen() {
                       <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center">
                         <Button
                           onClick={() => setSelectedMatch(match)}
-                          className="text-[#00A66E] hover:text-[#00C97A] font-medium text-xs xl:text-sm px-2 xl:px-3 py-1 xl:py-1.5"
+                          className="text-[#00A66E] hover:text-[#00C97A] font-bold text-xs xl:text-sm px-2 xl:px-3 py-1 xl:py-1.5"
                         >
                           View Details
                         </Button>
@@ -733,10 +733,10 @@ export function FancySettlementScreen() {
           <div className="lg:hidden space-y-3">
             <div className="bg-purple-50 px-4 py-3 rounded-t-lg border-b border-purple-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-purple-900">
+                <h3 className="text-sm font-bold text-purple-900">
                   Fancy Pending Settlements
                 </h3>
-                <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-bold">
                   {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
                 </span>
               </div>
@@ -745,10 +745,10 @@ export function FancySettlementScreen() {
               <div key={match.matchId || index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-200">
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-mono font-semibold text-gray-900 mb-1 truncate">
+                    <div className="text-xs font-mono font-bold text-gray-900 mb-1 truncate">
                       ID: {match.matchId || "N/A"}
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-bold text-gray-900">
                       {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export function FancySettlementScreen() {
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Fancy Bets</div>
-                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-semibold">
+                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-bold">
                       <Target className="w-3 h-3" />
                       {match.fancy?.count || 0} bet{match.fancy?.count !== 1 ? 's' : ''}
                     </div>
@@ -772,7 +772,7 @@ export function FancySettlementScreen() {
 
                 <Button
                   onClick={() => setSelectedMatch(match)}
-                  className="w-full bg-[#00A66E] hover:bg-[#00C97A] text-white font-medium text-sm px-4 py-2.5 rounded-lg"
+                  className="w-full bg-[#00A66E] hover:bg-[#00C97A] text-white font-bold text-sm px-4 py-2.5 rounded-lg"
                 >
                   View Details
                 </Button>
@@ -783,7 +783,7 @@ export function FancySettlementScreen() {
       ) : (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
           <Target className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Fancy Pending</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Fancy Pending</h3>
           <p className="text-gray-500 text-sm">There are no matches with Fancy bets requiring settlement.</p>
           <p className="text-gray-400 text-xs mt-2">Check Match Odds or Bookmaker screens for other bet types.</p>
         </div>

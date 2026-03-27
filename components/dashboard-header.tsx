@@ -11,6 +11,7 @@ import FastMarquee from "react-fast-marquee";
 type DashboardHeaderProps = {
   selectedTab: string
   onSelectTab: (tab: string) => void
+  disableLiveFetch?: boolean
 }
 
 // Simple wrapper to use the native <marquee> tag without TypeScript errors
@@ -31,7 +32,7 @@ const TABS = [
   { name: "Evolution", hasLiveCount: false, liveCount: 0 },
 ]
 
-export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardHeaderProps) {
+export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveFetch = false }: DashboardHeaderProps) {
   const active = useMemo(() => selectedTab, [selectedTab])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false)
@@ -44,7 +45,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
     url: process.env.NEXT_PUBLIC_SOCKET_URL
       ? `${process.env.NEXT_PUBLIC_SOCKET_URL}/entitysport`
       : 'http://localhost:3000/entitysport',
-    autoConnect: true,
+    autoConnect: !disableLiveFetch,
     realtimeEvent: 'entitySportRealtimeData',
     listEvent: 'entitySportLiveData',
   })
@@ -53,6 +54,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
   const { matches: cricketMatches } = useCricketMatches({
     page: 1,
     per_page: 20,
+    enabled: !disableLiveFetch,
   })
 
   // Fetch news bar text
@@ -104,12 +106,12 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee + Complain button */}
-      <div className="relative overflow-hidden bg-gray-900 border-y border-gray-700/40">
+      <div className="relative overflow-hidden bg-[#2DE8B7] border-y border-[#22d7a8]">
 
         <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4">
-        <div className="w-full overflow-hidden bg-black">
+        <div className="w-full overflow-hidden bg-[w-full overflow-hidden bg-[#01411C] border border-[#17c999] rounded-lg] border border-[#17c999] rounded-lg">
   <FastMarquee speed={50} gradient={false} pauseOnHover>
-    <span className="px-4 text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] font-semibold tracking-wide text-white">
+    <span className="px-4 text-[0.8rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
       {newsBarText}
     </span>
   </FastMarquee>
@@ -117,14 +119,14 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
           <button
             type="button"
             onClick={() => setIsComplaintModalOpen(true)}
-            className="ml-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-2 ring-red-300/80 hover:ring-red-200 transition-colors"
+            className="ml-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-red-600 hover:bg-red-600 text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/60 hover:brightness-110"
           >
             COMPLAIN
           </button>
         </div>
       </div>
       {/* Nav bar */}
-      <div className="bg-[#00A66E]">
+      <div className="bg-[#01411C]/90 border-b border-[#01411C]/90">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">
           <ul className="flex items-center h-10 gap-4 sm:gap-6 whitespace-nowrap py-1 no-scrollbar">
             {tabsWithLiveCounts.map((tab) => {
@@ -133,10 +135,10 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
                 <li key={tab.name} className="shrink-0 relative group">
                   <button
                     onClick={() => onSelectTab(tab.name)}
-                    className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded transition-colors ${
+                    className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded-lg transition-all duration-300 ${
                       isActive
-                        ? "bg-white/25 text-white shadow-sm border-b-2 border-white"
-                        : "text-white/90 hover:text-white hover:bg-white/15"
+                        ? "bg-[#FFD949] text-black shadow-sm border-b-2 border-[#00A66E] font-bold"
+                        : "text-black/90 text-white hover:bg-black/10 font-bold"
                     }`}
                   >
                     {tab.name}
@@ -154,7 +156,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab }: DashboardH
                   
                   {/* Hover line indicator - only when not active */}
                   {!isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00FF9D] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
                   )}
                 </li>
               )

@@ -20,43 +20,43 @@ const getSportHeaderColor = (sport: string): string => {
   
   switch (sportLower) {
     case 'cricket':
-      return 'bg-[#005461]' // Green for Cricket
+      return 'bg-[#01411C]' // Green for Cricket
     case 'soccer':
     case 'football':
-      return 'bg-[#0066CC]' // Blue for Soccer
+      return 'bg-[#01411C]' // Blue for Soccer
     case 'tennis':
-      return 'bg-[#018790]' // Orange/Red for Tennis
+      return 'bg-[#01411C]' // Orange/Red for Tennis
     case 'horse':
     case 'horse racing':
-      return 'bg-[#36656B]' // Saddle Brown for Horse Racing
+      return 'bg-[#01411C]' // Saddle Brown for Horse Racing
     case 'greyhound':
     case 'greyhound racing':
-      return 'bg-[#6B7280]' // Gray for Greyhound Racing
+      return 'bg-[#01411C]' // Gray for Greyhound Racing
     case 'badminton':
-      return 'bg-[#10B981]' // Emerald Green for Badminton
+      return 'bg-[#01411C]' // Emerald Green for Badminton
     case 'basketball':
-      return 'bg-[#FF6B00]' // Orange for Basketball
+      return 'bg-[#01411C]' // Orange for Basketball
     case 'baseball':
-      return 'bg-[#1E40AF]' // Deep Blue for Baseball
+      return 'bg-[#01411C]' // Deep Blue for Baseball
     case 'hockey':
-      return 'bg-[#059669]' // Teal Green for Hockey
+      return 'bg-[#01411C]' // Teal Green for Hockey
     case 'rugby':
-      return 'bg-[#DC2626]' // Red for Rugby
+      return 'bg-[#01411C]' // Red for Rugby
     case 'volleyball':
-      return 'bg-[#EA580C]' // Orange Red for Volleyball
+      return 'bg-[#01411C]' // Orange Red for Volleyball
     case 'kabaddi':
-      return 'bg-[#7C3AED]' // Purple for Kabaddi
+      return 'bg-[#01411C]' // Purple for Kabaddi
     case 'cycling':
-      return 'bg-[#0284C7]' // Sky Blue for Cycling
+      return 'bg-[#01411C]' // Sky Blue for Cycling
     case 'running':
-      return 'bg-[#F59E0B]' // Amber for Running
+      return 'bg-[#01411C]' // Amber for Running
     case 'boxing':
-      return 'bg-[#991B1B]' // Dark Red for Boxing
+      return 'bg-[#01411C]' // Dark Red for Boxing
     case 'mma':
     case 'ufc':
-      return 'bg-[#1F2937]' // Dark Gray for MMA/UFC
+      return 'bg-[#01411C]' // Dark Gray for MMA/UFC
     default:
-      return 'bg-[#00A66E]' // Default green
+      return 'bg-[#01411C]' // Default green
   }
 }
 
@@ -140,7 +140,7 @@ const ViewMoreButton = memo(({
     <div className="p-4 text-right">
       <button
         onClick={onToggle}
-        className="text-[#00A66E] hover:text-[#008a5a] font-medium text-sm transition-colors"
+        className="text-[#00A66E] hover:text-[#008a5a] font-bold text-sm transition-colors"
       >
         {showAll ? "Show Less" : "View More..."}
       </button>

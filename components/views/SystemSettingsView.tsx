@@ -37,19 +37,19 @@ export default function SystemSettingsView() {
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5 text-[#00A66E]" />
-              <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
+              <h2 className="text-lg font-bold text-gray-900">System Settings</h2>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Reset
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-bold rounded-lg transition-colors"
               >
                 <Save className="w-4 h-4" />
                 Save Changes
@@ -60,10 +60,10 @@ export default function SystemSettingsView() {
           <div className="p-6 space-y-6">
             {/* General Settings */}
             <div>
-              <h3 className="text-md font-semibold text-gray-900 mb-4">General Settings</h3>
+              <h3 className="text-md font-bold text-gray-900 mb-4">General Settings</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Site Name
                   </label>
                   <input
@@ -74,7 +74,7 @@ export default function SystemSettingsView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Currency
                   </label>
                   <select
@@ -89,7 +89,7 @@ export default function SystemSettingsView() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Timezone
                   </label>
                   <select
@@ -107,10 +107,10 @@ export default function SystemSettingsView() {
 
             {/* Betting Settings */}
             <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-md font-semibold text-gray-900 mb-4">Betting Settings</h3>
+              <h3 className="text-md font-bold text-gray-900 mb-4">Betting Settings</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Minimum Bet Amount
                   </label>
                   <input
@@ -121,7 +121,7 @@ export default function SystemSettingsView() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Maximum Bet Amount
                   </label>
                   <input
@@ -136,11 +136,11 @@ export default function SystemSettingsView() {
 
             {/* System Status */}
             <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-md font-semibold text-gray-900 mb-4">System Status</h3>
+              <h3 className="text-md font-bold text-gray-900 mb-4">System Status</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Maintenance Mode</label>
+                    <label className="text-sm font-bold text-gray-700">Maintenance Mode</label>
                     <p className="text-xs text-gray-500">Enable to put site under maintenance</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -155,7 +155,7 @@ export default function SystemSettingsView() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Registration Enabled</label>
+                    <label className="text-sm font-bold text-gray-700">Registration Enabled</label>
                     <p className="text-xs text-gray-500">Allow new user registrations</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">

@@ -165,13 +165,13 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
       <div className="bg-gray-800 px-2 sm:px-4 py-2 border-b border-gray-700">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="text-white text-xs sm:text-sm font-medium truncate">{data.matchName}</h3>
+            <h3 className="text-white text-xs sm:text-sm font-bold truncate">{data.matchName}</h3>
             {matchDateTime && (
               <p className="text-gray-400 text-[10px] sm:text-xs mt-0.5 truncate">{matchDateTime}</p>
             )}
           </div>
           <div className="ml-2 flex-shrink-0">
-            <span className="bg-green-500 text-white text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+            <span className="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
               INPLAY
             </span>
           </div>
@@ -186,7 +186,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             {/* Team Scores - Always Visible */}
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Team 1 Score */}
-              <div className="text-white text-xs sm:text-sm font-semibold">
+              <div className="text-white text-xs sm:text-sm font-bold">
                 <span>{data.team1.shortName}</span>
                 <span className="ml-1">{data.team1.score}</span>
                 <span className="text-gray-400 ml-1">({data.team1.overs})</span>
@@ -196,7 +196,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
               <div className="text-white text-xs sm:text-sm">
                 {data.team2.score && data.team2.score.trim() !== '' ? (
                   <>
-                    <span className="font-semibold">{data.team2.shortName}</span>
+                    <span className="font-bold">{data.team2.shortName}</span>
                     <span className="ml-1">{data.team2.score}</span>
                     {data.team2.overs && data.team2.overs.trim() !== '' && (
                       <span className="text-gray-400 ml-1">({data.team2.overs})</span>
@@ -204,7 +204,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                   </>
                 ) : (
                   <>
-                    <span className="font-semibold">{data.team2.shortName}</span>
+                    <span className="font-bold">{data.team2.shortName}</span>
                     <span className="text-gray-400 ml-1 italic">Yet to bat</span>
                   </>
                 )}
@@ -218,7 +218,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                 {currentRunRate && (
                   <div className="flex items-center gap-1 text-[10px] sm:text-xs">
                     <span className="text-gray-300">CRR</span>
-                    <span className="text-green-400 font-semibold">: {currentRunRate}</span>
+                    <span className="text-green-400 font-bold">: {currentRunRate}</span>
                   </div>
                 )}
 
@@ -226,7 +226,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                 {trail !== null && (
                   <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
                     <span className="text-gray-300">{data.team2.shortName} trail</span>
-                    <span className="font-semibold">by {trail} runs</span>
+                    <span className="font-bold">by {trail} runs</span>
                   </div>
                 )}
 
@@ -234,7 +234,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                 {runsNeededInfo && (
                   <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-400">
                     <span className="text-gray-300">{data.team2.shortName} needs</span>
-                    <span className="font-semibold">{runsNeededInfo.runs} runs in {runsNeededInfo.balls} balls to win</span>
+                    <span className="font-bold">{runsNeededInfo.runs} runs in {runsNeededInfo.balls} balls to win</span>
                   </div>
                 )}
               </>
@@ -315,7 +315,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                   return (
                     <div
                       key={idx}
-                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${bgColor}`}
+                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${bgColor}`}
                     >
                       {displayText}
                     </div>
@@ -361,10 +361,10 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
               {/* Batsman */}
               {data.batsman && data.batsman.length > 0 && (
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <span className="text-gray-400 font-semibold">BATTING</span>
+                  <span className="text-gray-400 font-bold">BATTING</span>
                   {data.batsman.map((batsman, idx) => (
                     <div key={batsman.player_id || idx} className="text-white flex items-center gap-1">
-                      <span className="font-medium">{batsman.name}</span>
+                      <span className="font-bold">{batsman.name}</span>
                       {batsman.strike_status === 1 && <span className="text-green-400">*</span>}
                       <span className="text-gray-400">
                         {batsman.run}({batsman.ball})
@@ -380,9 +380,9 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
               {/* Bowler */}
               {data.bowler && data.bowler.player_id && (
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-400 font-semibold">BOWLING</span>
+                  <span className="text-gray-400 font-bold">BOWLING</span>
                   <div className="text-white flex items-center gap-1">
-                    <span className="font-medium">{data.bowler.name}</span>
+                    <span className="font-bold">{data.bowler.name}</span>
                     <span className="text-gray-400">
                       {data.bowler.over} ov, {data.bowler.run}-{data.bowler.wicket}
                     </span>

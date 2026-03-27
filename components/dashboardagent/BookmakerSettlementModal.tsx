@@ -103,7 +103,7 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50">
           {/* Bet/Market Information */}
           <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-3 sm:mb-4 border border-gray-200">
-            <h3 className="font-semibold text-base sm:text-lg mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-base sm:text-lg mb-3 flex items-center gap-2">
               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[#00A66E]" />
               {match?.selectedBet ? "Bet Information" : "Market Information"}
             </h3>
@@ -111,19 +111,19 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <span className="text-gray-600">Bet ID:</span>
-                  <span className="ml-2 font-mono font-semibold break-all">{match.selectedBet.id || "N/A"}</span>
+                  <span className="ml-2 font-mono font-bold break-all">{match.selectedBet.id || "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{match.selectedBet.amount?.toLocaleString() || 0}</span>
+                  <span className="ml-2 font-bold text-green-600">Rs{match.selectedBet.amount?.toLocaleString() || 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Odds:</span>
-                  <span className="ml-2 font-semibold">{match.selectedBet.odds || "N/A"}</span>
+                  <span className="ml-2 font-bold">{match.selectedBet.odds || "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Bet Type:</span>
-                  <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`ml-2 px-2 py-1 rounded text-xs font-bold ${
                     match.selectedBet.betType === "BACK" ? "bg-green-100 text-green-800" :
                     match.selectedBet.betType === "LAY" ? "bg-red-100 text-red-800" :
                     "bg-gray-100 text-gray-800"
@@ -133,7 +133,7 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
                 </div>
                 <div className="sm:col-span-2">
                   <span className="text-gray-600">Bet Name:</span>
-                  <span className="ml-2 font-semibold break-words">{match.selectedBet.betName || "N/A"}</span>
+                  <span className="ml-2 font-bold break-words">{match.selectedBet.betName || "N/A"}</span>
                 </div>
                 <div className="sm:col-span-2">
                   <span className="text-gray-600">Settlement ID:</span>
@@ -144,11 +144,11 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <span className="text-gray-600">Bets Count:</span>
-                  <span className="ml-2 font-semibold">{marketData?.count || 0}</span>
+                  <span className="ml-2 font-bold">{marketData?.count || 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Total Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
+                  <span className="ml-2 font-bold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
                 </div>
               </div>
             )}
@@ -156,11 +156,11 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
 
           {/* Settlement Details */}
           <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200">
-            <h3 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4">Settlement Details</h3>
+            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Settlement Details</h3>
             
             <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                   Event ID <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -174,7 +174,7 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                   Market ID <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -188,7 +188,7 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                   Winner Selection ID <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -216,7 +216,7 @@ export function BookmakerSettlementModal({ match, isOpen, onClose, onSettle }: B
           <Button
             onClick={handleSettle}
             disabled={isLoading || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-            className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-white font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-white font-bold bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>

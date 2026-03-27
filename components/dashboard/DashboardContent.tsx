@@ -89,7 +89,7 @@ export default function DashboardContent({ tab }: DashboardContentProps) {
         <section className="bg-white rounded-md shadow-sm border border-gray-200">
           <div className="bg-[#00A66E] text-white font-bold px-4 py-3 rounded-t-md">{tab}</div>
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">{tab} Games</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{tab} Games</h2>
             <p className="text-gray-600">Gaming content for {tab} will be implemented here.</p>
           </div>
         </section>

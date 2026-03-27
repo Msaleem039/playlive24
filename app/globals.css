@@ -209,19 +209,18 @@ body {
   animation: blink-3colors 1.5s ease-in-out infinite;
 }
 
-/* Global brand color override:
-   Force old green backgrounds to #297370 with white text */
+/* Global brand color override (mint layout style) */
 [class*="bg-[#00A66E]"],
 [class*="bg-[#008f5a]"],
 [class*="from-[#00A66E]"],
 [class*="to-[#008f5a]"] {
-  background-color: #297370 !important;
+  background-color: #2DE8B7 !important;
   background-image: none !important;
-  color: #ffffff !important;
+  color: #000000 !important;
 }
 
 [class*="hover:bg-[#00A66E]"]:hover,
 [class*="hover:bg-[#008f5a]"]:hover {
-  background-color: #297370 !important;
-  color: #ffffff !important;
+  background-color: #22d7a8 !important;
+  color: #000000 !important;
 }

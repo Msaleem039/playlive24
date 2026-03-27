@@ -66,7 +66,7 @@ export function SharedNavigation({ activeTab = 'Dashboard', onTabChange, role = 
               <button
                 key={item}
                 onClick={() => onTabChange?.(item)}
-                className={`font-semibold flex items-center whitespace-nowrap text-[0.75rem] transition-colors ${
+                className={`font-bold flex items-center whitespace-nowrap text-[0.75rem] transition-colors ${
                   item === 'Game Controls' ? 'hover:text-gray-200' : ''
                 } ${
                   item === activeTab ? 'bg-white text-black px-3 py-1 rounded font-bold' : 'hover:text-gray-200'
@@ -84,7 +84,7 @@ export function SharedNavigation({ activeTab = 'Dashboard', onTabChange, role = 
 
       {/* Section Header */}
       <div className="bg-black text-white px-4 sm:px-6 py-2">
-        <h1 className="text-lg font-semibold">{activeTab}</h1>
+        <h1 className="text-lg font-bold">{activeTab}</h1>
       </div>
     </>
   )

@@ -33,8 +33,8 @@ export default function ClientRulesPage() {
         />
       )}
       <div className={`${isClient ? "pt-[20px]" : ""} min-h-[400px] bg-white rounded-lg shadow p-6`}>
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">Rules &amp; Guidelines</h1>
-        <h2 className="text-lg font-semibold text-gray-800 mt-4 mb-3">Betting Agreement</h2>
+        <h1 className="text-xl font-bold text-gray-800 mb-2">Rules &amp; Guidelines</h1>
+        <h2 className="text-lg font-bold text-gray-800 mt-4 mb-3">Betting Agreement</h2>
         <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
           <li>If you are placing bet that mean you are accepting our Betting Agreement.</li>
           <li>Cheating Bets Deleted Automatically. No Claims.</li>

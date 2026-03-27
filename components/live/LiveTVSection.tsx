@@ -55,7 +55,7 @@ export default function LiveTVSection({
     <div className={containerClass}>
       {/* Live TV Toggle Header */}
       <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between flex-shrink-0">
-        <span className={`${variant === 'mobile' ? 'text-xs sm:text-sm' : 'text-sm'} font-semibold`}>Live TV</span>
+        <span className={`${variant === 'mobile' ? 'text-xs sm:text-sm' : 'text-sm'} font-bold`}>Live TV</span>
         <button
           onClick={() => canToggleTV && onToggleChange(!liveToggle)}
           disabled={!canToggleTV}
@@ -128,11 +128,11 @@ export default function LiveTVSection({
                 <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                <p className="text-sm font-medium mb-2">Stream Unavailable</p>
+                <p className="text-sm font-bold mb-2">Stream Unavailable</p>
                 <p className="text-xs opacity-75 mb-4">The live stream is not available at this time.</p>
                 <button
                   onClick={handleRetry}
-                  className="px-4 py-2 bg-[#00A66E] hover:bg-[#00C97A] text-white rounded-lg text-xs font-medium transition-colors"
+                  className="px-4 py-2 bg-[#00A66E] hover:bg-[#00C97A] text-white rounded-lg text-xs font-bold transition-colors"
                 >
                   Retry
                 </button>
@@ -143,7 +143,7 @@ export default function LiveTVSection({
       
           
           {/* Stream Branding (Top Right) */}
-          {/* <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-semibold">
+          {/* <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-[10px] sm:text-xs font-bold">
             CANAL+ SPORT 360
           </div> */}
         </div>

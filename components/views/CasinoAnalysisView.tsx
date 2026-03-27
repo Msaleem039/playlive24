@@ -62,7 +62,7 @@ export default function CasinoAnalysisView() {
 
         {/* Revenue Chart Placeholder */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Revenue Chart</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Revenue Chart</h2>
           <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
             <p className="text-gray-500">Chart visualization will be displayed here</p>
           </div>

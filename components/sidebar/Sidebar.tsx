@@ -187,7 +187,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
             <div className="py-2">
               {/* Sports Section */}
               <div className="px-4 py-2">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                   Sports & Live Events
                 </h3>
                 {sidebarItems.map((item) => (
@@ -209,7 +209,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${item.color}`}>
                           {item.icon}
                         </div>
-                        <span className="font-medium text-gray-800">{item.label}</span>
+                        <span className="font-bold text-gray-800">{item.label}</span>
                       </div>
                       {item.hasDropdown && (
                         <div className="text-gray-400">
@@ -241,7 +241,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
                               getMatchesForTab(item.id).map((match) => (
                                 <div key={match.id} className="mb-2 p-2 bg-gray-50 rounded">
                                   <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-medium text-gray-800">
+                                    <span className="text-sm font-bold text-gray-800">
                                       {match.homeTeam} vs {match.awayTeam}
                                     </span>
                                     <span className={`text-xs px-2 py-1 rounded ${
@@ -288,7 +288,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
 
               {/* Gaming Section */}
               <div className="px-4 py-2 border-t border-gray-200">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                   Gaming & Casino
                 </h3>
                 {gamingItems.map((item) => (
@@ -302,7 +302,7 @@ export default function Sidebar({ isOpen, onClose, selectedTab, onSelectTab }: S
                       selectedTab === item.id ? "bg-gray-100" : ""
                     }`}
                   >
-                    <span className="font-medium text-gray-800">{item.label}</span>
+                    <span className="font-bold text-gray-800">{item.label}</span>
                   </button>
                 ))}
               </div>

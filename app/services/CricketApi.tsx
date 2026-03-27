@@ -46,14 +46,14 @@ export const cricketApi = createApi({
       providesTags: ['CricketMatches'],
     }),
     
-    // Get cricket match markets by eventId
-    getCricketMatchMarkets: builder.query<any, { eventId: string | number }>({
-      query: ({ eventId }) => {
+    // Get cricket match detail by marketid (for live detail screen)
+    getCricketMatchMarkets: builder.query<any, { marketid: string | number }>({
+      query: ({ marketid }) => {
         const searchParams = new URLSearchParams();
-        searchParams.append('eventId', eventId.toString());
+        searchParams.append('marketid', marketid.toString());
         
         return {
-          url: `${API_END_POINTS.cricketMatchMarkets}?${searchParams.toString()}`,
+          url: `${API_END_POINTS.cricketMatchDetail}?${searchParams.toString()}`,
           method: 'GET',
         };
       },

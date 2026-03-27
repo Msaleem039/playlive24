@@ -118,7 +118,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-14 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50"
+                  className="w-full h-14 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50"
                 >
                   {isLoading ? (
                     <motion.div

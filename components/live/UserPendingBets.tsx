@@ -59,7 +59,7 @@ export default function UserPendingBets({ userPendingBets, isLoading }: UserPend
                   style={{ backgroundColor: bgColor }}
                 >
                   <td className="px-2 sm:px-3 py-2.5">
-                    <div className="font-semibold text-gray-900 truncate text-xs sm:text-sm">
+                    <div className="font-bold text-gray-900 truncate text-xs sm:text-sm">
                       {bet.betName || 'Bet'}
                     </div>
                     <div className="text-[10px] sm:text-xs text-gray-600 truncate mt-0.5">
@@ -67,14 +67,14 @@ export default function UserPendingBets({ userPendingBets, isLoading }: UserPend
                     </div>
                     {/* {oddsValue && (
                       <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
-                        Odds: <span className="font-medium">{oddsValue}</span>
+                        Odds: <span className="font-bold">{oddsValue}</span>
                       </div>
                     )} */}
                   </td>
-                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-medium text-xs sm:text-sm">
+                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-bold text-xs sm:text-sm">
                     Rs {(bet.amount || bet.betValue || 0).toLocaleString()}
                   </td>
-                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-medium text-xs sm:text-sm">
+                  <td className="px-1 sm:px-3 py-2 text-center text-gray-900 font-bold text-xs sm:text-sm">
                     {oddsValue ? oddsValue : '--'}
                   </td>
                 </tr>

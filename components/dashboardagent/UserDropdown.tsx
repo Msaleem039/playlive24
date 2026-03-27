@@ -116,7 +116,7 @@ export function UserDropdown({ isOpen, onClose, onMenuClick }: UserDropdownProps
             }`}
           >
             {item.icon}
-            <span className={`text-sm font-medium ${item.isLogout ? 'text-gray-900' : 'text-gray-700'}`}>
+            <span className={`text-sm font-bold ${item.isLogout ? 'text-gray-900' : 'text-gray-700'}`}>
               {item.label}
             </span>
           </button>

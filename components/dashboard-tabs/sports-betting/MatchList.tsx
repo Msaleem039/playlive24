@@ -82,7 +82,7 @@ export function MatchList({ competitionId, sportId, sportName, onMatchSelect }: 
       <div className="py-4 px-2">
         <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg bg-red-50 border border-red-200 py-4 px-3 text-center">
           <AlertCircle className="w-6 h-6 text-red-500" />
-          <p className="text-xs font-medium text-red-800">Failed to load matches</p>
+          <p className="text-xs font-bold text-red-800">Failed to load matches</p>
           <button
             type="button"
             onClick={() => refetch()}
@@ -141,17 +141,17 @@ function MatchListItem({
           <div className="flex items-center gap-1.5 flex-wrap text-[11px] sm:text-xs text-gray-500">
             <span>{formatDate(match.openDate)}</span>
             {match.live && (
-              <span className="flex items-center gap-0.5 text-red-600 font-medium">
+              <span className="flex items-center gap-0.5 text-red-600 font-bold">
                 <Radio className="w-2.5 h-2.5" /> Live
               </span>
             )}
             {match.upcoming && !match.live && (
-              <span className="flex items-center gap-0.5 text-blue-600 font-medium">
+              <span className="flex items-center gap-0.5 text-blue-600 font-bold">
                 <Clock className="w-2.5 h-2.5" /> Upcoming
               </span>
             )}
           </div>
-          <div className="font-medium text-xs sm:text-sm truncate mt-0.5">{label}</div>
+          <div className="font-bold text-xs sm:text-sm truncate mt-0.5">{label}</div>
         </div>
         <ChevronRight
           className={`w-4 h-4 flex-shrink-0 text-gray-500 transition-transform ${expanded ? 'rotate-90' : ''}`}

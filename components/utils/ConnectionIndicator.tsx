@@ -63,7 +63,7 @@ export default function ConnectionIndicator({
     <div className={`flex items-center gap-2 ${className}`}>
       <div className={`flex items-center gap-1 ${getStatusColor()}`}>
         {getStatusIcon()}
-        <span className="text-sm font-medium">
+        <span className="text-sm font-bold">
           {getStatusText()}
         </span>
       </div>

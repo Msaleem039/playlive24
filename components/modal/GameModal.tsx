@@ -144,7 +144,7 @@ export default function GameModal({ isOpen, onClose, game }: GameModalProps) {
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="mt-4 inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-full text-sm font-medium"
+                  className="mt-4 inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-full text-sm font-bold"
                 > */}
                   {/* <motion.div 
                     animate={{ scale: [1, 1.2, 1] }}

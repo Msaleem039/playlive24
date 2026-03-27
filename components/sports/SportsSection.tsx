@@ -31,7 +31,7 @@ export default function SportsSection({ sport, matches, showViewMore = true }: S
       className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6"
     >
       {/* Header */}
-      <div className="bg-[#00A66E] text-white px-4 py-3 rounded-t-lg">
+      <div className="bg-[#01411C] text-white px-4 py-3 rounded-t-lg">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-normal">{sport}</h3>
           {/* <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export default function SportsSection({ sport, matches, showViewMore = true }: S
         <div className="p-4 text-right">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-[#00A66E] hover:text-[#008a5a] font-medium text-sm transition-colors"
+            className="text-[#00A66E] hover:text-[#008a5a] font-bold text-sm transition-colors"
           >
             {showAll ? "Show Less" : "View More..."}
           </button>

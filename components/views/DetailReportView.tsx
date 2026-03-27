@@ -43,14 +43,14 @@ export default function DetailReportView() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <FileText className="w-5 h-5 text-[#00A66E]" />
-            <h2 className="text-lg font-semibold text-gray-900">Report Type</h2>
+            <h2 className="text-lg font-bold text-gray-900">Report Type</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {reportTypes.map((type) => (
               <button
                 key={type.toLowerCase()}
                 onClick={() => setSelectedReport(type.toLowerCase())}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg font-bold transition-colors ${
                   selectedReport === type.toLowerCase()
                     ? "bg-[#00A66E] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -73,10 +73,10 @@ export default function DetailReportView() {
         {/* Report Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Detailed Report</h2>
+            <h2 className="text-lg font-bold text-gray-900">Detailed Report</h2>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#00A66E] hover:bg-[#00b97b] text-white font-bold rounded-lg transition-colors"
             >
               <Download className="w-4 h-4" />
               Export

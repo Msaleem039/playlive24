@@ -73,7 +73,7 @@ export default function SuperAdminSelectClient() {
               className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-200"
             >
               <div className="bg-black text-white px-4 py-2">
-                <h3 className="font-semibold text-sm">SETTLEMENT ADMIN PANEL</h3>
+                <h3 className="font-bold text-sm">SETTLEMENT ADMIN PANEL</h3>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
@@ -88,7 +88,7 @@ export default function SuperAdminSelectClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <span className="text-sm text-[#00A66E] font-semibold">Go to Admin Panel</span>
+                  <span className="text-sm text-[#00A66E] font-bold">Go to Admin Panel</span>
                   <ArrowRight className="w-4 h-4 text-[#00A66E]" />
                 </div>
               </div>
@@ -100,7 +100,7 @@ export default function SuperAdminSelectClient() {
               className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-200"
             >
               <div className="bg-black text-white px-4 py-2">
-                <h3 className="font-semibold text-sm">SUPER ADMIN DASHBOARD</h3>
+                <h3 className="font-bold text-sm">SUPER ADMIN DASHBOARD</h3>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
@@ -115,7 +115,7 @@ export default function SuperAdminSelectClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <span className="text-sm text-blue-600 font-semibold">Go to Dashboard</span>
+                  <span className="text-sm text-blue-600 font-bold">Go to Dashboard</span>
                   <ArrowRight className="w-4 h-4 text-blue-600" />
                 </div>
               </div>
@@ -130,21 +130,21 @@ export default function SuperAdminSelectClient() {
                   <BarChart3 className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs text-gray-600 mb-1">User Management</p>
-                <p className="text-sm font-semibold text-gray-900">Full Control</p>
+                <p className="text-sm font-bold text-gray-900">Full Control</p>
               </div>
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg mb-2">
                   <Settings className="w-5 h-5 text-green-600" />
                 </div>
                 <p className="text-xs text-gray-600 mb-1">Settlement Control</p>
-                <p className="text-sm font-semibold text-gray-900">Admin Panel</p>
+                <p className="text-sm font-bold text-gray-900">Admin Panel</p>
               </div>
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg mb-2">
                   <LayoutDashboard className="w-5 h-5 text-purple-600" />
                 </div>
                 <p className="text-xs text-gray-600 mb-1">Complete Dashboard</p>
-                <p className="text-sm font-semibold text-gray-900">All Features</p>
+                <p className="text-sm font-bold text-gray-900">All Features</p>
               </div>
             </div>
           </div>

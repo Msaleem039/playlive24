@@ -110,11 +110,11 @@ export function BetHistoryView() {
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'WON':
-        return 'text-green-600 font-semibold'
+        return 'text-green-600 font-bold'
       case 'LOST':
-        return 'text-red-600 font-semibold'
+        return 'text-red-600 font-bold'
       case 'PENDING':
-        return 'text-yellow-600 font-semibold'
+        return 'text-yellow-600 font-bold'
       default:
         return 'text-gray-600'
     }
@@ -134,32 +134,32 @@ export function BetHistoryView() {
             <div className="flex flex-wrap gap-3 sm:gap-6 text-[11px] sm:text-xs md:text-sm">
               <div className="flex items-center gap-1.5">
                 <span className="text-gray-500">Balance:</span>
-                <span className="font-semibold text-green-600">
+                <span className="font-bold text-green-600">
                   Rs {formatCurrency(summaryInfo.balance)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-gray-500">Liability:</span>
-                <span className="font-semibold text-red-600">
+                <span className="font-bold text-red-600">
                   Rs {formatCurrency(summaryInfo.liability)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-gray-500">In:</span>
-                <span className="font-semibold text-blue-600">
+                <span className="font-bold text-blue-600">
                   Rs {formatCurrency(summaryInfo.inAmount)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-gray-500">Out:</span>
-                <span className="font-semibold text-amber-700">
+                <span className="font-bold text-amber-700">
                   Rs {formatCurrency(summaryInfo.outAmount)}
                 </span>
               </div>
               {/* <div className="flex items-center gap-1.5">
                 <span className="text-gray-500">Net P/L:</span>
                 <span
-                  className={`font-semibold ${
+                  className={`font-bold ${
                     summaryInfo.netPnl >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
@@ -171,17 +171,17 @@ export function BetHistoryView() {
 
           {cashHistory.length > 0 && (
             <div className="border-t border-gray-200 pt-2 mt-1">
-              <h2 className="text-[11px] sm:text-xs md:text-sm font-semibold text-gray-700 mb-1.5">
+              <h2 className="text-[11px] sm:text-xs md:text-sm font-bold text-gray-700 mb-1.5">
                 Cash History
               </h2>
               <div className="overflow-x-auto">
                 <table className="min-w-[320px] w-full text-[10px] sm:text-xs">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-2 py-1.5 text-left font-semibold text-gray-700">Date</th>
-                      <th className="px-2 py-1.5 text-left font-semibold text-gray-700">Type</th>
-                      <th className="px-2 py-1.5 text-right font-semibold text-gray-700">Amount</th>
-                      <th className="px-2 py-1.5 text-left font-semibold text-gray-700">Remarks</th>
+                      <th className="px-2 py-1.5 text-left font-bold text-gray-700">Date</th>
+                      <th className="px-2 py-1.5 text-left font-bold text-gray-700">Type</th>
+                      <th className="px-2 py-1.5 text-right font-bold text-gray-700">Amount</th>
+                      <th className="px-2 py-1.5 text-left font-bold text-gray-700">Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -192,7 +192,7 @@ export function BetHistoryView() {
                         </td>
                         <td className="px-2 py-1.5">
                           <span
-                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                               (entry.type || "").toUpperCase() === "IN"
                                 ? "bg-green-100 text-green-700"
                                 : "bg-red-100 text-red-700"
@@ -201,7 +201,7 @@ export function BetHistoryView() {
                             {(entry.type || "").toUpperCase() || "N/A"}
                           </span>
                         </td>
-                        <td className="px-2 py-1.5 text-right font-semibold text-gray-900">
+                        <td className="px-2 py-1.5 text-right font-bold text-gray-900">
                           Rs {formatCurrency(Number(entry.amount || 0))}
                         </td>
                         <td
@@ -226,7 +226,7 @@ export function BetHistoryView() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("Current")}
-            className={`px-6 py-2 text-sm font-semibold ${
+            className={`px-6 py-2 text-sm font-bold ${
               activeTab === "Current" 
                 ? "bg-[#00A66E] text-white" 
                 : "text-white hover:bg-gray-700"
@@ -236,7 +236,7 @@ export function BetHistoryView() {
           </button>
           <button
             onClick={() => setActiveTab("Past")}
-            className={`px-6 py-2 text-sm font-semibold ${
+            className={`px-6 py-2 text-sm font-bold ${
               activeTab === "Past" 
                 ? "bg-[#00A66E] text-white" 
                 : "text-white hover:bg-gray-700"
@@ -343,7 +343,7 @@ export function BetHistoryView() {
                       {bet.user?.name || bet.user?.username || 'N/A'}
                     </td>
                     <td className="px-3 py-2 text-xs">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                         bet.betType === 'BACK' 
                           ? 'bg-[#AEDBFB] text-blue-800' 
                           : 'bg-pink-100 text-pink-800'

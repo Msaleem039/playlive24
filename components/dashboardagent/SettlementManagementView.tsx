@@ -70,53 +70,53 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
             <>
               {/* Match Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-lg mb-3">Match Information</h3>
+                <h3 className="font-bold text-lg mb-3">Match Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-gray-600">Match ID:</span>
-                    <span className="ml-2 font-medium">{details.match_id}</span>
+                    <span className="ml-2 font-bold">{details.match_id}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Event:</span>
-                    <span className="ml-2 font-medium">{details.match?.eventName || details.match?.ename || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.match?.eventName || details.match?.ename || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Home Team:</span>
-                    <span className="ml-2 font-medium">{details.match?.homeTeam || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.match?.homeTeam || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Away Team:</span>
-                    <span className="ml-2 font-medium">{details.match?.awayTeam || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.match?.awayTeam || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Status:</span>
-                    <span className="ml-2 font-medium">{details.match?.status || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.match?.status || "N/A"}</span>
                   </div>
                 </div>
               </div>
 
               {/* Bet Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-lg mb-3">Bet Information</h3>
+                <h3 className="font-bold text-lg mb-3">Bet Information</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-gray-600">Bet Name:</span>
-                    <span className="ml-2 font-medium">{details.bet_info?.betName || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.bet_info?.betName || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Market:</span>
-                    <span className="ml-2 font-medium">{details.bet_info?.marketName || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.bet_info?.marketName || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">GType:</span>
-                    <span className="ml-2 font-medium">{details.bet_info?.gtype || "N/A"}</span>
+                    <span className="ml-2 font-bold">{details.bet_info?.gtype || "N/A"}</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Counts */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-lg mb-3">Status Summary</h3>
+                <h3 className="font-bold text-lg mb-3">Status Summary</h3>
                 <div className="grid grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-yellow-600">{details.status_counts?.PENDING || 0}</div>
@@ -150,10 +150,10 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
               {/* Manual Settlement */}
               {details.status_counts?.PENDING > 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-lg mb-3">Manual Settlement</h3>
+                  <h3 className="font-bold text-lg mb-3">Manual Settlement</h3>
                   <div className="flex gap-4 items-end">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
                         Winner/Result
                       </label>
                       <Input
@@ -177,7 +177,7 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
 
               {/* Bets Table */}
               <div className="bg-white border rounded-lg overflow-hidden">
-                <h3 className="font-semibold text-lg p-4 bg-gray-100">Bets List</h3>
+                <h3 className="font-bold text-lg p-4 bg-gray-100">Bets List</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-100">
@@ -199,7 +199,7 @@ function SettlementDetailsModal({ settlementId, isOpen, onClose, onSettle }: Set
                             <td className="px-4 py-3 text-sm">{bet.odds || "N/A"}</td>
                             <td className="px-4 py-3 text-sm">{bet.betName || "N/A"}</td>
                             <td className="px-4 py-3 text-sm">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
                                 bet.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
                                 bet.status === "WON" ? "bg-green-100 text-green-800" :
                                 bet.status === "LOST" ? "bg-red-100 text-red-800" :
@@ -344,17 +344,17 @@ export function SettlementManagementView() {
                           {settlement.first_bet?.marketName || "N/A"}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
-                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
+                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">
                             {settlement.pending_bets_count || 0}
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
                           Rs{settlement.total_bet_amount?.toLocaleString() || 0}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-center">
                           <button
                             onClick={() => handleViewDetails(settlement.settlement_id)}
-                            className="inline-flex items-center gap-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-3 py-1 rounded text-xs font-medium"
+                            className="inline-flex items-center gap-1 bg-[#00A66E] hover:bg-[#008a5a] text-white px-3 py-1 rounded text-xs font-bold"
                           >
                             <Eye className="w-4 h-4" />
                             View Details

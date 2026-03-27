@@ -226,7 +226,7 @@ export default function HierarchicalNavigation() {
               e.preventDefault()
               handleBreadcrumbClick(-1)
             }}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+            className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
           >
             {userRole === 'SUPER_ADMIN' ? 'Admins' : userRole === 'ADMIN' ? 'Agents' : 'Clients'}
           </button>
@@ -238,7 +238,7 @@ export default function HierarchicalNavigation() {
                   e.preventDefault()
                   handleBreadcrumbClick(index)
                 }}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
               >
                 {path.name}
               </button>
@@ -247,7 +247,7 @@ export default function HierarchicalNavigation() {
           {viewMode === 'bets' && (
             <>
               <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Bet History</span>
+              <span className="text-sm font-bold text-gray-900">Bet History</span>
             </>
           )}
         </div>
@@ -272,7 +272,7 @@ export default function HierarchicalNavigation() {
           // Users List View
           <>
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900">
                 {navigationPath.length === 0 
                   ? (userRole === 'SUPER_ADMIN' ? 'Admins' : userRole === 'ADMIN' ? 'Agents' : 'Clients')
                   : 'Subordinates'}
@@ -296,11 +296,11 @@ export default function HierarchicalNavigation() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Username</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Role</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">Balance</th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Name</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Username</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Role</th>
+                      <th className="px-4 py-3 text-right font-bold text-gray-700">Balance</th>
+                      <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -324,7 +324,7 @@ export default function HierarchicalNavigation() {
                           }}
                         >
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">
+                            <div className="font-bold text-gray-900">
                               {displayName}
                             </div>
                           </td>
@@ -332,7 +332,7 @@ export default function HierarchicalNavigation() {
                             {displayUsername}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${
                               itemRole === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
                               itemRole === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
                               itemRole === 'AGENT' ? 'bg-green-100 text-green-800' :
@@ -341,7 +341,7 @@ export default function HierarchicalNavigation() {
                               {itemRole || '--'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-medium text-gray-900">
+                          <td className="px-4 py-3 text-right font-bold text-gray-900">
                             Rs {userItem.balance?.toLocaleString() || '0.00'}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -372,7 +372,7 @@ export default function HierarchicalNavigation() {
           // Bet History View
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Bet History</h2>
+              <h2 className="text-lg font-bold text-gray-900">Bet History</h2>
               <button
                 onClick={(e) => {
                   e.preventDefault()
@@ -380,7 +380,7 @@ export default function HierarchicalNavigation() {
                   setNavigationPath(navigationPath.slice(0, -1))
                   setSelectedParentId(navigationPath.length > 1 ? navigationPath[navigationPath.length - 2].id : null)
                 }}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
@@ -404,15 +404,15 @@ export default function HierarchicalNavigation() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Type</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Name</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">Odds</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">Stake</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-700">Net Profit</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">Created At</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Market Type</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Market Name</th>
+                      <th className="px-4 py-3 text-right font-bold text-gray-700">Odds</th>
+                      <th className="px-4 py-3 text-right font-bold text-gray-700">Stake</th>
+                      <th className="px-4 py-3 text-right font-bold text-gray-700">Net Profit</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Status</th>
+                      <th className="px-4 py-3 text-left font-bold text-gray-700">Created At</th>
                       {isSuperAdmin && (
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                        <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                       )}
                     </tr>
                   </thead>
@@ -427,20 +427,20 @@ export default function HierarchicalNavigation() {
                       return (
                         <tr key={betItem.id || betItem.betId} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-bold text-gray-900">
                               {betItem.marketType || '--'}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-gray-600">
                             {displayName}
                           </td>
-                          <td className="px-4 py-3 text-right font-medium text-gray-900">
+                          <td className="px-4 py-3 text-right font-bold text-gray-900">
                             {betItem.odds?.toFixed(2) || '--'}
                           </td>
-                          <td className="px-4 py-3 text-right font-medium text-gray-900">
+                          <td className="px-4 py-3 text-right font-bold text-gray-900">
                             Rs {stake.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-right font-medium">
+                          <td className="px-4 py-3 text-right font-bold">
                             <span className={betItem.netProfit && betItem.netProfit > 0 ? 'text-green-600' : betItem.netProfit && betItem.netProfit < 0 ? 'text-red-600' : 'text-gray-600'}>
                               {betItem.netProfit !== null && betItem.netProfit !== undefined 
                                 ? `Rs ${betItem.netProfit.toFixed(2)}`
@@ -448,7 +448,7 @@ export default function HierarchicalNavigation() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`font-medium ${status.color}`}>
+                            <span className={`font-bold ${status.color}`}>
                               {status.text}
                             </span>
                           </td>

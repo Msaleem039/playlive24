@@ -44,7 +44,7 @@ export function DateFilter({
     // <div className="bg-white p-4 sm:p-6 shadow-sm">
     //   <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
     //     <div className="flex items-center space-x-2 relative">
-    //       <label className="text-sm font-medium text-gray-700 whitespace-nowrap">From Date:</label>
+    //       <label className="text-sm font-bold text-gray-700 whitespace-nowrap">From Date:</label>
     //       <div className="relative">
     //         <Input
     //           role="presentation"
@@ -66,7 +66,7 @@ export function DateFilter({
     //       </div>
     //     </div>
     //     <div className="flex items-center space-x-2 relative">
-    //       <label className="text-sm font-medium text-gray-700 whitespace-nowrap">To Date:</label>
+    //       <label className="text-sm font-bold text-gray-700 whitespace-nowrap">To Date:</label>
     //       <div className="relative">
     //         <Input
     //           role="presentation"

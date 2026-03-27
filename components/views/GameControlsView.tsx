@@ -69,7 +69,7 @@ export default function GameControlsView() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Settings className="w-5 h-5 text-[#00A66E]" />
-                <h2 className="text-lg font-semibold text-gray-900">Match Visibility Controls</h2>
+                <h2 className="text-lg font-bold text-gray-900">Match Visibility Controls</h2>
               </div>
               <Button
                 onClick={() => refetch()}
@@ -115,7 +115,7 @@ export default function GameControlsView() {
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                        <h3 className="font-bold text-gray-900 mb-2 truncate">
                           {matchName}
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
@@ -126,7 +126,7 @@ export default function GameControlsView() {
                             <Calendar className="w-3.5 h-3.5 text-gray-500" />
                             <span>{formatDate(matchDate)}</span>
                           </span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${
                             isEnabled
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
@@ -160,7 +160,7 @@ export default function GameControlsView() {
             ) : (
               <div className="text-center py-20">
                 <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 font-medium text-lg">
+                <p className="text-gray-500 font-bold text-lg">
                   {searchTerm ? "No matches found" : "No matches available"}
                 </p>
                 {searchTerm && (

@@ -236,7 +236,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-[#30967c] hover:bg-[#2a7f6a] text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50"
+              className="w-full h-14 bg-[#30967c] hover:bg-[#2a7f6a] text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50"
             >
               {isLoading ? (
                 <motion.div
@@ -256,7 +256,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
               Already have an account?{" "}
               <button
                 onClick={onSwitchToLogin}
-                className="text-[#30967c] hover:text-[#2a7f6a] font-semibold transition-colors"
+                className="text-[#30967c] hover:text-[#2a7f6a] font-bold transition-colors"
               >
                 Sign in
               </button>

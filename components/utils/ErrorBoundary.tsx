@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
+              <h3 className="text-sm font-bold text-red-800">
                 Something went wrong
               </h3>
               <div className="mt-2 text-sm text-red-700">
@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
               <div className="mt-4">
                 <button
-                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-bold text-red-800 hover:bg-red-200"
                   onClick={() => this.setState({ hasError: false, error: undefined })}
                 >
                   Try again

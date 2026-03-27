@@ -23,7 +23,7 @@ export function CurrentBetsView() {
       {/* Filter Section */}
       <div className="bg-purple-600 px-4 py-3">
         <div className="flex items-center gap-4">
-          <span className="text-white font-medium">Choose Type</span>
+          <span className="text-white font-bold">Choose Type</span>
           <div className="relative">
             <select
               value={betType}

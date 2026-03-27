@@ -435,7 +435,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         <div className="flex min-w-0">
           <button
             onClick={() => setUserTab("Active Users")}
-            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm sm:text-sm font-semibold relative touch-manipulation ${
+            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm sm:text-sm font-bold relative touch-manipulation ${
               userTab === "Active Users" 
                 ? "text-white" 
                 : "text-gray-400 hover:text-white"
@@ -448,7 +448,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           </button>
           <button
             onClick={() => setUserTab("Close Users")}
-            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold relative touch-manipulation ${
+            className={`flex-1 min-w-0 px-3 sm:px-6 py-2.5 sm:py-2 text-sm font-bold relative touch-manipulation ${
               userTab === "Close Users" 
                 ? "text-white" 
                 : "text-gray-400 hover:text-white"
@@ -528,7 +528,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         ) : error ? (
           <div className="flex items-center justify-center py-12 px-4">
             <div className="text-center">
-              <p className="text-red-600 mb-2 text-sm sm:text-base font-medium">Error loading users</p>
+              <p className="text-red-600 mb-2 text-sm sm:text-base font-bold">Error loading users</p>
               <p className="text-sm text-gray-500">Please try again later</p>
             </div>
           </div>
@@ -550,7 +550,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
               >
                 <div className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
+                    <div className="font-bold text-gray-900 text-base truncate">{user.name || "Unknown"}</div>
                     <div className="text-sm text-gray-500 truncate mt-0.5">[{user.username || user.email?.split("@")[0] || "N/A"}]</div>
                   </div>
                   <button
@@ -566,10 +566,10 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                 {isExpanded && (
                   <>
                     <div className="px-4 pb-3 grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm border-t border-gray-100 pt-3">
-                      <div className="min-w-0"><span className="text-gray-500">PL+Cash:</span> <span className="font-semibold text-green-600 break-all">${formatBalance(user.plCash || 0)}</span></div>
-                      <div className="min-w-0"><span className="text-gray-500">Balance:</span> <span className="font-semibold break-all">${formatBalance(user.balance)}</span></div>
-                      <div className="min-w-0"><span className="text-gray-500">Liability:</span> <span className="font-semibold text-red-600 break-all">${formatBalance(user.liability || 0)}</span></div>
-                      <div className="min-w-0"><span className="text-gray-500">Available:</span> <span className="font-semibold break-all">${formatBalance(user.availableBalance || 0)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">PL+Cash:</span> <span className="font-bold text-green-600 break-all">${formatBalance(user.plCash || 0)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Balance:</span> <span className="font-bold break-all">${formatBalance(user.balance)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Liability:</span> <span className="font-bold text-red-600 break-all">${formatBalance(user.liability || 0)}</span></div>
+                      <div className="min-w-0"><span className="text-gray-500">Available:</span> <span className="font-bold break-all">${formatBalance(user.availableBalance || 0)}</span></div>
                     </div>
                     <div className="px-4 pb-5 flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <button onClick={() => handleToggleUserStatus(user.id, user.isActive ?? true)} disabled={isTogglingStatus} className="w-9 h-9 sm:w-10 sm:h-10 rounded flex items-center justify-center shrink-0 disabled:opacity-50 touch-manipulation" title={user.isActive === false ? "Activate" : "Deactivate"}>
@@ -614,31 +614,31 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-[#00A66E]">
                     <tr>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[80px] sm:min-w-[100px] md:min-w-[130px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[80px] sm:min-w-[100px] md:min-w-[130px]">
                         Login Name
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         PL+Cash
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Balance
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[40px] sm:min-w-[50px] md:min-w-[60px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[40px] sm:min-w-[50px] md:min-w-[60px]">
                         Share
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[50px] sm:min-w-[60px] md:min-w-[80px]">
                         Liability
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[70px] sm:min-w-[90px] md:min-w-[110px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[70px] sm:min-w-[90px] md:min-w-[110px]">
                         Available
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[35px] sm:min-w-[45px] md:min-w-[55px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[35px] sm:min-w-[45px] md:min-w-[55px]">
                         Active
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px] md:min-w-[65px]">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider min-w-[45px] sm:min-w-[55px] md:min-w-[65px]">
                         Cash
                       </th>
-                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-medium text-white uppercase tracking-wider w-auto">
+                      <th className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 text-left text-[10px] sm:text-[11px] md:text-xs font-bold text-white uppercase tracking-wider w-auto">
                         Action
                       </th>
                     </tr>
@@ -647,7 +647,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                     {displayUsers.map((user: UserData, index) => (
                       <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
                         <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2">
-                          <div className="text-[10px] sm:text-[11px] md:text-xs font-medium text-gray-900 break-words leading-tight">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs font-bold text-gray-900 break-words leading-tight">
                             <span className="block sm:inline">{user.name || 'Unknown'}</span>
                             <span className="text-gray-600 text-[9px] sm:text-[10px] md:text-[10px]"> [{user.username || user.email?.split('@')[0] || user.name || 'N/A'}]</span>
                           </div>
@@ -668,7 +668,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                           </div>
                         </td>
                         <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 whitespace-nowrap">
-                          <div className="text-[10px] sm:text-[11px] md:text-xs text-red-600 font-medium">
+                          <div className="text-[10px] sm:text-[11px] md:text-xs text-red-600 font-bold">
                             ${formatBalance(user.liability || 0)}
                           </div>
                         </td>
@@ -1029,7 +1029,7 @@ function SubordinatesView({ userId }: { userId: string }) {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => handleBreadcrumbClick(-1)}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+            className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
           >
             Root
           </button>
@@ -1038,7 +1038,7 @@ function SubordinatesView({ userId }: { userId: string }) {
               <ChevronRight className="w-4 h-4 text-gray-400" />
               <button
                 onClick={() => handleBreadcrumbClick(index)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
               >
                 {path.name}
               </button>
@@ -1047,7 +1047,7 @@ function SubordinatesView({ userId }: { userId: string }) {
           {viewMode === 'bets' && (
             <>
               <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Bet History</span>
+              <span className="text-sm font-bold text-gray-900">Bet History</span>
             </>
           )}
         </div>
@@ -1057,7 +1057,7 @@ function SubordinatesView({ userId }: { userId: string }) {
       {viewMode === 'users' ? (
         <>
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-bold text-gray-900">
               {navigationPath.length === 0 ? 'Subordinates' : 'Subordinates'}
             </h3>
           </div>
@@ -1079,11 +1079,11 @@ function SubordinatesView({ userId }: { userId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Username</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Role</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Balance</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Name</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Username</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Role</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Balance</th>
+                    <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -1098,7 +1098,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                         onClick={() => handleItemClick(userItem)}
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900">
+                          <div className="font-bold text-gray-900">
                             {userItem.name || userItem.username || 'Unknown'}
                           </div>
                         </td>
@@ -1106,7 +1106,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                           {userItem.username || userItem.name || '--'}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                          <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${
                             itemRole === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
                             itemRole === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
                             itemRole === 'AGENT' ? 'bg-green-100 text-green-800' :
@@ -1115,7 +1115,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                             {itemRole || '--'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           Rs {userItem.balance?.toLocaleString() || '0.00'}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -1144,14 +1144,14 @@ function SubordinatesView({ userId }: { userId: string }) {
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Bet History</h3>
+            <h3 className="text-lg font-bold text-gray-900">Bet History</h3>
             <button
               onClick={() => {
                 setViewMode('users')
                 setNavigationPath(navigationPath.slice(0, -1))
                 setSelectedParentId(navigationPath.length > 1 ? navigationPath[navigationPath.length - 2].id : userId)
               }}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-200"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
@@ -1175,15 +1175,15 @@ function SubordinatesView({ userId }: { userId: string }) {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Type</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Market Name</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Odds</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Stake</th>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Net Profit</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Created At</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Market Type</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Market Name</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Odds</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Stake</th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-700">Net Profit</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-700">Created At</th>
                     {isSuperAdmin && (
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                      <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                     )}
                   </tr>
                 </thead>
@@ -1212,20 +1212,20 @@ function SubordinatesView({ userId }: { userId: string }) {
                     return (
                       <tr key={betItem.id || betItem.betId} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-bold text-gray-900">
                               {betItem.marketType || '--'}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-gray-600">
                             {displayName}
                           </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           {betItem.odds?.toFixed(2) || '--'}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900">
                           Rs {stake.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium">
+                        <td className="px-4 py-3 text-right font-bold">
                           <span className={betItem.netProfit && betItem.netProfit > 0 ? 'text-green-600' : betItem.netProfit && betItem.netProfit < 0 ? 'text-red-600' : 'text-gray-600'}>
                             {betItem.netProfit !== null && betItem.netProfit !== undefined 
                               ? `Rs ${betItem.netProfit.toFixed(2)}`
@@ -1233,7 +1233,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`font-medium ${status.color}`}>
+                          <span className={`font-bold ${status.color}`}>
                             {status.text}
                           </span>
                         </td>

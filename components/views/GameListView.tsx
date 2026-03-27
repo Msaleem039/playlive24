@@ -46,7 +46,7 @@ export default function GameListView() {
         {/* Game List Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Game List</h2>
+            <h2 className="text-lg font-bold text-gray-900">Game List</h2>
           </div>
           <div className="p-4">
             <DataTable

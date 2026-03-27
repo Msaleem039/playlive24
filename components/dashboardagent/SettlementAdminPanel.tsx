@@ -90,7 +90,7 @@ export function SettlementAdminPanel() {
           <div className="flex-1 overflow-y-auto p-6">
             <div className="text-center py-20">
               <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium text-lg">Select a market type from the sidebar</p>
+              <p className="text-gray-500 font-bold text-lg">Select a market type from the sidebar</p>
             </div>
           </div>
         )
@@ -137,7 +137,7 @@ export function SettlementAdminPanel() {
               }`}
             >
               <BarChart3 className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">All Markets</span>}
+              {sidebarOpen && <span className="font-bold">All Markets</span>}
             </button>
 
             <button
@@ -154,7 +154,7 @@ export function SettlementAdminPanel() {
               <Play className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && (
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-medium">Match Odds</span>
+                  <span className="font-bold">Match Odds</span>
                   <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
                     {stats.matchOddsMatches}
                   </span>
@@ -176,7 +176,7 @@ export function SettlementAdminPanel() {
               <Target className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && (
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-medium">Fancy</span>
+                  <span className="font-bold">Fancy</span>
                   <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
                     {stats.fancyMatches}
                   </span>
@@ -198,7 +198,7 @@ export function SettlementAdminPanel() {
               <BookOpen className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && (
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-medium">Bookmaker</span>
+                  <span className="font-bold">Bookmaker</span>
                   <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
                     {stats.bookmakerMatches}
                   </span>
@@ -220,7 +220,7 @@ export function SettlementAdminPanel() {
               <Link2 className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && (
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-medium">Tied Match</span>
+                  <span className="font-bold">Tied Match</span>
                   <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
                     {stats.tiedMatchMatches}
                   </span>
@@ -242,7 +242,7 @@ export function SettlementAdminPanel() {
               }`}
             >
               <FileText className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">Results</span>}
+              {sidebarOpen && <span className="font-bold">Results</span>}
             </button>
           </div>
         </div>
@@ -252,15 +252,15 @@ export function SettlementAdminPanel() {
             <div className="bg-gray-50 rounded-lg p-2 md:p-3 space-y-1.5 md:space-y-2">
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Total Matches:</span>
-                <span className="font-semibold">{stats.totalMatches}</span>
+                <span className="font-bold">{stats.totalMatches}</span>
               </div>
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Total Bets:</span>
-                <span className="font-semibold">{stats.totalPendingBets}</span>
+                <span className="font-bold">{stats.totalPendingBets}</span>
               </div>
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Total Amount:</span>
-                <span className="font-semibold text-green-600">Rs{stats.totalAmount.toLocaleString()}</span>
+                <span className="font-bold text-green-600">Rs{stats.totalAmount.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -288,7 +288,7 @@ export function SettlementAdminPanel() {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
                   onClick={() => window.location.reload()}
-                  className="flex items-center gap-1 md:gap-2 bg-white/20 hover:bg-white/30 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all"
+                  className="flex items-center gap-1 md:gap-2 bg-white/20 hover:bg-white/30 px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all"
                 >
                   <RefreshCw className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">Refresh</span>

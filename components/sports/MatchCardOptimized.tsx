@@ -60,24 +60,24 @@ const MatchCardOptimized = memo(({
       <div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-sm text-gray-600 font-medium">
+            <span className="text-sm text-gray-600 font-bold">
               {formatMatchDate(match?.date_start)} {formatMatchTime(match?.date_start)}
             </span>
 
-            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(match?.status)}`}>
+            <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(match?.status)}`}>
               {match?.status_str}
             </span>
 
             {(typeof match?.iplay === 'boolean' ? match.iplay === true : match?.status === 1 || match?.status === 3 || match?.status === 5) && (
               <div className="flex items-center gap-1 text-green-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium">Live Now</span>
+                <span className="text-xs font-bold">Live Now</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-gray-800 truncate">
+            <span className="text-sm font-bold text-gray-800 truncate">
               {match?.title}
             </span>
             {match?.commentary === 1 && <Tv className="w-4 h-4 text-blue-500" />}
@@ -100,9 +100,9 @@ const MatchCardOptimized = memo(({
                   {match?.teama?.short_name?.charAt(0) || 'T'}
                 </div>
               )}
-              <span className="font-medium">{match?.teama?.short_name}</span>
+              <span className="font-bold">{match?.teama?.short_name}</span>
               {match?.teama?.scores && (
-                <span className="text-gray-600 font-semibold">{match?.teama?.scores}</span>
+                <span className="text-gray-600 font-bold">{match?.teama?.scores}</span>
               )}
             </div>
 
@@ -123,15 +123,15 @@ const MatchCardOptimized = memo(({
                   {match?.teamb?.short_name?.charAt(0) || 'T'}
                 </div>
               )}
-              <span className="font-medium">{match?.teamb?.short_name}</span>
+              <span className="font-bold">{match?.teamb?.short_name}</span>
               {match?.teamb?.scores && (
-                <span className="text-gray-600 font-semibold">{match?.teamb?.scores}</span>
+                <span className="text-gray-600 font-bold">{match?.teamb?.scores}</span>
               )}
             </div>
           </div>
 
           {match?.result && (
-            <div className="text-sm text-[#00A66E] font-medium mt-2">
+            <div className="text-sm text-[#00A66E] font-bold mt-2">
               {match?.result}
             </div>
           )}

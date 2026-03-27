@@ -219,11 +219,11 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
       {/* Enhanced Blurred Background */}
-      <div className="absolute inset-0  backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-[#0f0f0f]/20 to-[#111]/20" />
+      <div className="absolute inset-0 bg-[#01411C]">
+        <div className="absolute inset-0 bg-[#01411C]" />
         
         {/* Animated Pattern Background */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%2330967c%22%20fill-opacity%3D%220.08%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20" />
+        <div className="absolute inset-0 bg-[#01411C]" />
       </div>
 
       {/* Modal Content */}
@@ -260,18 +260,16 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
           </motion.button>
 
           {/* Logo Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 flex justify-center items-center">
             <motion.h1
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4 }}
               className="text-4xl font-black uppercase tracking-[0.18em] text-transparent bg-clip-text bg-gradient-to-r from-[#41D2FF] via-[#7FEAFF] to-[#FFD836] drop-shadow-[0_0_25px_rgba(126,234,255,0.35)]"
             >
-              PlayLive7
+            <img src="/images/rbg.png" alt="Logo" width={150} height={150} />
             </motion.h1>
-            <p className="mt-4 text-white/70 text-sm tracking-[0.35em] uppercase">
-              Login Portal
-            </p>
+        
           </div>
 
           {/* Error Display */}
@@ -335,7 +333,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
             ) : (
               <Button
                 type="submit"
-                className="w-full h-14 bg-[#30967c] hover:bg-[#2a7f6a] text-white font-semibold rounded-xl transition-all duration-300"
+                className="w-full h-14 bg-[#30967c] hover:bg-[#2a7f6a] text-white font-bold rounded-xl transition-all duration-300"
               >
                 Sign In
               </Button>
@@ -348,7 +346,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
               Don't have an account?{" "}
               <button
                 onClick={onSwitchToSignup}
-                className="text-[#30967c] hover:text-[#2a7f6a] font-semibold transition-colors"
+                className="text-[#30967c] hover:text-[#2a7f6a] font-bold transition-colors"
               >
                 Sign up
               </button>

@@ -51,12 +51,12 @@ export default function FancyDetail({
       <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="font-semibold text-xs sm:text-sm">
+          <span className="font-bold text-xs sm:text-sm">
             {market.name}
           </span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold">
+          <button className="bg-[#FFD949] hover:bg-yellow-600  px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-bold text-black">
             BOOK
           </button>
         </div>
@@ -78,7 +78,7 @@ export default function FancyDetail({
               {Array.from({ length: NO_COLUMNS }).map((_, i) => (
                 <th 
                   key={`no-${i}`} 
-                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-bold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   NO
                 </th>
@@ -86,7 +86,7 @@ export default function FancyDetail({
               {Array.from({ length: YES_COLUMNS }).map((_, i) => (
                 <th 
                   key={`yes-${i}`} 
-                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-bold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   Yes
                 </th>
@@ -130,13 +130,13 @@ export default function FancyDetail({
                 <td className="px-0.5 sm:px-1 py-0.5">
                   {shouldSplit ? (
                     // Two-line display for long text on mobile only
-                    <div className="font-medium text-[12px] text-gray-900">
+                    <div className="font-bold text-[12px] text-gray-900">
                       <div className="leading-tight break-words">{firstLine}</div>
                       <div className="leading-tight break-words">{secondLine}</div>
                     </div>
                   ) : (
                     // Single-line display for short text or desktop
-                    <div className="font-medium text-[12px] sm:text-xs text-gray-900 truncate">
+                    <div className="font-bold text-[12px] sm:text-xs text-gray-900 truncate">
                       {row.team}
                     </div>
                   )}

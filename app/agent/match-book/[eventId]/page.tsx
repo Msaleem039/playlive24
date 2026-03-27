@@ -259,7 +259,7 @@ export default function AgentMatchBookPage() {
             className="flex items-center gap-2 text-gray-700 hover:text-[#00A66E] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm font-bold">Back</span>
           </button>
           <button
             onClick={handleRefresh}
@@ -280,10 +280,10 @@ export default function AgentMatchBookPage() {
             {/* Match Odds Header */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="bg-[#00A66E] text-white px-4 py-2 flex items-center justify-between">
-                <h2 className="font-semibold text-sm">Match Odds</h2>
+                <h2 className="font-bold text-sm">Match Odds</h2>
                 <button
                   onClick={handleRefresh}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold flex items-center gap-1"
                 >
                   <RefreshCw className="w-3 h-3" />
                   Refresh
@@ -333,7 +333,7 @@ export default function AgentMatchBookPage() {
               {matchOddsMarket && (
                 <div className="border-b">
                   {/* <div className="bg-gray-100 px-4 py-2">
-                    <h3 className="text-xs font-semibold text-gray-700">RUNNER</h3>
+                    <h3 className="text-xs font-bold text-gray-700">RUNNER</h3>
                   </div> */}
                   <MatchOdds
                     market={matchOddsMarket}
@@ -351,7 +351,7 @@ export default function AgentMatchBookPage() {
               {fancyMarkets.length > 0 && (
                 <div>
                   <div className="bg-gray-100 px-4 py-2">
-                    <h3 className="text-xs font-semibold text-gray-700">SESSION</h3>
+                    <h3 className="text-xs font-bold text-gray-700">SESSION</h3>
                   </div>
                   {fancyMarkets.map((market, idx) => (
                     <FancyDetail
@@ -374,20 +374,20 @@ export default function AgentMatchBookPage() {
             {/* Matched Bet */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="bg-gray-100 px-4 py-2 flex items-center justify-between border-b">
-                <h3 className="text-sm font-semibold text-gray-900">Matched Bet</h3>
+                <h3 className="text-sm font-bold text-gray-900">Matched Bet</h3>
                 <button className="text-xs text-[#00A66E] hover:underline">View All</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Sr.</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Odds</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Stake</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">BetType</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Team</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">User</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Date</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Sr.</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Odds</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Stake</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">BetType</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Team</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">User</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Date</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -405,7 +405,7 @@ export default function AgentMatchBookPage() {
                           <td className="px-2 py-2 text-gray-900">{bet.odds?.toFixed(2) || '-'}</td>
                           <td className="px-2 py-2 text-gray-900">{bet.amount?.toFixed(2) || '0.00'}</td>
                           <td className="px-2 py-2">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${
                               bet.betType === 'BACK' 
                                 ? 'bg-blue-300 text-gray-900 border border-blue-200' 
                                 : 'bg-pink-200 text-gray-900 border border-pink-200'
@@ -435,19 +435,19 @@ export default function AgentMatchBookPage() {
             {/* Session Bet */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="bg-gray-100 px-4 py-2 flex items-center justify-between border-b">
-                <h3 className="text-sm font-semibold text-gray-900">Session Bet</h3>
+                <h3 className="text-sm font-bold text-gray-900">Session Bet</h3>
                 <button className="text-xs text-[#00A66E] hover:underline">View All</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Sr.</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Session</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Rate</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">Stake</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">BetType</th>
-                      <th className="px-2 py-2 text-left font-semibold text-gray-700">User</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Sr.</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Session</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Rate</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">Stake</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">BetType</th>
+                      <th className="px-2 py-2 text-left font-bold text-gray-700">User</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -466,7 +466,7 @@ export default function AgentMatchBookPage() {
                           <td className="px-2 py-2 text-gray-900">{bet.odds?.toFixed(2) || '-'}</td>
                           <td className="px-2 py-2 text-gray-900">{bet.amount?.toFixed(2) || '0.00'}</td>
                           <td className="px-2 py-2">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${
                               bet.displayBetType === 'YES' 
                                 ? 'bg-blue-300 text-gray-900 border border-blue-200' 
                                 : 'bg-pink-200 text-gray-900 border border-pink-200'

@@ -65,7 +65,7 @@ export default function ChipSummaryView() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Coins className="w-5 h-5 text-[#00A66E]" />
-            <h2 className="text-lg font-semibold text-gray-900">Chip Overview</h2>
+            <h2 className="text-lg font-bold text-gray-900">Chip Overview</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

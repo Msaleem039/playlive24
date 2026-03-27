@@ -101,7 +101,7 @@ export default function SelfTopupModal({
               )}
 
               <div className="px-6 py-4 border-b border-dashed border-gray-200">
-                <label className="text-sm font-semibold text-gray-800 mb-2 block">Amount</label>
+                <label className="text-sm font-bold text-gray-800 mb-2 block">Amount</label>
                 <Input
                   type="number"
                   min="0"
@@ -115,7 +115,7 @@ export default function SelfTopupModal({
               </div>
 
               <div className="px-6 py-4 border-b border-dashed border-gray-200">
-                <label className="text-sm font-semibold text-gray-800 mb-2 block">Remarks (optional)</label>
+                <label className="text-sm font-bold text-gray-800 mb-2 block">Remarks (optional)</label>
                 <Input
                   type="text"
                   value={remarks}
@@ -130,14 +130,14 @@ export default function SelfTopupModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-5 py-2 rounded-md bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-colors"
+                  className="px-5 py-2 rounded-md bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-md bg-[#00A66E] text-white font-semibold hover:bg-[#008a5a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-md bg-[#00A66E] text-white font-bold hover:bg-[#008a5a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Processing..." : "Confirm"}

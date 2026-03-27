@@ -441,7 +441,7 @@ export function MatchOddsSettlementScreen() {
         {/* Match Odds Settlements Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4 md:mb-6">
           <div className="bg-gray-50 px-3 md:px-6 py-3 md:py-4 border-b border-gray-200">
-            <h3 className="font-semibold text-base md:text-lg">Match Odds Settlements</h3>
+            <h3 className="font-bold text-base md:text-lg">Match Odds Settlements</h3>
           </div>
           <div className="overflow-x-auto -mx-3 md:mx-0">
             <div className="inline-block min-w-full align-middle">
@@ -457,11 +457,11 @@ export function MatchOddsSettlementScreen() {
                   {groupedSettlements.length > 0 ? (
                     groupedSettlements.map((group: any, index: number) => (
                       <tr key={group.settlementId || index} className="hover:bg-gray-50">
-                        <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-semibold">
+                        <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-bold">
                           {group.betName || group.settlementId || "N/A"}
                         </td>
                         <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                          <span className="text-xs md:text-sm font-semibold text-blue-600">
+                          <span className="text-xs md:text-sm font-bold text-blue-600">
                             {group.count} {group.count === 1 ? 'bet' : 'bets'}
                           </span>
                         </td>
@@ -475,7 +475,7 @@ export function MatchOddsSettlementScreen() {
                   ) : (
                     <tr>
                       <td colSpan={3} className="px-3 md:px-6 py-8 md:py-12 text-center">
-                        <p className="text-gray-500 font-medium text-sm md:text-base">No match odds bets found</p>
+                        <p className="text-gray-500 font-bold text-sm md:text-base">No match odds bets found</p>
                       </td>
                     </tr>
                   )}
@@ -488,14 +488,14 @@ export function MatchOddsSettlementScreen() {
         {/* Settlement Form */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 md:px-6 py-3 md:py-4">
-            <h3 className="font-semibold text-base md:text-lg flex items-center gap-2">
+            <h3 className="font-bold text-base md:text-lg flex items-center gap-2">
               <Zap className="w-4 h-4 md:w-5 md:h-5" />
               Settlement Details
             </h3>
           </div>
           <div className="p-3 md:p-6 space-y-3 md:space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Event ID <span className="text-red-500">*</span>
               </label>
               <Input
@@ -509,7 +509,7 @@ export function MatchOddsSettlementScreen() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Market ID <span className="text-red-500">*</span>
                 <span className="ml-2 text-xs text-gray-500 font-normal">(Accepts both integer and decimal values, e.g., 7519538977640 or 1.252991818)</span>
               </label>
@@ -531,7 +531,7 @@ export function MatchOddsSettlementScreen() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 {isCancel ? "Selection ID" : "Winner Selection"} <span className="text-red-500">*</span>
                 {runners && runners.length > 0 && !isCancel && (
                   <span className="ml-2 text-xs text-gray-500 font-normal">({runners.length} options available)</span>
@@ -597,7 +597,7 @@ export function MatchOddsSettlementScreen() {
                 onChange={(e) => setIsCancel(e.target.checked)}
                 className="w-4 h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
               />
-              <label htmlFor="isCancel" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="isCancel" className="text-sm font-bold text-gray-700 cursor-pointer">
                 Cancel/Refund all bets
               </label>
             </div>
@@ -613,7 +613,7 @@ export function MatchOddsSettlementScreen() {
               <Button
                 onClick={handleSettle}
                 disabled={(isSettling || isCancelling) || !eventId.trim() || !marketId.trim() || !winnerSelectionId.trim()}
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
+                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-white font-bold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
               >
                 {(isSettling || isCancelling) ? (
                   <>
@@ -669,10 +669,10 @@ export function MatchOddsSettlementScreen() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-blue-50 px-3 md:px-6 py-2 md:py-3 border-b border-blue-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm md:text-base font-semibold text-blue-900">
+              <h3 className="text-sm md:text-base font-bold text-blue-900">
                 Match Odds Pending Settlements
               </h3>
-              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-bold">
                 {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'}
               </span>
             </div>
@@ -697,7 +697,7 @@ export function MatchOddsSettlementScreen() {
                         {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs md:text-sm font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs md:text-sm font-bold">
                           <Play className="w-3 h-3" />
                           {match.matchOdds?.count || 0} Match Odds bet{match.matchOdds?.count !== 1 ? 's' : ''}
                         </span>
@@ -710,7 +710,7 @@ export function MatchOddsSettlementScreen() {
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
                         <Button
                           onClick={() => setSelectedMatch(match)}
-                          className="text-[#00A66E] hover:text-[#00C97A] font-medium text-xs md:text-sm px-2 md:px-3 py-1 md:py-1.5"
+                          className="text-[#00A66E] hover:text-[#00C97A] font-bold text-xs md:text-sm px-2 md:px-3 py-1 md:py-1.5"
                         >
                           View Details
                         </Button>
@@ -725,7 +725,7 @@ export function MatchOddsSettlementScreen() {
       ) : (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
           <Play className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Match Odds Pending</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Match Odds Pending</h3>
           <p className="text-gray-500 text-sm">There are no matches with Match Odds bets requiring settlement.</p>
           <p className="text-gray-400 text-xs mt-2">Check Fancy or Bookmaker screens for other bet types.</p>
         </div>

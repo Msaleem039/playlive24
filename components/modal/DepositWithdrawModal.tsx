@@ -130,14 +130,14 @@
 //                 <button
 //                   type="button"
 //                   onClick={handleClose}
-//                   className="px-6 py-2 bg-[#E74C3C] hover:bg-[#C0392B] text-black font-semibold rounded-md transition-colors"
+//                   className="px-6 py-2 bg-[#E74C3C] hover:bg-[#C0392B] text-black font-bold rounded-md transition-colors"
 //                   disabled={isLoading}
 //                 >
 //                   No
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-6  py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-black font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//                   className="px-6  py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-black font-bold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 //                   disabled={isLoading || !amount.trim()}
 //                 >
 //                   {isLoading ? "Processing..." : "Submit"}

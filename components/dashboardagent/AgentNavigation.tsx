@@ -38,7 +38,7 @@ export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentN
               <button
                 key={item}
                 onClick={() => onTabChange?.(item)}
-                className={`font-semibold flex items-center whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[36px] sm:min-h-[40px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
+                className={`font-bold flex items-center whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[36px] sm:min-h-[40px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
                   item === 'Game Controls' ? 'hover:text-gray-200' : ''
                 } ${
                   item === activeTab 
@@ -58,7 +58,7 @@ export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentN
 
       {/* Section Header */}
       <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-2">
-        <h1 className="text-base sm:text-lg font-semibold">{activeTab}</h1>
+        <h1 className="text-base sm:text-lg font-bold">{activeTab}</h1>
       </div>
     </>
   )

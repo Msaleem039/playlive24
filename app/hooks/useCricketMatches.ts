@@ -26,6 +26,7 @@ interface UseCricketMatchesProps {
   per_page?: number
   status?: number
   format?: number
+  enabled?: boolean
 }
 
 export const isMatchLive = (status: number) => status === 1 || status === 3 || status === 5
@@ -34,7 +35,8 @@ export function useCricketMatches({
   page = 1,
   per_page = 20,
   status,
-  format
+  format,
+  enabled = true
 }: UseCricketMatchesProps = {}) {
   const [matches, setMatches] = useState<CricketMatch[]>([])
   const [loading, setLoading] = useState(true)
@@ -220,10 +222,18 @@ export function useCricketMatches({
 
   // Normalize aggregator event to match format
   const normalizeAggregatorEvent = (eventData: any): any => {
-    if (!eventData?.event) return null
-    
-    const event = eventData.event
-    const eventName = event.name || ''
+    // Supports both:
+    // 1) { event: { id, name, openDate, ... }, live, upcoming }
+    // 2) { EventId, Event, StartTime, live, upcoming, ... }  // current events-by-sport shape
+    const event = eventData?.event
+    const eventId = event?.id ?? eventData?.EventId ?? eventData?.eventId ?? eventData?.id
+    const eventName = event?.name ?? eventData?.Event ?? eventData?.eventName ?? eventData?.name ?? ''
+    const openDate = event?.openDate ?? eventData?.StartTime ?? eventData?.startTime
+    const countryCode = event?.countryCode ?? eventData?.countryCode
+    const timezone = event?.timezone ?? eventData?.timezone
+    const marketId = eventData?.MarketId ?? eventData?.marketId
+
+    if (!eventId || !eventName) return null
     
     // Parse team names from event name (e.g., "India v South Africa" or "Gulf Giants v Desert Vipers")
     const nameParts = eventName.split(/\s+v\s+/i)
@@ -231,8 +241,8 @@ export function useCricketMatches({
     const teamB = nameParts[1]?.trim() || 'Team B'
     
     return {
-      match_id: parseInt(event.id) || 0,
-      gmid: parseInt(event.id) || 0,
+      match_id: parseInt(String(eventId)) || 0,
+      gmid: parseInt(String(eventId)) || 0,
       title: eventName,
       short_title: eventName,
       ename: eventName,
@@ -240,12 +250,13 @@ export function useCricketMatches({
       status_str: 'upcoming',
       status: 3, // Upcoming by default
       iplay: false,
-      stime: event.openDate,
-      date_start: event.openDate,
-      countryCode: event.countryCode,
-      timezone: event.timezone,
+      stime: openDate,
+      date_start: openDate,
+      countryCode: countryCode,
+      timezone: timezone,
       isPremiumActive: eventData.isPremiumActive === "1",
       marketCount: eventData.marketCount || 0,
+      marketId: marketId,
       teama: {
         name: teamA,
         short_name: teamA,
@@ -275,7 +286,9 @@ export function useCricketMatches({
     if (status !== undefined) params.append("status", status.toString())
     if (format !== undefined) params.append("format", format.toString())
 
-    const response = await fetch(`${API_END_POINTS.cricketMatches}${params.toString() ? `?${params}` : ''}`)
+    const paramsString = params.toString()
+    const separator = API_END_POINTS.cricketMatches.includes("?") ? "&" : "?"
+    const response = await fetch(`${API_END_POINTS.cricketMatches}${paramsString ? `${separator}${paramsString}` : ''}`)
     if (!response.ok) throw new Error(`HTTP error! ${response.status}`)
 
     const data: any = await response.json()
@@ -391,6 +404,7 @@ export function useCricketMatches({
 
   // Load cached data on mount
   useEffect(() => {
+    if (!enabled) return
     if (!mounted) return
 
     const cached = loadCachedData()
@@ -404,9 +418,13 @@ export function useCricketMatches({
       setTotalPages(cached.data.totalPages)
       setLoading(false)
     }
-  }, [mounted, cacheKey])
+  }, [mounted, cacheKey, enabled])
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false)
+      return
+    }
     if (!mounted) return
 
     // Check if we have cached data first
@@ -440,7 +458,7 @@ export function useCricketMatches({
         setMatches([])
         setLoading(false)
       })
-  }, [mounted, page, per_page, status, format, cacheKey])
+  }, [mounted, page, per_page, status, format, cacheKey, enabled])
 
   // Using API data only (WebSocket removed)
   const mergedMatches = useMemo(() => {

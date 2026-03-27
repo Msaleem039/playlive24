@@ -24,7 +24,7 @@ export function DataTable({
   return (
     <div className={`bg-white rounded-lg shadow-sm overflow-hidden ${className}`}>
       <div className="bg-black text-white px-4 py-2">
-        <h3 className="font-semibold text-sm">{title}</h3>
+        <h3 className="font-bold text-sm">{title}</h3>
       </div>
       <div className="p-4">
         <table className="w-full">
@@ -33,7 +33,7 @@ export function DataTable({
               {columns.map((column) => (
                 <th 
                   key={column.key}
-                  className={`py-2 text-sm font-medium text-gray-600 ${
+                  className={`py-2 text-sm font-bold text-gray-600 ${
                     column.align === 'right' ? 'text-right' : 
                     column.align === 'center' ? 'text-center' : 'text-left'
                   }`}
@@ -51,7 +51,7 @@ export function DataTable({
                     <td 
                       key={column.key}
                       className={`py-2 text-sm ${
-                        column.align === 'right' ? 'text-right font-medium' : 
+                        column.align === 'right' ? 'text-right font-bold' : 
                         column.align === 'center' ? 'text-center' : 'text-left'
                       }`}
                     >

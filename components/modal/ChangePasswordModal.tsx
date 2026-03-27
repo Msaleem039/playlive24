@@ -168,7 +168,7 @@ export default function ChangePasswordModal({
                 <button
                   type="submit"
                   disabled={isLoading || !password || !confirmPassword}
-                  className="w-full px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold rounded-md disabled:opacity-50"
+                  className="w-full px-6 py-2 bg-[#2ECC71] hover:bg-[#27AE60] text-white font-bold rounded-md disabled:opacity-50"
                 >
                   {isLoading ? "Processing..." : "Submit"}
                 </button>

@@ -97,7 +97,7 @@ export default function MatchesView() {
                 }`}
               >
                 {tab.icon}
-                <span className="text-sm font-semibold tracking-wide">
+                <span className="text-sm font-bold tracking-wide">
                   {tab.name}
                 </span>
                 {tab.count > 0 && (

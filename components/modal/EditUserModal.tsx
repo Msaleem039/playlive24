@@ -76,7 +76,7 @@ export default function EditUserModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between rounded-t-lg sticky top-0 z-10">
-          <h2 className="text-sm sm:text-base font-semibold">Edit User</h2>
+          <h2 className="text-sm sm:text-base font-bold">Edit User</h2>
           <button
             onClick={onClose}
             className="text-white hover:text-gray-200 transition-colors"
@@ -89,7 +89,7 @@ export default function EditUserModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-3 sm:p-4 space-y-2 sm:space-y-3">
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-0.5 sm:mb-1">
               Username
             </label>
             <input
@@ -101,7 +101,7 @@ export default function EditUserModal({
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-0.5 sm:mb-1">
               Name <span className="text-red-500">*</span>
             </label>
             <Input
@@ -116,7 +116,7 @@ export default function EditUserModal({
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-0.5 sm:mb-1">
               Password <span className="text-gray-500 text-[10px] sm:text-xs">(optional)</span>
             </label>
             <div className="relative">
@@ -141,7 +141,7 @@ export default function EditUserModal({
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-0.5 sm:mb-1">
               Commission % <span className="text-red-500">*</span>
             </label>
             <Input

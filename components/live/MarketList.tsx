@@ -51,13 +51,16 @@ export default function MarketList({
         const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
         const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
         
-        // POSITION MAPPING: Pass normalized positions to MatchOdds component
+        // POSITION MAPPING:
+        // Apply match-odds positions to all runner-based non-fancy markets
+        // (e.g. MATCH_ODDS, TIED_MATCH and other exchange runner markets).
+        // Fancy keeps its own structure and is handled separately.
         let positionsForMarket: Record<string, number> | undefined = undefined
-        
-        if (isMatchOdds) {
-          // Match Odds: Pass normalized positions object
+        if (!isFancy) {
           positionsForMarket = positionsByMarketType.matchOdds
-          
+        }
+
+        if (isMatchOdds) {
           console.log('🎯 [MarketList] ========== PASSING POSITIONS TO MATCHODDS ==========', {
             marketName: market.name,
             marketIndex,

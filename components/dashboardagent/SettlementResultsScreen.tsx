@@ -141,7 +141,7 @@ export function SettlementResultsScreen() {
         <div className="bg-gray-50 px-3 sm:px-6 py-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             <div className="flex-1 w-full sm:w-auto">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Start Date</label>
               <Input
                 type="datetime-local"
                 value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ""}
@@ -150,7 +150,7 @@ export function SettlementResultsScreen() {
               />
             </div>
             <div className="flex-1 w-full sm:w-auto">
-              <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">End Date</label>
               <Input
                 type="datetime-local"
                 value={endDate ? new Date(endDate).toISOString().slice(0, 16) : ""}
@@ -200,28 +200,28 @@ export function SettlementResultsScreen() {
                   {allResults.map((result: any, index: number) => (
                     <tr key={result.id || index} className="hover:bg-gray-50">
                       <td className="px-4 xl:px-6 py-4 whitespace-nowrap">
-                        <span className="text-xs xl:text-sm font-mono font-semibold text-gray-900">
+                        <span className="text-xs xl:text-sm font-mono font-bold text-gray-900">
                           {result.winnerId ?? result.winner_id ?? "—"}
                         </span>
                       </td>
-                      <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-xs xl:text-sm text-gray-900 font-medium">
+                      <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-xs xl:text-sm text-gray-900 font-bold">
                         {result.betName || "N/A"}
                       </td>
                       <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-xs xl:text-sm text-gray-900">
                         {result.marketType || result.marketName || "N/A"}
                       </td>
                       <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-center">
-                        <span className="text-xs xl:text-sm font-semibold text-gray-900">
+                        <span className="text-xs xl:text-sm font-bold text-gray-900">
                           Rs{result.amount?.toLocaleString() ?? 0}
                         </span>
                       </td>
                       <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-center">
-                        <span className="text-xs xl:text-sm font-semibold text-gray-900">
+                        <span className="text-xs xl:text-sm font-bold text-gray-900">
                           {result.odds ?? "N/A"}
                         </span>
                       </td>
                       <td className="px-4 xl:px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`px-2 xl:px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-2 xl:px-3 py-1 rounded-full text-xs font-bold ${
                           result.status === "WON" ? "bg-green-100 text-green-800" :
                           result.status === "LOST" ? "bg-red-100 text-red-800" :
                           result.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
@@ -238,7 +238,7 @@ export function SettlementResultsScreen() {
                         <Button
                           onClick={() => handleRollback(result)}
                           disabled={isRollingBack || result.isRollback}
-                          className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-2 xl:px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+                          className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-2 xl:px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
                         >
                           <RotateCcw className="w-3 h-3" />
                           <span className="hidden xl:inline">{result.isRollback ? "Rolled Back" : "Rollback"}</span>
@@ -259,15 +259,15 @@ export function SettlementResultsScreen() {
                 {/* Header Section */}
                 <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-200">
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-mono font-semibold text-gray-500 mb-0.5">
+                    <div className="text-xs font-mono font-bold text-gray-500 mb-0.5">
                       Winner ID: {result.winnerId ?? result.winner_id ?? "—"}
                     </div>
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-bold text-gray-900 truncate">
                       {result.betName || "N/A"}
                     </div>
                   </div>
                   <div className="ml-2 flex-shrink-0">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                       result.status === "WON" ? "bg-green-100 text-green-800" :
                       result.status === "LOST" ? "bg-red-100 text-red-800" :
                       result.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
@@ -283,25 +283,25 @@ export function SettlementResultsScreen() {
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Market</div>
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-bold text-gray-900 truncate">
                       {result.marketType || result.marketName || "N/A"}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Date</div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-bold text-gray-900">
                       {result.settledAt || result.createdAt ? new Date(result.settledAt || result.createdAt).toLocaleDateString() : "N/A"}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Amount</div>
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-bold text-gray-900">
                       Rs{result.amount?.toLocaleString() ?? 0}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Odds</div>
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-bold text-gray-900">
                       {result.odds ?? "N/A"}
                     </div>
                   </div>
@@ -312,7 +312,7 @@ export function SettlementResultsScreen() {
                   <Button
                     onClick={() => handleRollback(result)}
                     disabled={isRollingBack || result.isRollback}
-                    className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
                     {result.isRollback ? "Rolled Back" : "Rollback Settlement"}
@@ -325,7 +325,7 @@ export function SettlementResultsScreen() {
       ) : (
         <div className="px-4 sm:px-6 py-12 text-center">
           <FileText className="w-12 sm:w-16 h-12 sm:h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 font-medium text-base sm:text-lg">No results found</p>
+          <p className="text-gray-500 font-bold text-base sm:text-lg">No results found</p>
         </div>
       )}
     </div>

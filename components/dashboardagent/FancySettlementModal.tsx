@@ -107,7 +107,7 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
           {/* Bet/Market Information */}
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-200">
-            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
               <Activity className="w-5 h-5 text-[#00A66E]" />
               {match?.selectedBet ? "Bet Information" : "Market Information"}
             </h3>
@@ -115,19 +115,19 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Bet ID:</span>
-                  <span className="ml-2 font-mono font-semibold">{match.selectedBet.id || "N/A"}</span>
+                  <span className="ml-2 font-mono font-bold">{match.selectedBet.id || "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{match.selectedBet.amount?.toLocaleString() || 0}</span>
+                  <span className="ml-2 font-bold text-green-600">Rs{match.selectedBet.amount?.toLocaleString() || 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Odds:</span>
-                  <span className="ml-2 font-semibold">{match.selectedBet.odds || "N/A"}</span>
+                  <span className="ml-2 font-bold">{match.selectedBet.odds || "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Bet Type:</span>
-                  <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`ml-2 px-2 py-1 rounded text-xs font-bold ${
                     match.selectedBet.betType === "BACK" ? "bg-green-100 text-green-800" :
                     match.selectedBet.betType === "LAY" ? "bg-red-100 text-red-800" :
                     "bg-gray-100 text-gray-800"
@@ -137,7 +137,7 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
                 </div>
                 <div>
                   <span className="text-gray-600">Bet Name:</span>
-                  <span className="ml-2 font-semibold">{match.selectedBet.betName || "N/A"}</span>
+                  <span className="ml-2 font-bold">{match.selectedBet.betName || "N/A"}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Settlement ID:</span>
@@ -148,11 +148,11 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Bets Count:</span>
-                  <span className="ml-2 font-semibold">{marketData?.count || 0}</span>
+                  <span className="ml-2 font-bold">{marketData?.count || 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Total Amount:</span>
-                  <span className="ml-2 font-semibold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
+                  <span className="ml-2 font-bold text-green-600">Rs{marketData?.totalAmount?.toLocaleString() || 0}</span>
                 </div>
               </div>
             )}
@@ -160,11 +160,11 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
 
           {/* Settlement Details */}
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <h3 className="font-semibold text-lg mb-4">Settlement Details</h3>
+            <h3 className="font-bold text-lg mb-4">Settlement Details</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   Event ID <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -178,7 +178,7 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   Selection ID <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -192,7 +192,7 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                   Market ID <span className="text-gray-500">(Optional)</span>
                 </label>
                 <Input
@@ -212,14 +212,14 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
                   onChange={(e) => setIsCancel(e.target.checked)}
                   className="w-4 h-4 text-[#00A66E] border-gray-300 rounded focus:ring-[#00A66E]"
                 />
-                <label htmlFor="isCancel" className="text-sm font-medium text-gray-700 cursor-pointer">
+                <label htmlFor="isCancel" className="text-sm font-bold text-gray-700 cursor-pointer">
                   Cancel/Refund all bets
                 </label>
               </div>
 
               {!isCancel && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Decision Run <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -251,7 +251,7 @@ export function FancySettlementModal({ match, isOpen, onClose, onSettle }: Fancy
           <Button
             onClick={handleSettle}
             disabled={isLoading || !eventId.trim() || !selectionId.trim() || (!isCancel && !decisionRun.trim())}
-            className="px-6 py-2.5 rounded-lg text-white font-semibold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 rounded-lg text-white font-bold bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>

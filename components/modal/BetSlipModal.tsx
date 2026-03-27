@@ -407,7 +407,7 @@ export default function BetSlipModal({
         <div className="absolute inset-0 flex items-center justify-center  z-50">
           <div className="flex flex-col items-center gap-3 bg-white/90 backdrop-blur-md rounded-lg p-4 shadow-1xl">
             <Loader size={40} />
-            <span className="text-sm font-semibold text-gray-700">Placing your bet...</span>
+            <span className="text-sm font-bold text-gray-700">Placing your bet...</span>
           </div>
         </div>
       )}
@@ -421,12 +421,12 @@ export default function BetSlipModal({
         >
           <div className="relative bg-gradient-to-r from-cyan-500/80 via-blue-500/80 to-purple-500/80 backdrop-blur-md text-white px-3 sm:px-4 py-2.5 flex items-center justify-between overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-            <span className="text-sm font-semibold relative z-10 drop-shadow-lg">Bet Slip</span>
+            <span className="text-sm font-bold relative z-10 drop-shadow-lg">Bet Slip</span>
             <span className="text-xs text-cyan-100 cursor-pointer hover:text-white transition-colors relative z-10">Edit Stakes</span>
           </div>
 
           <div className="p-3 sm:p-4 space-y-3 overflow-y-auto bg-gradient-to-b from-white/40 to-green-50/30 backdrop-blur-sm">
-            <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-semibold">
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs font-bold">
               <div className="bg-gradient-to-br from-emerald-200/60 to-teal-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center sm:text-left border border-emerald-300/40 shadow-sm animate-fadeIn delay-100">Bet for</div>
               <div className="bg-gradient-to-br from-cyan-200/60 to-blue-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-cyan-300/40 shadow-sm animate-fadeIn delay-200">Odds</div>
               <div className="bg-gradient-to-br from-amber-200/60 to-orange-200/60 backdrop-blur-sm px-1 sm:px-2 py-1 rounded text-center border border-amber-300/40 shadow-sm animate-fadeIn delay-300">Stake</div>
@@ -434,7 +434,7 @@ export default function BetSlipModal({
             </div>
 
             <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center bg-white/60 backdrop-blur-md rounded-lg p-2 border border-green-200/50 shadow-lg shadow-green-500/10 animate-fadeIn delay-500">
-              <div className="text-xs sm:text-sm font-medium text-gray-800 truncate text-center sm:text-left px-1">
+              <div className="text-xs sm:text-sm font-bold text-gray-800 truncate text-center sm:text-left px-1">
                 {selectedBet.team}
               </div>
               
@@ -459,7 +459,7 @@ export default function BetSlipModal({
                 />
               </div>
               
-              <div className="text-xs sm:text-sm text-gray-700 text-center px-1 font-medium">{plText}</div>
+              <div className="text-xs sm:text-sm text-gray-700 text-center px-1 font-bold">{plText}</div>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
@@ -470,7 +470,7 @@ export default function BetSlipModal({
                   <button
                     key={amount}
                     onClick={() => handleQuickStake(amount)}
-                    className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                    className={`px-1 sm:px-3 py-1.5 sm:py-2 rounded text-xs sm:text-sm font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                       isActive
                         ? 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/40 ring-2 ring-cyan-300/50 animate-pulse'
                         : 'bg-gradient-to-br from-[#3F9AAE]/80 to-[#3F9AAE]/80 hover:from-[#3F9AAE]/90 hover:to-[#3F9AAE]/90 text-white shadow-md shadow-[#3F9AAE]/20 hover:shadow-lg hover:shadow-[#3F9AAE]/30 backdrop-blur-sm border border-[#3F9AAE]/30'
@@ -486,20 +486,20 @@ export default function BetSlipModal({
             <div className="flex gap-1.5 sm:gap-2 pt-2">
               <button
                 onClick={onClose}
-                className="flex-1 bg-gradient-to-r from-gray-400/80 to-gray-500/80 hover:from-gray-500/90 hover:to-gray-600/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-gray-500/20 backdrop-blur-sm border border-gray-300/30"
+                className="flex-1 bg-gradient-to-r from-gray-400/80 to-gray-500/80 hover:from-gray-500/90 hover:to-gray-600/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-gray-500/20 backdrop-blur-sm border border-gray-300/30"
               >
                 Close
               </button>
               <button
                 onClick={handleClear}
-                className="flex-1 bg-gradient-to-r from-amber-400/80 to-orange-400/80 hover:from-amber-500/90 hover:to-orange-500/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 backdrop-blur-sm border border-amber-300/30"
+                className="flex-1 bg-gradient-to-r from-amber-400/80 to-orange-400/80 hover:from-amber-500/90 hover:to-orange-500/90 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md shadow-amber-500/20 backdrop-blur-sm border border-amber-300/30"
               >
                 Clear
               </button>
               <button
                 onClick={handlePlaceBet}
                 disabled={isPlacingBet}
-                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:transform-none shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 backdrop-blur-sm border border-cyan-300/50 relative overflow-hidden flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-2 sm:px-4 py-2 rounded text-xs sm:text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:transform-none shadow-lg shadow-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/50 backdrop-blur-sm border border-cyan-300/50 relative overflow-hidden flex items-center justify-center gap-2"
               >
                 {isPlacingBet && (
                   <>

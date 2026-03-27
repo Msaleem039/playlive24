@@ -30,7 +30,7 @@ export function MarketList({ eventId, sportName, onMatchSelect }: MarketListProp
       <button
         type="button"
         onClick={handleViewMatch}
-        className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium text-[#00A66E] bg-[#00A66E]/10 hover:bg-[#00A66E]/20 rounded-lg transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold text-[#00A66E] bg-[#00A66E]/10 hover:bg-[#00A66E]/20 rounded-lg transition-colors"
       >
         <TrendingUp className="w-3.5 h-3.5" /> View full match
       </button>

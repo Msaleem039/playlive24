@@ -17,10 +17,10 @@ export function SummaryCard({ title, value, color = 'black', className = '' }: S
   return (
     <div className={`bg-white rounded-lg shadow-sm overflow-hidden ${className}`}>
       <div className="bg-black text-white px-4 py-2">
-        <h3 className="font-semibold text-sm">{title}</h3>
+        <h3 className="font-bold text-sm">{title}</h3>
       </div>
       <div className="p-6 text-center">
-        <div className={`text-sm font-semibold ${colorClasses[color]}`}>
+        <div className={`text-sm font-bold ${colorClasses[color]}`}>
           {value}
         </div>
       </div>

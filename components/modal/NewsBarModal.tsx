@@ -68,7 +68,7 @@ export default function NewsBarModal({ isOpen, onClose }: NewsBarModalProps) {
           ) : (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">
                   News Bar Text <span className="text-red-500">*</span>
                 </label>
                 <Input

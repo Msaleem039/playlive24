@@ -69,7 +69,7 @@ export default function MatchRow({
         <div className="text-sm text-gray-600">
           {dateStr && timeStr ? `${dateStr} ${timeStr}` : 'Loading...'}
         </div>
-        <div className="text-sm font-semibold text-gray-900">
+        <div className="text-sm font-bold text-gray-900">
           {match.short_title}
         </div>
         <div className="text-xs text-gray-500">
@@ -77,7 +77,7 @@ export default function MatchRow({
         </div>
         <div className="flex items-center gap-1">
           <div className={`w-2 h-2 ${statusDisplay.dot} rounded-full`}></div>
-          <span className={`text-sm font-semibold ${statusDisplay.color}`}>
+          <span className={`text-sm font-bold ${statusDisplay.color}`}>
             {statusDisplay.text}
           </span>
         </div>
@@ -99,7 +99,7 @@ export default function MatchRow({
       {/* Right Side - Action Icons and Format */}
       <div className="flex items-center gap-3">
         {/* Format Badge */}
-        <div className="bg-[#00A66E] text-white px-2 py-1 rounded text-xs font-medium">
+        <div className="bg-[#00A66E] text-white px-2 py-1 rounded text-xs font-bold">
           {match.format_str}
         </div>
         

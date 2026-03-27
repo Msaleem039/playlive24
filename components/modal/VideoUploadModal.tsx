@@ -171,7 +171,7 @@ export default function VideoUploadModal({
 
               {/* File Upload Section */}
               <div className="px-6 py-4">
-                <label className="text-sm font-semibold text-gray-800 mb-2 block flex items-center gap-2">
+                <label className="text-sm font-bold text-gray-800 mb-2 block flex items-center gap-2">
                   <Upload className="w-4 h-4 text-[#00A66E]" />
                   Select Video File
                 </label>
@@ -192,7 +192,7 @@ export default function VideoUploadModal({
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-8 h-8 mb-2 text-gray-400" />
                       <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
+                        <span className="font-bold">Click to upload</span> or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">MP4, WebM, MOV (MAX. 500MB)</p>
                     </div>
@@ -202,7 +202,7 @@ export default function VideoUploadModal({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <FileVideo className="w-4 h-4 text-[#00A66E]" />
-                          <span className="text-sm font-medium text-gray-700 truncate">
+                          <span className="text-sm font-bold text-gray-700 truncate">
                             {selectedFile.name}
                           </span>
                         </div>

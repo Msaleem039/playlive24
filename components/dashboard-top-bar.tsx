@@ -245,36 +245,39 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   }
 
   return (
-    <div className="bg-[#334443]">
-      <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
-          {/* Hamburger icon - Hidden on small screens, shown from md breakpoint */}
-          <button
-            aria-label="Open sidebar"
-            onClick={onSidebarOpen}
-            className="hidden md:block text-emerald-400 rounded p-1.5 sm:p-2 flex-shrink-0"
-          >
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          {/* PlayLIve text on small screens, Logo on medium+ screens - both clickable to open sidebar */}
-          <motion.button
-            aria-label="Open sidebar"
-            onClick={onSidebarOpen}
-            initial={{ opacity: 0, x: -20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-          >
-           <div className="relative w-24 sm:w-28 md:w-32 lg:w-40 aspect-square">
-  <Image
-    src="/images/logo12.png"
-    alt="Logo"
-    fill
-    className="object-contain"
-  />
-</div>
-          </motion.button>
-        </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+    <div className="bg-[#01411C]">
+    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
+        
+        <button
+          aria-label="Open sidebar"
+          onClick={onSidebarOpen}
+          className="hidden md:block text-black rounded p-1.5 sm:p-2 flex-shrink-0"
+        >
+          <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFD949]" />
+        </button>
+  
+        <motion.button
+          aria-label="Open sidebar"
+          onClick={onSidebarOpen}
+          initial={{ opacity: 0, x: -20 }} 
+          animate={{ opacity: 1, x: 0 }} 
+          className="block md:block text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-white tracking-wide flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <div className="relative w-24 sm:w-28 md:w-20 lg:w-40 aspect-square">
+            <Image
+              src="/images/rbg.png"
+              alt="Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </motion.button>
+      </div>
+  
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+        
+        {/* BALANCE */}
         <div className="relative" ref={balanceMenuRef}>
           <button
             type="button"
@@ -282,18 +285,22 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
               setIsBalanceMenuOpen((prev) => !prev)
               setIsUserMenuOpen(false)
             }}
-            className="flex items-center gap-1 sm:gap-1.5 bg-[#00A66E] text-black px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 rounded-full shadow-sm min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] justify-center hover:bg-[#00b97b] transition"
+            className="flex items-center gap-1 sm:gap-1.5 
+            bg-[#FFD949] 
+            text-white px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 
+            rounded-md shadow-sm
+            min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] 
+            justify-center  transition"
           >
-       
             <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
             <div className="leading-tight text-left min-w-0">
-              <div className="text-xs sm:text-sm font-medium truncate">{userInfo.balance}</div>
+              <div className="text-xs sm:text-sm  truncate text-black font-bold">{userInfo.balance}</div>
             </div>
             <ChevronDown
-              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform flex-shrink-0 ${isBalanceMenuOpen ? "rotate-180" : "rotate-0"}`}
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform flex-shrink-0 text-[#01411C] ${isBalanceMenuOpen ? "rotate-180" : "rotate-0"}`}
             />
           </button>
-
+  
           <AnimatePresence>
             {isBalanceMenuOpen && (
               <motion.div
@@ -301,131 +308,121 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-48 sm:w-52 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-50"
+                className="absolute right-0 mt-2 w-48 sm:w-52 
+                bg-[#FDC700] rounded-lg border border-[#FDC700]/30 
+                shadow-lg overflow-hidden z-50"
               >
-                <div className="px-3 sm:px-4 py-3 text-gray-700 space-y-1">
+                <div className="px-3 sm:px-4 py-3 text-gray-300 space-y-1">
                   {userInfo.balance && (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-gray-500 text-sm">Main Balance</span>
-                      <span className="text-sm font-semibold text-gray-900">{userInfo.balance}</span>
+                      <span className="text-gray-400 text-sm">Main Balance</span>
+                      <span className="text-sm font-bold text-black">{userInfo.balance}</span>
                     </div>
                   )}
                   {userInfo.liability && (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-gray-500 text-sm">Liability</span>
-                      <span className="text-sm font-semibold text-gray-900">{userInfo.liability}</span>
+                      <span className="text-gray-400 text-sm">Liability</span>
+                      <span className="text-sm font-bold text-white">{userInfo.liability}</span>
                     </div>
                   )}
                   {userInfo.availableBalance && (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-gray-500 text-sm">P/L</span>
-                      <span className="text-sm font-semibold text-green-600">{userInfo.availableBalance}</span>
+                      <span className="text-gray-400 text-sm">P/L</span>
+                      <span className="text-sm font-bold text-[#00FF9D]">{userInfo.availableBalance}</span>
                     </div>
                   )}
                 </div>
+  
                 <button
                   onClick={() => {
                     refetchWallet()
                     setIsBalanceMenuOpen(false)
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm text-gray-700 hover:bg-[#f4f7f6] border-t border-gray-200 transition"
-                  title="Refresh balance"
+                  className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2 
+                  text-sm text-gray-300  
+                  border-t border-[#117044]/30 transition"
                 >
-                  <RefreshCw className="w-4 h-4 text-[#00A66E]" />
+                  <RefreshCw className="w-4 h-4 text-[#00FF9D]" />
                   Refresh Balance
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => {
-                setIsUserMenuOpen((prev) => !prev)
-                setIsBalanceMenuOpen(false)
-              }}
-              className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-[#00A66E] px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded-full text-black font-semibold shadow-sm hover:bg-[#00b97b] transition min-w-0"
-            >
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px] md:max-w-[150px] lg:max-w-none">{userInfo.name}</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
-              />
-            </button>
-
-            <AnimatePresence>
-              {isUserMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-52 sm:w-56 md:w-64 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-50"
-                >
-                  <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 text-[10px] sm:text-xs font-semibold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <ClockIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                      <span className="truncate">{userInfo.timezone}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-[11px] text-gray-600">
-                      <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#00A66E] flex-shrink-0" />
-                      <span>{userInfo.roleLabel}</span>
-                    </div>
-                  </div>
-
-                  <div className="py-1 text-xs sm:text-sm text-gray-700">
-                    {dropdownItems.map(({ label, href, icon: Icon }) => {
-                      if (label === "Change Password") {
-                        return (
-                          <button
-                            key={label}
-                            onClick={() => {
-                              setIsChangePasswordModalOpen(true)
-                              setIsUserMenuOpen(false)
-                            }}
-                            className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f4f7f6] transition text-left"
-                          >
-                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00A66E] flex-shrink-0" />
-                            <span className="text-[11px] sm:text-xs md:text-sm">{label}</span>
-                          </button>
-                        )
-                      }
-                      return (
-                        <Link
-                          key={label}
-                          href={href}
-                          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#f4f7f6] transition"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00A66E] flex-shrink-0" />
-                          <span className="text-[11px] sm:text-xs md:text-sm">{label}</span>
-                        </Link>
-                      )
-                    })}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 text-left text-[#8B1A3A] hover:bg-[#fce8ee] transition"
+  
+        {/* USER */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => {
+              setIsUserMenuOpen((prev) => !prev)
+              setIsBalanceMenuOpen(false)
+            }}
+            className="flex items-center gap-1 sm:gap-1.5 md:gap-2 
+            bg-[#FFD949] px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 
+            rounded-md text-black font-bold 
+            border border-black/50 
+             transition min-w-0"
+          >
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px] md:max-w-[150px] lg:max-w-none text-black font-bold">{userInfo.name}</span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
+            />
+          </button>
+  
+          <AnimatePresence>
+            {isUserMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-52 sm:w-56 md:w-64 
+                bg-[#0F172A] rounded-lg border border-[#117044]/30 
+                shadow-lg overflow-hidden z-50"
+              >
+                <div className="px-3 sm:px-4 py-2 sm:py-3 
+                bg-[#020617] text-xs font-bold text-gray-400 flex justify-between">
+                  <span>{userInfo.timezone}</span>
+                  <span className="text-[#00FF9D]">{userInfo.roleLabel}</span>
+                </div>
+  
+                <div className="py-1 text-xs sm:text-sm text-gray-300">
+                  {dropdownItems.map(({ label, href, icon: Icon }) => (
+                    <Link
+                      key={label}
+                      href={href}
+                      className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 
+                      hover:bg-[#117044]/20 hover:text-[#00FF9D] transition"
                     >
-                      <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-[11px] sm:text-xs md:text-sm">Logout</span>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00FF9D]" />
+                      <span>{label}</span>
+                    </Link>
+                  ))}
+  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 
+                    text-left text-red-400 hover:bg-red-500/10 transition"
+                  >
+                    <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    Logout
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-
-      {/* Change Password Modal */}
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-        username={userInfo.name}
-        onSubmit={handleChangePassword}
-      />
     </div>
+  
+    <ChangePasswordModal
+      isOpen={isChangePasswordModalOpen}
+      onClose={() => setIsChangePasswordModalOpen(false)}
+      username={userInfo.name}
+      onSubmit={handleChangePassword}
+    />
+  </div>
   )
 }
 

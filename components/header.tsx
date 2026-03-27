@@ -29,9 +29,9 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-black">
+    <header className="bg-[#01411C]">
       {/* Top bar (dark) */}
-      <div className="bg-black">
+      <div className="bg-[#01411C]">
         <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-1.5 xs:py-2 sm:py-2.5 flex items-center justify-between gap-2">
         <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -51,7 +51,7 @@ export default function Header() {
     WebkitTextStroke: "0.5px rgba(255,255,255,0.2)",
   }}
 >
-  PlayLive <span className="text-green-400">7</span>/24
+<img src="/images/rbg.png" alt="Logo" width={150} height={150} />
   {/* <Logo /> */}
 </p>
 
@@ -63,7 +63,7 @@ export default function Header() {
               onClick={openLoginModal}
               className="bg-black border border-[#00A66E] text-[#00A66E] font-bold px-2.5 xs:px-3 sm:px-4 md:px-5 py-1 xs:py-1.5 sm:py-1.5 text-[0.7rem] xs:text-xs sm:text-sm md:text-base rounded hover:bg-[#00A66E] hover:text-black transition-all duration-300 whitespace-nowrap"
             >
-              Login
+              Login 
             </Button>
             {/* <Button 
               onClick={openSignupModal}
@@ -76,7 +76,7 @@ export default function Header() {
       </div>
 
       {/* Nav bar (green, reduced height) - always visible with horizontal scroll on small screens */}
-      <div className="bg-black w-full">
+      <div className="bg-[#01411C] w-full">
         <nav className="w-full flex justify-center px-0 sm:px-4 md:px-6 bg-[#00A66E] h-8 xs:h-9 sm:h-10">
           <ul className="w-full flex justify-start sm:justify-center items-center gap-1.5 xs:gap-2 sm:gap-4 md:gap-6 lg:gap-8 px-2 xs:px-3 sm:px-0 py-1.5 xs:py-2 bg-[#00A66E] overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth">
             {[

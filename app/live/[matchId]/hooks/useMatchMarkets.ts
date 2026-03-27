@@ -364,6 +364,12 @@ export function useMatchMarkets(
           const backOdds: BettingOption[] = []
           const layOdds: BettingOption[] = []
 
+          const formatOddAmount = (rawSize: unknown) => {
+            const size = Number(rawSize)
+            if (!Number.isFinite(size) || size <= 0) return '0'
+            return size >= 1000 ? `${(size / 1000).toFixed(1)}k` : size.toFixed(2)
+          }
+
           // Extract back odds (availableToBack) - sort descending (highest first)
           if (oddsForRunner?.ex?.availableToBack && Array.isArray(oddsForRunner.ex.availableToBack)) {
             const sortedBack = [...oddsForRunner.ex.availableToBack]
@@ -372,8 +378,8 @@ export function useMatchMarkets(
             
             sortedBack.forEach((odd) => {
               backOdds.push({
-                odds: odd.price.toString(),
-                amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                odds: String(Number(odd?.price) || 0),
+                amount: formatOddAmount(odd?.size)
               })
             })
           }
@@ -386,8 +392,8 @@ export function useMatchMarkets(
             
             sortedLay.forEach((odd) => {
               layOdds.push({
-                odds: odd.price.toString(),
-                amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                odds: String(Number(odd?.price) || 0),
+                amount: formatOddAmount(odd?.size)
               })
             })
           }

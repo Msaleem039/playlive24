@@ -52,7 +52,7 @@ export default function GameCard({ game, gameId, index = 0 }: GameCardProps) {
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </div>
-              <p className="text-sm font-medium">Click to Play</p>
+              <p className="text-sm font-bold">Click to Play</p>
             </div>
           </div>
 

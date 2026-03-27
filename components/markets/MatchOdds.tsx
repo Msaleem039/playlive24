@@ -58,16 +58,16 @@ export default function MatchOdds({
       <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="font-semibold text-xs sm:text-sm">{market.name}</span>
+          <span className="font-bold text-xs sm:text-sm">{market.name}</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold">
+          <button className="bg-[#FFD949] hover:bg-yellow-600  px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-bold text-black">
             BOOK
           </button>
           {market.name === 'MATCH_ODDS' && onRefresh && (
             <button 
               onClick={onRefresh}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-semibold flex items-center gap-1"
+              className="bg-[#FFD949] hover:bg-yellow-600 px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-bold text-black flex items-center gap-1"
             >
               <RefreshCw className="w-3 h-3" />
               {!isMobile && 'Refresh'}
@@ -86,13 +86,13 @@ export default function MatchOdds({
         <table className="w-full text-[10px] sm:text-xs">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-1 sm:px-2 py-1 text-left text-[10px] sm:text-xs font-semibold text-gray-700 w-16 sm:w-20">
+              <th className="px-1 sm:px-2 py-1 text-left text-[0.8rem] sm:text-xs font-bold text-gray-700 w-16 sm:w-20">
                 Team
               </th>
               {Array.from({ length: BACK_COLUMNS }).map((_, i) => (
                 <th 
                   key={`back-${i}`} 
-                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-bold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   Back
                 </th>
@@ -100,7 +100,7 @@ export default function MatchOdds({
               {Array.from({ length: LAY_COLUMNS }).map((_, i) => (
                 <th 
                   key={`lay-${i}`} 
-                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-semibold text-gray-700 w-[50px] sm:w-[60px]"
+                  className="px-0.5 py-1 text-center text-[10px] sm:text-xs font-bold text-gray-700 w-[50px] sm:w-[60px]"
                 >
                   Lay
                 </th>
@@ -173,12 +173,12 @@ export default function MatchOdds({
               return (
               <tr key={rowIndex} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                 <td className="px-0.5 sm:px-1 py-0.5">
-                  <div className="font-medium text-[12px] sm:text-xs text-gray-900 truncate">
+                  <div className="font-bold text-[12px] sm:text-xs text-gray-900 truncate">
                     {row.team}
                   </div>
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
                     // Show net value badge - exactly as backend provides
-                    <div className={`inline-flex items-center px-1 py-0.5 rounded text-[9px] font-semibold mt-0.5 border ${
+                    <div className={`inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold mt-0.5 border ${
                       netValue > 0
                         ? 'bg-green-50 text-green-700 border-green-200' 
                         : netValue < 0
