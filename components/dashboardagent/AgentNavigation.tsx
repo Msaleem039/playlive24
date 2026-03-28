@@ -31,7 +31,7 @@ export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentN
   return (
     <>
       {/* Main Navigation Header */}
-      <div className="bg-[#00A66E] text-black">
+      <div className="bg-[#064e3b] border-t border-[#047857]/60">
         <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
           <div className="flex justify-start sm:justify-center items-center space-x-2 sm:space-x-3 md:space-x-4 lg:space-x-6 xl:space-x-8 overflow-x-auto no-scrollbar scroll-smooth">
             {navigationItems.map((item) => (
@@ -39,11 +39,9 @@ export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentN
                 key={item}
                 onClick={() => onTabChange?.(item)}
                 className={`font-bold flex items-center whitespace-nowrap text-[0.65rem] xs:text-[0.7rem] sm:text-[0.75rem] md:text-[0.8rem] transition-colors min-h-[36px] sm:min-h-[40px] px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 ${
-                  item === 'Game Controls' ? 'hover:text-gray-200' : ''
-                } ${
-                  item === activeTab 
-                    ? 'bg-white text-black rounded font-bold shadow-sm' 
-                    : 'hover:text-gray-200 hover:bg-black/10 rounded'
+                  item === activeTab
+                    ? "bg-[#fbbf24] text-black rounded-t-md shadow-sm"
+                    : "text-white hover:bg-white/10 rounded-lg"
                 }`}
               >
                 {item}
@@ -57,7 +55,7 @@ export function AgentNavigation({ activeTab = 'Dashboard', onTabChange }: AgentN
       </div>
 
       {/* Section Header */}
-      <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-2">
+      <div className="bg-[#064e3b] text-white px-2 sm:px-4 md:px-6 py-2 border-t border-[#047857]/60">
         <h1 className="text-base sm:text-lg font-bold">{activeTab}</h1>
       </div>
     </>

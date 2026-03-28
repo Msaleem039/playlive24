@@ -238,12 +238,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(0,255,102,0.15)] relative"
+          className="bg-white/10 backdrop-blur-2xl border border-[#FFD949] rounded-3xl p-8 shadow-[0_0_30px_rgba(0,255,102,0.15)] relative"
         >
           {/* Cross Button with Blink Animation */}
           <motion.button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors z-10"
+            className="absolute top-4 right-4 text-[#FFD949] hover:text-[#FFD949]"
             animate={{ 
               opacity: [0.6, 1, 0.6],
               scale: [1, 1.1, 1]
@@ -295,7 +295,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="pl-12 h-14 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:bg-white/15 focus:border-[#30967c]/50 transition-all duration-300"
+                className="pl-12 h-14 bg-white/10 border border-[#FFD949] rounded-xl text-white placeholder-white/40 focus:bg-white/15 focus:border-[#30967c]/50 transition-all duration-300"
                 required
               />
             </div>
@@ -307,7 +307,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-12 pr-12 h-14 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:bg-white/15 focus:border-[#30967c]/50 transition-all duration-300"
+                className="pl-12 pr-12 h-14 bg-white/10 border border-[#FFD949] rounded-xl text-white placeholder-white/40 focus:bg-white/15 focus:border-[#30967c]/50 transition-all duration-300"
                 required
               />
               <motion.button
@@ -315,7 +315,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-black border border-[#FFD949] rounded-full hover:text-black/80 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </motion.button>
@@ -333,7 +333,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginM
             ) : (
               <Button
                 type="submit"
-                className="w-full h-14 bg-[#30967c] hover:bg-[#2a7f6a] text-white font-bold rounded-xl transition-all duration-300"
+                className="w-full h-14 bg-[#FFD949] hover:bg-[#FFD949] text-black font-bold rounded-xl transition-all duration-300"
               >
                 Sign In
               </Button>

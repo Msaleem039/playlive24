@@ -112,11 +112,11 @@ export default function DashboardLayout({ role }: { role: string }) {
         <CommonHeader activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Spacer to push content below fixed header - Top bar (h-10=40px mobile, h-12=48px desktop) + Nav bar (≈32px mobile, ≈52px desktop) */}
-      <div className="h-[72px] sm:h-[100px] flex-shrink-0" />
+      {/* Spacer = CommonHeader top row (h-8/h-10) + tab nav only — no client ticker on staff routes */}
+      <div className="h-[80px] sm:h-[86px] md:h-[88px] flex-shrink-0" />
 
       {/* ======= Tab Content ======= - Scrollable area starts below header */}
-      <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">
+      <main ref={mainRef} className="flex-1 relative z-10 overflow-x-hidden overflow-y-auto px-2 sm:px-2 lg:px-2 py-4">
         {activeTab === "Dashboard" && <MyReportView />}
 
         {(activeTab === "User Management" || activeTab === "User List") && (

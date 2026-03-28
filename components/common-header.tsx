@@ -31,7 +31,9 @@ import { Sidebar } from "@/components/sidebar"
 import Logo from "./utils/Logo"
 import { useDispatch, useSelector } from "react-redux"
 import { logout as logoutThunk, selectCurrentUser, setCredentials } from "@/app/store/slices/authSlice"
-import { useLoginMutation, useChangePasswordMutation, useSuperAdminSelfTopupMutation, useUpdateSiteVideoMutation, useGetSiteVideoQuery } from "@/app/services/Api"
+import { useLoginMutation, useChangePasswordMutation, useSuperAdminSelfTopupMutation, useUpdateSiteVideoMutation, useGetSiteVideoQuery, useGetNewsBarQuery } from "@/app/services/Api"
+import FastMarquee from "react-fast-marquee"
+import ComplaintModal from "@/components/modal/ComplaintModal"
 import Cookies from "js-cookie"
 import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import SelfTopupModal from "@/components/modal/SelfTopupModal"
@@ -117,6 +119,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
   const [isNewsBarModalOpen, setIsNewsBarModalOpen] = useState(false)
   const [isTabBannerModalOpen, setIsTabBannerModalOpen] = useState(false)
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false)
+  const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const adminDropdownRef = useRef<HTMLDivElement | null>(null)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -233,7 +236,6 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
       authUser?.chips
     )
     
-    console.log("CommonHeader: Normalized balance value:", balanceValue)
     const exposureValue = normalizeNumber(
       authUser?.exposure ??
       authUser?.currentExposure ??
@@ -312,9 +314,22 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
     return roleNavigationItems[role] || roleNavigationItems.CLIENT
   }, [userInfo.role])
   const isSuperAdmin = userInfo.role === "SUPER_ADMIN"
+
+  /** Mint ticker + COMPLAIN only when logged in as client (not admin / agent / settlement). */
+  const showClientNewsTicker =
+    !!authUser?.role &&
+    String(authUser.role).toUpperCase().replace(/[-\s]+/g, "_") === "CLIENT"
   
   // Fetch site video only for super admin
   const { data: siteVideoData } = useGetSiteVideoQuery(undefined, { skip: !isSuperAdmin })
+
+  const { data: newsBarData } = useGetNewsBarQuery(
+    {},
+    { pollingInterval: 60000, skip: !showClientNewsTicker }
+  )
+  const newsBarText =
+    newsBarData?.text ||
+    "Welcome to Playlive24 enjoy icc cricket world cup 2026"
 
   // Function to manually refresh user balance
   const refreshUserBalance = async () => {
@@ -493,59 +508,57 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
   }
 
   return (
-    <div className="bg-[#25C9A0]">
-      {/* Top bar */}
-      <div className="bg-[#2DE8B7] border-b border-[#22d7a8]">
-        <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 h-10 sm:h-12 flex items-center justify-between gap-1 xs:gap-2">
+    <div className="bg-[#064e3b]">
+      {/* Top bar — deep forest green + gold actions (matches client dashboard screenshot) */}
+      <div className="border-b border-[#047857]/70">
+        <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 xs:gap-2">
           <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               aria-label="Open sidebar"
               onClick={() => setIsSidebarOpen(true)}
-              className="rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-black/10 transition-colors"
+              className="rounded p-1 xs:p-1.5 sm:p-2 flex-shrink-0 hover:bg-white/10 transition-colors"
             >
-              {/* PlayLIve text - shown on small screens, hidden on sm and above */}
-              <span className="text-yellow-400 font-bold text-lg sm:hidden">PlayLIve</span>
-              {/* Menu icon - hidden on small screens, shown from sm breakpoint */}
-              <Menu className="hidden sm:block w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5 text-emerald-400" />
+              <span className="text-[#fbbf24] font-bold text-lg sm:hidden">PlayLIve</span>
+              <Menu className="hidden sm:block w-4 h-4 xs:w-4.5 sm:w-5 sm:h-5 text-[#fbbf24]" />
             </button>
-            {/* Logo - Hidden on small screens, shown from sm breakpoint */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               className="hidden sm:block text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-wide flex-shrink-0"
             >
-              <Logo/>
+              <Logo />
             </motion.div>
           </div>
           <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 bg-[#01411C] text-white px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1.5 rounded-md shadow-sm min-w-[65px] xs:min-w-[75px] sm:min-w-[90px] md:min-w-[110px] lg:min-w-[120px] justify-center">
-              <Coins className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-[#FFD949] flex-shrink-0" />
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 bg-[#fbbf24] text-black px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1.5 rounded-md shadow-sm min-w-[65px] xs:min-w-[75px] sm:min-w-[90px] md:min-w-[110px] lg:min-w-[120px] justify-center border border-black/10">
+              <Coins className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-black flex-shrink-0" />
               <div className="leading-tight text-left min-w-0">
-                <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-bold truncate">{userInfo.balance}</div>
+                <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-bold truncate text-black">
+                  {userInfo.balance}
+                </div>
               </div>
             </div>
             {isSuperAdmin && (
               <>
                 <button
                   onClick={() => setIsSelfTopupModalOpen(true)}
-                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all"
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all"
                   title="Top up super admin balance"
                 >
                   Top Up
                 </button>
                 <button
                   onClick={() => setIsVideoUploadModalOpen(true)}
-                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all flex items-center gap-1"
+                  className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all flex items-center gap-1"
                   title="Upload site video"
                 >
                   <Video className="w-3 h-3" />
                   <span className="hidden sm:inline">Video</span>
                 </button>
-                {/* Admin Dropdown */}
                 <div className="relative" ref={adminDropdownRef}>
                   <button
                     onClick={() => setIsAdminDropdownOpen((prev) => !prev)}
-                    className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-[#117044] text-white border border-[#00FF9D]/40 hover:bg-[#1DBF73] hover:brightness-110 transition-all flex items-center gap-1"
+                    className="px-2 xs:px-2.5 sm:px-3 py-1 text-[10px] xs:text-xs sm:text-sm font-bold rounded-lg bg-white/15 text-white border border-white/25 hover:bg-white/25 transition-all flex items-center gap-1"
                     title="Admin Settings"
                   >
                     <Settings className="w-3 h-3" />
@@ -604,12 +617,12 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#01411C] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-md text-white font-bold shadow-sm hover:bg-black transition-all text-[10px] xs:text-xs sm:text-sm min-w-0"
+                className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 bg-[#fbbf24] px-1.5 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-1.5 rounded-md text-black font-bold shadow-sm border border-black/15 hover:brightness-95 transition-all text-[10px] xs:text-xs sm:text-sm min-w-0"
               >
-                <User className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <User className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-black" />
                 <span className="truncate max-w-[50px] xs:max-w-[60px] sm:max-w-[80px] md:max-w-none">{userInfo.name || <span className="text-[10px] xs:text-xs sm:text-sm">User</span>}</span>
                 <ChevronDown
-                  className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
+                  className={`w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 transition-transform flex-shrink-0 text-black ${isUserMenuOpen ? "rotate-180" : "rotate-0"}`}
                 />
               </button>
 
@@ -620,7 +633,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[280px] xs:w-56 sm:w-64 bg-[#0F172A]/95 backdrop-blur-md rounded-lg border border-[#117044]/40 shadow-[0_0_20px_rgba(0,255,157,0.12)] overflow-hidden z-[60]"
+                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[280px] xs:w-56 sm:w-64 bg-[#0F172A]/95 backdrop-blur-md rounded-lg border border-[#047857]/50 shadow-lg overflow-hidden z-[60]"
                   >
                     <div className="px-3 xs:px-4 py-2 xs:py-3 bg-gray-100 text-[10px] xs:text-xs font-bold text-gray-700 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 xs:gap-0">
                       <div className="flex items-center gap-1.5 xs:gap-2">
@@ -746,36 +759,46 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
           </div>
         </div>
       </div>
-      {/* Marquee */}
-      {/* <div className="bg-black text-emerald-400 py-0.5 xs:py-1 overflow-hidden">
-        <div className="animate-marquee text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.70rem] lg:text-[0.75rem] text-white font-bold whitespace-nowrap">
-          Welcome to Playlive7! If you have any queries, contact us +923254353
-        </div>
-      </div> */}
 
-      {/* Navigation Bar - Combined from SharedNavigation */}
+      {showClientNewsTicker && (
+        <div className="relative overflow-hidden bg-[#34d399] border-y border-[#10b981]">
+          <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4 gap-2">
+            <div className="w-full min-w-0 overflow-hidden bg-[#064e3b] border border-white/20 rounded-lg">
+              <FastMarquee speed={50} gradient={false} pauseOnHover>
+                <span className="px-4 text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
+                  {newsBarText}
+                </span>
+              </FastMarquee>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsComplaintModalOpen(true)}
+              className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50"
+            >
+              COMPLAIN
+            </button>
+          </div>
+        </div>
+      )}
+
       {onTabChange && (
-        <div className="relative z-[20]">
-          {/* Main Navigation Header */}
-          <div className="bg-[#2DE8B7] text-black">
-            <div className="px-1 xs:px-1.5 sm:px-3 md:px-4 lg:px-4 py-1 xs:py-1.5 sm:py-2 md:py-2.5 lg:py-3">
+        <div className="relative z-[20] border-t border-[#047857]/60">
+          <div className="bg-[#064e3b]">
+            <div className="px-1 xs:px-1.5 sm:px-3 md:px-4 lg:px-4 py-1 xs:py-1.5 sm:py-2 md:py-2">
               <div className="flex justify-start sm:justify-center items-center space-x-0.5 xs:space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-3 xl:space-x-4 overflow-x-auto no-scrollbar scroll-smooth">
                 {navigationItems.map((item) => (
                   <button
                     key={item}
                     onClick={() => onTabChange?.(item)}
                     className={`font-bold flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 whitespace-nowrap text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] lg:text-[0.75rem] xl:text-[0.8rem] transition-all duration-300 min-h-[20px] xs:min-h-[22px] sm:min-h-[24px] md:min-h-[26px] lg:min-h-[28px] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 py-0.5 xs:py-1 sm:py-1.5 md:py-2 ${
-                      item === 'Game Controls' ? 'hover:text-gray-200' : ''
-                    } ${
-                      item === currentActiveTab 
-                        ? 'bg-black/15 text-black rounded-lg font-bold border-b-2 border-[#00A66E] shadow-sm' 
-                        : 'hover:text-black hover:bg-black/10 rounded-lg'
+                      item === currentActiveTab
+                        ? "bg-[#fbbf24] text-black rounded-t-md shadow-sm"
+                        : "text-white hover:bg-white/10 rounded-lg"
                     }`}
                   >
                     <span className="truncate">{item}</span>
-                    {/* Show live count for Matches tab (Cricket) */}
-                    {item === 'Matches' && liveCricketCount > 0 && (
-                      <span className="flex items-center gap-0.5 xs:gap-1 bg-red-500 text-white px-1 xs:px-1.5 py-0.5 rounded-full text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] font-bold flex-shrink-0">
+                    {item === "Matches" && liveCricketCount > 0 && (
+                      <span className="flex items-center gap-0.5 xs:gap-1 bg-[#dc2626] text-white px-1 xs:px-1.5 py-0.5 rounded-full text-[0.55rem] xs:text-[0.6rem] sm:text-[0.65rem] font-bold flex-shrink-0 border border-white/90">
                         <Radio className="w-2 h-2 xs:w-2.5 xs:h-2.5 animate-pulse flex-shrink-0" />
                         {liveCricketCount}
                       </span>
@@ -789,11 +812,14 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
             </div>
           </div>
 
-          {/* Section Header */}
-          {/* <div className="bg-black text-white px-4 sm:px-6 py-2">
-            <h1 className="text-lg font-bold">{activeTab}</h1>
-          </div> */}
         </div>
+      )}
+
+      {showClientNewsTicker && (
+        <ComplaintModal
+          isOpen={isComplaintModalOpen}
+          onClose={() => setIsComplaintModalOpen(false)}
+        />
       )}
 
       {/* Sidebar */}

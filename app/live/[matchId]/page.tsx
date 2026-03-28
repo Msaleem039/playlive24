@@ -294,7 +294,7 @@ export default function LiveMatchDetailPage() {
       )}
       
       {/* Main Content Area - Responsive Grid Layout */}
-      <div className={`${isClient ? 'min-h-[calc(100vh-108px)]' : isAgentOrAdmin ? 'min-h-[calc(100vh-110px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass(displayMatchData.hasLiveTV, streamUrl)}`}>
+      <div className={`${isClient ? 'min-h-[calc(100vh-120px)]' : isAgentOrAdmin ? 'min-h-[calc(100vh-88px)]' : 'min-h-[calc(100vh-64px)]'} ${getMainLayoutClass(displayMatchData.hasLiveTV, streamUrl)}`}>
         {/* Left Panel - Betting Markets (with integrated scorecard) */}
         <div className={`flex flex-col bg-white ${getLeftPanelClass(displayMatchData.hasLiveTV, streamUrl)} px-2 sm:px-0`} style={{ gap: 0 }}>
           {/* Betting Markets Section - Scorecard integrated as first item */}

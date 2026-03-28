@@ -245,8 +245,8 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
   }
 
   return (
-    <div className="bg-[#01411C]">
-    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2">
+    <div className="bg-[#064e3b]">
+    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 sm:gap-2 border-b border-[#047857]/70">
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
         
         <button
@@ -254,7 +254,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
           onClick={onSidebarOpen}
           className="hidden md:block text-black rounded p-1.5 sm:p-2 flex-shrink-0"
         >
-          <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFD949]" />
+          <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-[#fbbf24]" />
         </button>
   
         <motion.button
@@ -286,18 +286,18 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
               setIsUserMenuOpen(false)
             }}
             className="flex items-center gap-1 sm:gap-1.5 
-            bg-[#FFD949] 
-            text-white px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 
-            rounded-md shadow-sm
+            bg-[#fbbf24] 
+            text-black px-1.5 sm:px-2 md:px-2.5 py-1 sm:py-1.5 
+            rounded-md shadow-sm border border-black/10
             min-w-[70px] sm:min-w-[85px] md:min-w-[100px] lg:min-w-[120px] 
             justify-center  transition"
           >
-            <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-[#FFD949] flex-shrink-0" />
+            <Coins className="w-3 h-3 sm:w-3.5 sm:h-4 text-black flex-shrink-0" />
             <div className="leading-tight text-left min-w-0">
               <div className="text-xs sm:text-sm  truncate text-black font-bold">{userInfo.balance}</div>
             </div>
             <ChevronDown
-              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform flex-shrink-0 text-[#01411C] ${isBalanceMenuOpen ? "rotate-180" : "rotate-0"}`}
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform flex-shrink-0 text-black ${isBalanceMenuOpen ? "rotate-180" : "rotate-0"}`}
             />
           </button>
   
@@ -358,10 +358,10 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
               setIsBalanceMenuOpen(false)
             }}
             className="flex items-center gap-1 sm:gap-1.5 md:gap-2 
-            bg-[#FFD949] px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 
+            bg-[#fbbf24] px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 
             rounded-md text-black font-bold 
-            border border-black/50 
-             transition min-w-0"
+            border border-black/15 
+             transition min-w-0 hover:brightness-95"
           >
             <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             <span className="text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px] md:max-w-[150px] lg:max-w-none text-black font-bold">{userInfo.name}</span>

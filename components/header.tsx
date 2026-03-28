@@ -58,12 +58,12 @@ export default function Header() {
 
     </motion.div>
 
-          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0 bg-[#FFD949] rounded-full">
             <Button 
               onClick={openLoginModal}
-              className="bg-black border border-[#00A66E] text-[#00A66E] font-bold px-2.5 xs:px-3 sm:px-4 md:px-5 py-1 xs:py-1.5 sm:py-1.5 text-[0.7rem] xs:text-xs sm:text-sm md:text-base rounded hover:bg-[#00A66E] hover:text-black transition-all duration-300 whitespace-nowrap"
+              className="bg-[#FFD949] border border-[#FFD949] text-black font-bold px-4 xs:px-3 sm:px-4 md:px-5 py-2 xs:py-1.5 sm:py-2 text-[0.7rem] xs:text-xs sm:text-sm md:text-base rounded hover:bg-[#FFD949] hover:text-black transition-all duration-300 whitespace-nowrap"
             >
-              Login 
+              Login
             </Button>
             {/* <Button 
               onClick={openSignupModal}

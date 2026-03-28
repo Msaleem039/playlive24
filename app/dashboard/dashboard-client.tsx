@@ -47,8 +47,8 @@ export default function DashboardPageClient() {
         <DashboardHeader selectedTab={tab} onSelectTab={handleTabChange} />
       </div>
 
-      {/* Spacer to push content below fixed header - Top bar (h-12=48px) + Marquee (py-1≈20px) + Nav bar (h-10=40px) */}
-      <div className="h-[108px] flex-shrink-0" />
+      {/* Spacer = DashboardTopBar (h-8/h-10) + marquee row (py + ticker) + nav (h-10) — tuned to avoid gap under fixed header */}
+      <div className="h-[108px] sm:h-[118px] md:h-[120px] flex-shrink-0" />
 
       {/* Scrollable content area - starts below header */}
       <main 

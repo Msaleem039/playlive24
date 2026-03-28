@@ -213,7 +213,7 @@ export default function UserManagement() {
       </div>
 
       {/* Spacer to push content below fixed header */}
-      <div className="h-[90px] sm:h-[110px] flex-shrink-0" />
+      <div className="h-[80px] sm:h-[86px] md:h-[88px] flex-shrink-0" />
 
       {/* Main Content - Scrollable area */}
       <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">

@@ -53,7 +53,7 @@ export default function SettlementAdminLayout() {
       </div>
 
       {/* Spacer to push content below fixed header (top bar + marquee only, no nav bar) */}
-      <div className="h-[50px] sm:h-[60px] flex-shrink-0" />
+      <div className="h-[48px] sm:h-[56px] flex-shrink-0" />
 
       {/* Main Content - Scrollable area */}
       <main ref={mainRef} className="flex-1 relative z-10 p-0 pt-0 overflow-x-hidden overflow-y-auto">

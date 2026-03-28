@@ -73,7 +73,7 @@ export default function ComplaintModal({ isOpen, onClose }: ComplaintModalProps)
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder="Enter user id"
               className="w-full border-gray-300 focus:border-red-500 focus:ring-red-500"
               required
             />
@@ -81,13 +81,13 @@ export default function ComplaintModal({ isOpen, onClose }: ComplaintModalProps)
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1.5">
-              Contact Number <span className="text-red-500">*</span>
+              whatsapp number <span className="text-red-500">*</span>
             </label>
             <Input
               type="tel"
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
-              placeholder="Enter your contact number"
+              placeholder="Enter whatsapp number"
               className="w-full border-gray-300 focus:border-red-500 focus:ring-red-500"
               required
             />

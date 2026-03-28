@@ -251,7 +251,7 @@ export default function AgentMatchBookPage() {
     <div className="min-h-screen bg-gray-100">
       <CommonHeader activeTab={activeTab} onTabChange={handleTabChange} />
       
-      <div className="min-h-[calc(100vh-110px)] p-2 sm:p-4">
+      <div className="min-h-[calc(100vh-88px)] p-2 sm:p-4">
         {/* Header with Back Button */}
         <div className="mb-4 flex items-center justify-between">
           <button

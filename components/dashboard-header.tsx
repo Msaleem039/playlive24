@@ -106,27 +106,26 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
       {/* Marquee + Complain button */}
-      <div className="relative overflow-hidden bg-[#2DE8B7] border-y border-[#22d7a8]">
-
-        <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4">
-        <div className="w-full overflow-hidden bg-[w-full overflow-hidden bg-[#01411C] border border-[#17c999] rounded-lg] border border-[#17c999] rounded-lg">
-  <FastMarquee speed={50} gradient={false} pauseOnHover>
-    <span className="px-4 text-[0.8rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
-      {newsBarText}
-    </span>
-  </FastMarquee>
-</div>
+      <div className="relative overflow-hidden bg-[#34d399] border-y border-[#10b981]">
+        <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4 gap-2">
+          <div className="w-full min-w-0 overflow-hidden bg-[#064e3b] border border-white/20 rounded-lg">
+            <FastMarquee speed={50} gradient={false} pauseOnHover>
+              <span className="px-4 text-[0.8rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
+                {newsBarText}
+              </span>
+            </FastMarquee>
+          </div>
           <button
             type="button"
             onClick={() => setIsComplaintModalOpen(true)}
-            className="ml-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-red-600 hover:bg-red-600 text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/60 hover:brightness-110"
+            className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50 hover:brightness-110"
           >
             COMPLAIN
           </button>
         </div>
       </div>
       {/* Nav bar */}
-      <div className="bg-[#01411C]/90 border-b border-[#01411C]/90">
+      <div className="bg-[#064e3b] border-b border-[#047857]/70">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">
           <ul className="flex items-center h-10 gap-4 sm:gap-6 whitespace-nowrap py-1 no-scrollbar">
             {tabsWithLiveCounts.map((tab) => {
@@ -135,10 +134,10 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
                 <li key={tab.name} className="shrink-0 relative group">
                   <button
                     onClick={() => onSelectTab(tab.name)}
-                    className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded-lg transition-all duration-300 ${
+                    className={`uppercase font-bold text-[0.68rem] px-3 py-2 rounded-t-md transition-all duration-300 ${
                       isActive
-                        ? "bg-[#FFD949] text-black shadow-sm border-b-2 border-[#00A66E] font-bold"
-                        : "text-black/90 text-white hover:bg-black/10 font-bold"
+                        ? "bg-[#fbbf24] text-black shadow-sm font-bold"
+                        : "text-white hover:bg-white/10 font-bold"
                     }`}
                   >
                     {tab.name}
@@ -147,7 +146,7 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
                   {/* Live Count Badge with Signal Icon */}
                   {tab.hasLiveCount && tab.liveCount > 0 && (
                     <div className="absolute -top-1 -right-1 flex items-center gap-1">
-                      <div className="w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border border-white font-bold">
+                      <div className="w-4 h-4 bg-[#dc2626] text-white text-xs rounded-full flex items-center justify-center border border-white font-bold">
                         {tab.liveCount}
                       </div>
                       <Radio className="w-3 h-3 text-red-500" />
