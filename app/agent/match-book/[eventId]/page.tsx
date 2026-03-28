@@ -14,6 +14,7 @@ import LiveTVSection from '@/components/live/LiveTVSection'
 import { RefreshCw, ArrowLeft } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import { useGetMatchPositionsQuery } from '@/app/services/Api'
+import { normalizedApiMarketKey } from '@/app/live/[matchId]/types'
 
 export default function AgentMatchBookPage() {
   const params = useParams()
@@ -120,22 +121,24 @@ export default function AgentMatchBookPage() {
 
   // Separate Match Odds and Fancy markets
   const matchOddsMarket = useMemo(() => {
-    return bettingMarkets.find(m => 
-      (m.name?.toUpperCase() === 'MATCH_ODDS' || m.name?.toUpperCase() === 'MATCH ODDS') && 
-      m.gtype === 'match'
+    return bettingMarkets.find(
+      (m) => normalizedApiMarketKey(m) === 'MATCH_ODDS' && m.gtype === 'match'
     )
   }, [bettingMarkets])
 
   const fancyMarkets = useMemo(() => {
-    return bettingMarkets.filter(m => 
-      m.gtype === 'fancy' || 
-      m.gtype === 'fancy1' || 
-      m.gtype === 'fancy2' || 
-      m.gtype === 'match1' ||
-      m.gtype === 'oddeven' ||
-      m.gtype === 'cricketcasino' ||
-      m.gtype === 'meter'
-    )
+    return bettingMarkets.filter((m) => {
+      if (normalizedApiMarketKey(m) === 'MATCH_ODDS') return false
+      return (
+        m.gtype === 'fancy' ||
+        m.gtype === 'fancy1' ||
+        m.gtype === 'fancy2' ||
+        m.gtype === 'match1' ||
+        m.gtype === 'oddeven' ||
+        m.gtype === 'cricketcasino' ||
+        m.gtype === 'meter'
+      )
+    })
   }, [bettingMarkets])
 
   // Get all bets from match book data
@@ -317,6 +320,7 @@ export default function AgentMatchBookPage() {
                 <div className="border-b">
                   <LiveTVSection
                     streamUrl={streamUrl}
+                    eventId={currentEventId ?? eventId}
                     liveToggle={liveToggle}
                     onToggleChange={setLiveToggle}
                     canToggleTV={true}

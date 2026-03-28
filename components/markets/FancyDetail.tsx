@@ -1,7 +1,7 @@
 'use client'
 
-import { Pin, CheckCircle } from 'lucide-react'
-import type { BettingMarket } from '@/app/live/[matchId]/types'
+import { Pin } from 'lucide-react'
+import { type BettingMarket, normalizedApiMarketKey } from '@/app/live/[matchId]/types'
 
 interface FancyDetailProps {
   market: BettingMarket
@@ -52,7 +52,7 @@ export default function FancyDetail({
         <div className="flex items-center gap-2">
           <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
           <span className="font-bold text-xs sm:text-sm">
-            {market.name}
+            { market.name}
           </span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">

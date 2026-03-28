@@ -2,7 +2,7 @@
 
 import MatchOdds from '@/components/markets/MatchOdds'
 import FancyDetail from '@/components/markets/FancyDetail'
-import type { BettingMarket } from '@/app/live/[matchId]/types'
+import { type BettingMarket, normalizedApiMarketKey } from '@/app/live/[matchId]/types'
 
 interface MarketListProps {
   markets: BettingMarket[]
@@ -45,10 +45,8 @@ export default function MarketList({
     <>
       {marketsToShow.map((market, marketIndex) => {
         // Determine if this is a match odds market or fancy market
-        const marketName = (market.name || '').toUpperCase().trim()
         const marketType = (market.gtype || '').toLowerCase()
-        // STRICT check: Only "MATCH_ODDS" or "MATCH ODDS" by name, not by type
-        const isMatchOdds = marketName === 'MATCH_ODDS' || marketName === 'MATCH ODDS'
+        const isMatchOdds = normalizedApiMarketKey(market) === 'MATCH_ODDS'
         const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
         
         // POSITION MAPPING:

@@ -3,12 +3,17 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 
+const LIVE_TV_PLAYER_BASE = 'https://mis2.sqmr.xyz/ank.php'
+
 interface LiveTVSectionProps {
+  /** Legacy / fallback iframe URL if event id cannot be resolved */
   streamUrl: string
   liveToggle: boolean
   onToggleChange: (value: boolean) => void
   canToggleTV: boolean
   numericMatchId: number | null
+  /** Preferred: API event id (e.g. 35364422) for mis2.sqmr.xyz player */
+  eventId?: string | number | null
   isMobile?: boolean
   scorecard?: any
   matchData?: any
@@ -21,12 +26,24 @@ export default function LiveTVSection({
   onToggleChange,
   canToggleTV,
   numericMatchId,
+  eventId: eventIdProp,
   isMobile = false,
   scorecard,
   matchData,
   variant = 'mobile'
 }: LiveTVSectionProps) {
   const [streamLoadError, setStreamLoadError] = useState(false)
+
+  const resolvedEventId =
+    eventIdProp ??
+    matchData?.eventId ??
+    matchData?.event_id ??
+    numericMatchId
+
+  const iframeSrc =
+    resolvedEventId != null && String(resolvedEventId).trim() !== ''
+      ? `${LIVE_TV_PLAYER_BASE}?eventId=${encodeURIComponent(String(resolvedEventId).trim())}`
+      : streamUrl
 
   const handleRetry = () => {
     setStreamLoadError(false)
@@ -99,7 +116,7 @@ export default function LiveTVSection({
             <>
               <iframe
                 key={streamKey}
-                src={streamUrl}
+                src={iframeSrc}
                 className="w-full h-full border-0 absolute inset-0"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
@@ -109,7 +126,7 @@ export default function LiveTVSection({
                   setStreamLoadError(false)
                 }}
                 onError={() => {
-                  console.error('[Stream] Failed to load stream:', streamUrl)
+                  console.error('[Stream] Failed to load stream:', iframeSrc)
                   setStreamLoadError(true)
                 }}
               />

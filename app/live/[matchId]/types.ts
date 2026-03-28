@@ -13,6 +13,8 @@ export interface MarketRow {
 
 export interface BettingMarket {
   name: string
+  /** Original API `mname` (e.g. getdiamondapi: `"MATCH_ODDS"`). Prefer this + `name` for labels. */
+  mname?: string
   min: number
   max: number
   rows: MarketRow[]
@@ -21,6 +23,11 @@ export interface BettingMarket {
   marketIdString?: string // Store the full marketId string for API calls
   gscode?: number // Game status code
   gstatus?: string // Game status (ACTIVE, SUSPENDED, etc.)
+}
+
+/** Normalize Diamond/detail `mname` or display `name` for comparisons (MATCH_ODDS, MATCH ODDS, etc.). */
+export function normalizedApiMarketKey(market: Pick<BettingMarket, 'name' | 'mname'>): string {
+  return (market.mname || market.name || '').trim().toUpperCase().replace(/\s+/g, '_')
 }
 
 export interface BetHistoryItem {

@@ -323,6 +323,7 @@ export default function LiveMatchDetailPage() {
             {displayMatchData.hasLiveTV && streamUrl && (
               <LiveTVSection
                 streamUrl={streamUrl}
+                eventId={currentEventId}
                 liveToggle={liveToggle}
                 onToggleChange={setLiveToggle}
                 canToggleTV={canToggleTV}
@@ -370,6 +371,7 @@ export default function LiveMatchDetailPage() {
           <div className={`hidden md:flex bg-white flex-col ${getRightPanelClass(displayMatchData.hasLiveTV, streamUrl)}`}>
             <LiveTVSection
               streamUrl={streamUrl}
+              eventId={currentEventId}
               liveToggle={liveToggle}
               onToggleChange={setLiveToggle}
               canToggleTV={canToggleTV}

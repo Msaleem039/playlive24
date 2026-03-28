@@ -436,6 +436,7 @@ export function useMatchMarkets(
         if (rows.length > 0) {
           const marketData = {
             name: marketName,
+            mname: market.marketName || marketName,
             min: 500, // Default min
             max: 500000, // Default max
             rows,
@@ -542,6 +543,7 @@ export function useMatchMarkets(
           
           markets.push({
             name: marketName,
+            mname: marketEntry.mname,
             min: marketEntry.min || 500,
             max: marketEntry.max || (marketEntry.m || 500000),
             rows,

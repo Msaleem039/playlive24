@@ -177,13 +177,12 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     return eventId
   }, [marketsList, matchData, eventId])
 
-  // Streaming URL - using new tresting.com API
+  // Live TV iframe URL (mis2.sqmr.xyz player; LiveTVSection also builds this from currentEventId)
   const streamUrl = useMemo(() => {
     if (!currentEventId) return null
-    // Generate stream URL if match has TV enabled OR if we have eventId (new API)
     const hasEventId = matchData?.eventId || (Array.isArray(marketsList) && marketsList.length > 0)
     if (!matchData?.tv && !hasEventId) return null
-    return `https://tv.tresting.com/mobile.php?eventid=${currentEventId}`
+    return `https://mis2.sqmr.xyz/ank.php?eventId=${encodeURIComponent(String(currentEventId))}`
   }, [currentEventId, matchData, marketsList])
 
   return {
