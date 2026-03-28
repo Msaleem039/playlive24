@@ -58,7 +58,7 @@ export default function MatchOdds({
       <div className="bg-[#00A66E] text-white px-3 sm:px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="font-bold text-xs sm:text-sm">{market.name}</span>
+          <span className="font-bold text-xs sm:text-sm">{market.name === 'MATCH_ODDS' ? 'Bookmaker' : market.name}</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           <button className="bg-[#FFD949] hover:bg-yellow-600  px-2 py-1 sm:px-3 sm:py-1 rounded text-xs font-bold text-black">
