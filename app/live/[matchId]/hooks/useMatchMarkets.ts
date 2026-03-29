@@ -1,5 +1,14 @@
 import { useMemo } from 'react'
-import type { BettingMarket, MarketRow, BettingOption, MarketResponse, OddsResponse, MarketRunner, OddsRunner } from '../types'
+import {
+  normalizedApiMarketKey,
+  type BettingMarket,
+  type MarketRow,
+  type BettingOption,
+  type MarketResponse,
+  type OddsResponse,
+  type MarketRunner,
+  type OddsRunner,
+} from '../types'
 
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
@@ -117,6 +126,10 @@ export function useMatchMarkets(
         )
         
         bookmakerFancyMarkets.forEach((fancyMarket: any) => {
+          // Match Odds must come only from /cricketid/odds (markets + odds polling), not bookmaker-fancy
+          if (normalizedApiMarketKey(fancyMarket) === 'MATCH_ODDS') {
+            return
+          }
           const marketKey = `${fancyMarket.mname || ''}_${fancyMarket.gtype || ''}`
           if (!existingMarketKeys.has(marketKey)) {
             markets.push(fancyMarket)
