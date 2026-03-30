@@ -1,14 +1,5 @@
 import { useMemo } from 'react'
-import {
-  normalizedApiMarketKey,
-  type BettingMarket,
-  type MarketRow,
-  type BettingOption,
-  type MarketResponse,
-  type OddsResponse,
-  type MarketRunner,
-  type OddsRunner,
-} from '../types'
+import type { BettingMarket, MarketRow, BettingOption, MarketResponse, OddsResponse, MarketRunner, OddsRunner } from '../types'
 
 const BACK_COLUMNS = 1
 const LAY_COLUMNS = 1
@@ -40,6 +31,9 @@ export function useMatchMarkets(
   // Also merge bookmaker-fancy markets from the dedicated endpoint
   const allMarkets = useMemo(() => {
     let markets: any[] = []
+    const oddsList: any[] = Array.isArray(oddsData)
+      ? oddsData
+      : (Array.isArray(oddsData?.data) ? oddsData.data : [])
     
     // Start with new markets + odds API data (using direct API polling)
     if (marketsData && Array.isArray(marketsData) && marketsData.length > 0) {
@@ -48,8 +42,8 @@ export function useMatchMarkets(
         // Get odds from API (polled data from backend cronjob)
         let oddsForMarket = null
         
-        if (oddsData?.status && Array.isArray(oddsData.data)) {
-          oddsForMarket = oddsData.data.find((odds: any) => odds.marketId === market.marketId)
+        if (oddsList.length > 0) {
+          oddsForMarket = oddsList.find((odds: any) => odds.marketId === market.marketId)
         }
         
         return {
@@ -61,13 +55,14 @@ export function useMatchMarkets(
       markets = combinedMarkets
     }
 
-    // 3-runner markets: if we have odds with 3 runners but no matching market (e.g. odds-only response),
-    // add a synthetic market so Match Odds can render (soccer Home/Draw/Away, Test cricket Team A/Team B/Draw, etc.)
-    if (oddsData?.status && Array.isArray(oddsData.data)) {
+    // Odds-only markets: if we have odds with 2 or 3 runners but no matching market
+    // (e.g. detail API missing), add a synthetic market so Match Odds can render.
+    // Intentionally skip single-runner odds.
+    if (oddsList.length > 0) {
       const existingMarketIds = new Set(markets.map((m: any) => m.marketId))
-      oddsData.data.forEach((oddsItem: any) => {
+      oddsList.forEach((oddsItem: any) => {
         const runnerCount = oddsItem.runners?.length ?? 0
-        if (runnerCount === 3 && !existingMarketIds.has(oddsItem.marketId)) {
+        if ((runnerCount === 2 || runnerCount === 3) && !existingMarketIds.has(oddsItem.marketId)) {
           markets.push({
             marketId: oddsItem.marketId,
             marketName: 'MATCH_ODDS',
@@ -84,8 +79,8 @@ export function useMatchMarkets(
         eventId,
         totalMarkets: markets.length,
         marketsWithOdds: markets.filter((m: any) => m.odds).length,
-        hasApiOdds: !!oddsData?.status,
-        pollingActive: marketIds.length > 0,
+        hasApiOdds: oddsList.length > 0,
+        pollingActive: !!eventId,
         isSoccer,
         markets: markets.map((m: any) => ({ 
           marketId: m.marketId, 
@@ -107,6 +102,13 @@ export function useMatchMarkets(
       }
       
       if (bookmakerFancyMarkets.length > 0) {
+        // Never source MATCH_ODDS from bookmaker-fancy.
+        // MATCH_ODDS must come only from the dedicated odds API.
+        bookmakerFancyMarkets = bookmakerFancyMarkets.filter((m: any) => {
+          const marketName = (m?.mname || m?.marketName || '').toString().trim().toUpperCase()
+          return marketName !== 'MATCH_ODDS' && marketName !== 'MATCH ODDS'
+        })
+
         console.log('[MatchDetail] Adding bookmaker-fancy markets:', {
           eventId,
           fancyMarketsFound: bookmakerFancyMarkets.length,
@@ -126,10 +128,6 @@ export function useMatchMarkets(
         )
         
         bookmakerFancyMarkets.forEach((fancyMarket: any) => {
-          // Match Odds must come only from /cricketid/odds (markets + odds polling), not bookmaker-fancy
-          if (normalizedApiMarketKey(fancyMarket) === 'MATCH_ODDS') {
-            return
-          }
           const marketKey = `${fancyMarket.mname || ''}_${fancyMarket.gtype || ''}`
           if (!existingMarketKeys.has(marketKey)) {
             markets.push(fancyMarket)

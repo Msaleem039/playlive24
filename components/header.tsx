@@ -32,7 +32,7 @@ export default function Header() {
     <header className="bg-[#01411C]">
       {/* Top bar (dark) */}
       <div className="bg-[#01411C]">
-        <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-1.5 xs:py-2 sm:py-2.5 flex items-center justify-between gap-2">
+        <div className="w-full max-w-[1280px] mx-auto px-2 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-0.5 xs:py-1 sm:py-1.5 flex items-center justify-between gap-2">
         <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -58,10 +58,10 @@ export default function Header() {
 
     </motion.div>
 
-          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0 bg-[#FFD949] rounded-full">
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0">
             <Button 
               onClick={openLoginModal}
-              className="bg-[#FFD949] border border-[#FFD949] text-black font-bold px-4 xs:px-3 sm:px-4 md:px-5 py-2 xs:py-1.5 sm:py-2 text-[0.7rem] xs:text-xs sm:text-sm md:text-base rounded hover:bg-[#FFD949] hover:text-black transition-all duration-300 whitespace-nowrap"
+              className="bg-[#FFD949] border border-[#E5C53A] text-black font-bold px-4 xs:px-4 sm:px-5 md:px-6 py-2 xs:py-2 sm:py-2.5 text-xs xs:text-sm sm:text-sm md:text-base rounded-full hover:bg-[#FFD949] hover:text-black transition-all duration-300 whitespace-nowrap leading-none shadow-sm"
             >
               Login
             </Button>

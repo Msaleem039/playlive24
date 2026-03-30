@@ -80,17 +80,11 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     return []
   }, [marketsData])
 
-  // Extract marketIds from markets response
-  const marketIds = useMemo(() => {
-    if (!Array.isArray(marketsList) || marketsList.length === 0) return []
-    return marketsList.map((market: MarketResponse) => (market as any)?.marketId).filter(Boolean)
-  }, [marketsList])
-
-  // Fetch odds for all markets - uses direct API polling (backend cronjob updates odds)
+  // Fetch odds by eventId so Match Odds updates from match-level response
   const { data: oddsData, isLoading: isLoadingOdds, error: oddsError, refetch: refetchOdds } = useGetCricketMatchOddsQuery(
-    { marketIds },
+    { eventId },
     { 
-      skip: marketIds.length === 0,
+      skip: !eventId,
       // Enable polling to get updated odds from backend cronjob
       pollingInterval: 5000, // Poll every 5 seconds
     }
