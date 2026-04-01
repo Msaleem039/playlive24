@@ -326,8 +326,7 @@ export default function ClientAccountStatementModal({
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Type</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Description</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Result</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">CR</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">DR</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Decision Run</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Balance</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-gray-700">Bets</th>
                     </tr>
@@ -342,8 +341,8 @@ export default function ClientAccountStatementModal({
                     ) : (
                       transactions.map((transaction: any, idx: number) => {
                         // New format: totalCredit, totalDebit, runningBalance, latestSettledAt, description, result, bets
-                        const credit = transaction.totalCredit ?? transaction.credit ?? transaction.cr ?? 0
-                        const debit = transaction.totalDebit ?? transaction.debit ?? transaction.dr ?? 0
+                        // const credit = transaction.totalCredit ?? transaction.credit ?? transaction.cr ?? 0
+                        // const debit = transaction.totalDebit ?? transaction.debit ?? transaction.dr ?? 0
                         const balance = transaction.runningBalance ?? transaction.balance ?? 0
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
                         const typeVal = transaction.type ?? getStatementType(transaction.description || '')
@@ -365,12 +364,12 @@ export default function ClientAccountStatementModal({
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700">
                               {transaction.result !== null && transaction.result !== undefined ? String(transaction.result) : '-'}
                             </td>
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
+                            {/* {/* <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
                               {credit > 0 ? formatCurrency(credit) : '0.00'}
-                            </td>
+                            </td> */}
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-red-600">
-                              {debit > 0 ? `-${formatCurrency(debit)}` : '0.00'}
-                            </td>
+                              {transaction.decisionRun}
+                            </td> 
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
                               balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>

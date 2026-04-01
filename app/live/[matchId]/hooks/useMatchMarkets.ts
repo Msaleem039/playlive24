@@ -198,9 +198,10 @@ export function useMatchMarkets(
     const markets: BettingMarket[] = []
     
     allMarkets.forEach((marketEntry: any) => {
-      // Check if this is the new API format (has marketId and odds)
-      if (marketEntry.marketId && marketEntry.odds) {
-        const market = marketEntry as MarketResponse & { odds: OddsResponse['data'][0] }
+      // Check if this is the new API format (has marketId).
+      // Odds may be delayed/momentarily missing during polling; still render market rows.
+      if (marketEntry.marketId) {
+        const market = marketEntry as MarketResponse & { odds?: OddsResponse['data'][0] }
         const marketName = market.marketName || 'MATCH_ODDS'
         const rows: MarketRow[] = []
 

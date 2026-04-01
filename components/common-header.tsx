@@ -683,7 +683,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
                       </div>
                     )}
 
-                    <div className="py-1 text-xs xs:text-sm text-gray-700">
+                    <div className="py-1 text-xs xs:text-sm text-white">
                       {dropdownItems.map((item) => {
                         const { label, href, icon: Icon, action } = item
                         const tabName = 'tab' in item ? item.tab : undefined
@@ -698,7 +698,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
                                 setIsChangePasswordModalOpen(true)
                                 setIsUserMenuOpen(false)
                               }}
-                              className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                              className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-white hover:bg-[#f4f7f6] transition"
                             >
                               <Icon className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />
                               <span className="text-[11px] xs:text-xs sm:text-sm">{label}</span>
@@ -738,7 +738,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
                           refreshUserBalance()
                           setIsUserMenuOpen(false)
                         }}
-                        className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-gray-700 hover:bg-[#f4f7f6] transition"
+                        className="w-full flex items-center gap-2 xs:gap-3 px-3 xs:px-4 py-1.5 xs:py-2 text-left text-white hover:bg-[#f4f7f6] transition"
                         title="Refresh balance (balance updates automatically after deposit/withdraw)"
                       >
                         <RefreshCw className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00FF9D] flex-shrink-0" />

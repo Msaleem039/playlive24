@@ -247,22 +247,29 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             {data.lastBalls && data.lastBalls.length > 0 && (
               <div className="flex gap-1">
                 {data.lastBalls.map((ball, idx) => {
-                  const ballUpper = (ball || '').toString().toUpperCase().trim()
                   const ballOriginal = (ball || '').toString().trim()
-                  
-                  // 1. Wicket: only single letter "W" (API: "W" = wicket)
-                  const isWicket = ballUpper === 'W'
-                  // 2. Wide: "Wd", "WD", "Wd1", "Wd2" etc. (must have W+d so "W" alone is not wide)
-                  const isWide = !isWicket && (ballUpper.startsWith('WD') || ballUpper.includes('WD'))
-                  // 3. No ball (Nb, Nb1, Nb2, etc.)
-                  const isNoBall = ballUpper.startsWith('NB') || ballUpper.includes('NB')
-                  
-                  // Extract numeric value for runs (remove W, WD, NB, D, etc.)
+                  const ballUpper = ballOriginal.toUpperCase()
+
+                  // Differentiate wide vs wicket:
+                  // - "W" (uppercase) => wicket
+                  // - "w" (lowercase) => wide (provider-specific)
+                  // - "Wd", "WD", "w1", "Wd2" => wide
+                  // - "Nb", "NB", "nb1" => no-ball
+                  const isSingleLowerW = /^w$/.test(ballOriginal)
+                  const isSingleUpperW = /^W$/.test(ballOriginal)
+                  const isWicket = isSingleUpperW || /^WK(T)?$/i.test(ballOriginal)
+                  const isWide = !isWicket && (
+                    isSingleLowerW ||
+                    /^wd\d*$/i.test(ballOriginal) ||
+                    /^w\d+$/.test(ballOriginal)
+                  )
+                  const isNoBall = /^nb\d*$/i.test(ballOriginal)
+
+                  // Extract numeric value for runs (remove wide/no-ball/wicket markers)
                   let ballValue = ballUpper
-                    .replace(/WD/gi, '')
-                    .replace(/NB/gi, '')
-                    .replace(/W/gi, '')
-                    .replace(/D/gi, '')
+                    .replace(/^WD/i, '')
+                    .replace(/^NB/i, '')
+                    .replace(/^W(?!\d)/i, '')
                     .trim()
                   
                   const numericValue = parseInt(ballValue) || 0
