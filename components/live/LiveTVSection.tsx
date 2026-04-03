@@ -3,16 +3,16 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 
-const LIVE_TV_PLAYER_BASE = 'https://mis2.sqmr.xyz/ank.php'
+const LIVE_TV_PLAYER_BASE = 'https://admin.betone.live/tv'
 
 interface LiveTVSectionProps {
-  /** Legacy / fallback iframe URL if event id cannot be resolved */
+  /** Fallback iframe URL if event id cannot be resolved (e.g. full https://... URL) */
   streamUrl: string
   liveToggle: boolean
   onToggleChange: (value: boolean) => void
   canToggleTV: boolean
   numericMatchId: number | null
-  /** Preferred: API event id (e.g. 35364422) for mis2.sqmr.xyz player */
+  /** Preferred: API event id (e.g. 35406928) → https://admin.betone.live/tv/{eventId} */
   eventId?: string | number | null
   isMobile?: boolean
   scorecard?: any
@@ -42,7 +42,7 @@ export default function LiveTVSection({
 
   const iframeSrc =
     resolvedEventId != null && String(resolvedEventId).trim() !== ''
-      ? `${LIVE_TV_PLAYER_BASE}?eventId=${encodeURIComponent(String(resolvedEventId).trim())}`
+      ? `${LIVE_TV_PLAYER_BASE}/${encodeURIComponent(String(resolvedEventId).trim())}`
       : streamUrl
 
   const handleRetry = () => {

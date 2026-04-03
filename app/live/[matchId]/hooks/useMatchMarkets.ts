@@ -176,11 +176,18 @@ export function useMatchMarkets(
       if (mname === 'super over' || mname.includes('super over')) {
         return false
       }
-      // For match-type markets: Keep only "MATCH_ODDS" or "Match Odds" (these have correct selectionIds)
-      // Exclude other match-type markets
+      // For match-type markets: keep MATCH_ODDS and TIED_MATCH style markets.
+      // Exclude other match-type markets.
       const marketType = (market.gtype || '').toLowerCase()
       const marketNameUpper = (market.mname || market.marketName || '').toUpperCase().trim()
-      if (marketType === 'match' && marketNameUpper !== 'MATCH_ODDS' && marketNameUpper !== 'MATCH ODDS') {
+      const isMatchOddsMarket = marketNameUpper === 'MATCH_ODDS' || marketNameUpper === 'MATCH ODDS'
+      const isTiedMatchMarket =
+        marketNameUpper === 'TIED_MATCH' ||
+        marketNameUpper === 'TIED MATCH' ||
+        marketNameUpper.includes('TIED_MATCH') ||
+        marketNameUpper.includes('TIED MATCH')
+
+      if (marketType === 'match' && !isMatchOddsMarket && !isTiedMatchMarket) {
         return false
       }
       return true
@@ -236,18 +243,20 @@ export function useMatchMarkets(
             if (oddsRunner.ex?.availableToBack && Array.isArray(oddsRunner.ex.availableToBack)) {
               const sortedBack = [...oddsRunner.ex.availableToBack].sort((a, b) => b.price - a.price).slice(0, BACK_COLUMNS)
               sortedBack.forEach((odd) => {
+                const oddSize = Number(odd.size) || 0
                 backOdds.push({
                   odds: odd.price.toString(),
-                  amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                  amount: oddSize >= 1000 ? `${(oddSize / 1000).toFixed(1)}k` : oddSize.toFixed(2)
                 })
               })
             }
             if (oddsRunner.ex?.availableToLay && Array.isArray(oddsRunner.ex.availableToLay)) {
               const sortedLay = [...oddsRunner.ex.availableToLay].sort((a, b) => a.price - b.price).slice(0, LAY_COLUMNS)
               sortedLay.forEach((odd) => {
+                const oddSize = Number(odd.size) || 0
                 layOdds.push({
                   odds: odd.price.toString(),
-                  amount: odd.size >= 1000 ? `${(odd.size / 1000).toFixed(1)}k` : odd.size.toFixed(2)
+                  amount: oddSize >= 1000 ? `${(oddSize / 1000).toFixed(1)}k` : oddSize.toFixed(2)
                 })
               })
             }

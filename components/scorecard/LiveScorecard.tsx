@@ -257,7 +257,10 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                   // - "Nb", "NB", "nb1" => no-ball
                   const isSingleLowerW = /^w$/.test(ballOriginal)
                   const isSingleUpperW = /^W$/.test(ballOriginal)
-                  const isWicket = isSingleUpperW || /^WK(T)?$/i.test(ballOriginal)
+                  // Provider may send "ww" for wicket (e.g. CurrentOver.Balls)
+                  const isWwWicket = /^ww$/i.test(ballOriginal)
+                  const isWicket =
+                    isWwWicket || isSingleUpperW || /^WK(T)?$/i.test(ballOriginal)
                   const isWide = !isWicket && (
                     isSingleLowerW ||
                     /^wd\d*$/i.test(ballOriginal) ||
@@ -295,7 +298,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                       displayText = ballOriginal.match(/^nb/i) ? 'Nb' : 'Nb'
                     }
                   } else if (isWicket) {
-                    // Show "W" for wicket (wickets don't typically have runs)
+                    // Show "W" for wicket (including "ww" from API)
                     displayText = 'W'
                   } else if (isZero) {
                     // Show "0" for dot ball
@@ -306,17 +309,19 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                   }
                   
                   // Determine background color
-                  let bgColor = 'bg-green-500 text-white'
+                  let bgColor = 'bg-blue-500 text-white'
                   if (isWicket) {
-                    bgColor = 'bg-red-500 text-white'
+                    bgColor = 'bg-red-500 text-black'
                   } else if (isWide) {
-                    bgColor = 'bg-blue-500 text-white'
+                    bgColor = 'bg-red-500 text-black'
                   } else if (isNoBall) {
-                    bgColor = 'bg-purple-500 text-white'
+                    bgColor = 'bg-white text-black'
                   } else if (isZero) {
-                    bgColor = 'bg-gray-600 text-gray-300'
-                  } else if (isFour || isSix) {
-                    bgColor = 'bg-yellow-400 text-gray-900'
+                    bgColor = 'bg-gray-600 text-black'
+                  } else if (isFour) {
+                    bgColor = 'bg-orange-400 text-black'
+                  } else if (isSix) {
+                    bgColor = 'bg-purple-500 text-white'
                   }
                   
                   return (
