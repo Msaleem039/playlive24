@@ -171,12 +171,12 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     return eventId
   }, [marketsList, matchData, eventId])
 
-  // Live TV URL (admin.betone.live; LiveTVSection builds iframe from currentEventId / eventId prop)
+  // Live TV URL (mis2.sqmr.xyz player; LiveTVSection builds iframe from currentEventId)
   const streamUrl = useMemo(() => {
     if (!currentEventId) return null
     const hasEventId = matchData?.eventId || (Array.isArray(marketsList) && marketsList.length > 0)
     if (!matchData?.tv && !hasEventId) return null
-    return `https://admin.betone.live/tv/${encodeURIComponent(String(currentEventId))}`
+    return `https://mis2.sqmr.xyz/ank.php?eventId=${encodeURIComponent(String(currentEventId))}`
   }, [currentEventId, matchData, marketsList])
 
   return {
