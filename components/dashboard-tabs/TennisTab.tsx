@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/app/store/slices/authSlice'
 import { useGetTabBannersQuery, useGetTennisMatchesQuery } from '@/app/services/Api'
+import { FancyresTabScoreLine } from '@/components/dashboard-tabs/FancyresTabScoreLine'
 import { RefreshCw } from 'lucide-react'
 
 export default function TennisTab() {
@@ -101,6 +102,9 @@ export default function TennisTab() {
                   {teamB && <span className="text-gray-400 text-xs">v</span>}
                   {teamB && <span className="font-bold text-[13px] sm:text-sm truncate">{teamB}</span>}
                 </div>
+                {isLive && (
+                  <FancyresTabScoreLine eventId={String(eventId)} sport="tennis" isLive={isLive} />
+                )}
               </div>
 
               <div className="hidden sm:flex items-center justify-center">

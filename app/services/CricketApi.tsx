@@ -110,6 +110,22 @@ export const cricketApi = createApi({
       },
       providesTags: ['CricketMatches'],
     }),
+
+    // Fancyres dashboard scores (tennis / soccer) — external JSON
+    getFancyresTennisScore: builder.query<unknown, { eventId: string | number }>({
+      query: ({ eventId }) => ({
+        url: API_END_POINTS.fancyresTennisScore(eventId),
+        method: 'GET',
+      }),
+      providesTags: ['CricketMatches'],
+    }),
+    getFancyresSoccerScore: builder.query<unknown, { eventId: string | number }>({
+      query: ({ eventId }) => ({
+        url: API_END_POINTS.fancyresSoccerScore(eventId),
+        method: 'GET',
+      }),
+      providesTags: ['CricketMatches'],
+    }),
   }),
 });
 
@@ -122,4 +138,6 @@ export const {
   useGetCricketBookmakerFancyQuery,
   useGetAllSportsQuery,
   useGetCricketScorecardQuery,
+  useGetFancyresTennisScoreQuery,
+  useGetFancyresSoccerScoreQuery,
 } = cricketApi;

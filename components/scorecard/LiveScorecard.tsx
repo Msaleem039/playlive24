@@ -171,7 +171,7 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
             )}
           </div>
           <div className="ml-2 flex-shrink-0">
-            <span className="bg-green-500 text-white text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+            <span className="bg-[#FBBF24] text-black text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
               INPLAY
             </span>
           </div>
@@ -309,19 +309,19 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
                   }
                   
                   // Determine background color
-                  let bgColor = 'bg-blue-500 text-white'
+                  let bgColor = 'bg-blue-600 text-white'
                   if (isWicket) {
-                    bgColor = 'bg-red-500 text-black'
+                    bgColor = 'bg-red-600 text-white'
                   } else if (isWide) {
-                    bgColor = 'bg-red-500 text-black'
-                  } else if (isNoBall) {
                     bgColor = 'bg-white text-black'
+                  } else if (isNoBall) {
+                    bgColor = 'bg-orange-600 text-black'
                   } else if (isZero) {
-                    bgColor = 'bg-gray-600 text-black'
+                    bgColor = 'bg-green-600 text-white'
                   } else if (isFour) {
-                    bgColor = 'bg-orange-400 text-black'
+                    bgColor = 'bg-purple-600 text-white'
                   } else if (isSix) {
-                    bgColor = 'bg-purple-500 text-white'
+                    bgColor = 'bg-purple-800 text-white'
                   }
                   
                   return (

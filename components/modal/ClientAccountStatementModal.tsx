@@ -325,7 +325,7 @@ export default function ClientAccountStatementModal({
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Date</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Type</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Description</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Result</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Win / Loss</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Decision Run</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Balance</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-gray-700">Bets</th>
@@ -361,8 +361,28 @@ export default function ClientAccountStatementModal({
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700 max-w-[120px] sm:max-w-[200px] truncate" title={transaction.description || '-'}>
                               {transaction.description || transaction.desc || '-'}
                             </td>
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-700">
-                              {transaction.result !== null && transaction.result !== undefined ? String(transaction.result) : '-'}
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
+                              {(() => {
+                                const w = Number(transaction.win)
+                                const l = Number(transaction.loss)
+                                const hasWin = Number.isFinite(w) && w > 0
+                                const hasLoss = Number.isFinite(l) && l > 0
+                                if (hasWin) {
+                                  return (
+                                    <span className="font-bold text-green-600 whitespace-nowrap">
+                                      {w.toFixed(2)}
+                                    </span>
+                                  )
+                                }
+                                if (hasLoss) {
+                                  return (
+                                    <span className="font-bold text-red-600 whitespace-nowrap">
+                                      {l.toFixed(2)}
+                                    </span>
+                                  )
+                                }
+                                return <span className="text-gray-500">-</span>
+                              })()}
                             </td>
                             {/* {/* <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
                               {credit > 0 ? formatCurrency(credit) : '0.00'}

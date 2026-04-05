@@ -47,6 +47,11 @@ export const API_END_POINTS = {
     // cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventId`,
     // cricketScorecard: `https://cache.tresting.com/v2/api/getScoreByEventIdNew`,
     cricketScorecard: `${BASE_URL}/cricketid/score`,
+    /** External score feed for dashboard Tennis/Soccer tabs (e.g. …/tennisscore/1/{eventId}) */
+    fancyresTennisScore: (eventId: string | number) =>
+      `https://score.fancyres.in/api/MatchOdds/tennisscore/1/${encodeURIComponent(String(eventId))}`,
+    fancyresSoccerScore: (eventId: string | number) =>
+      `https://score.fancyres.in/api/MatchOdds/soccerscore/1/${encodeURIComponent(String(eventId))}`,
     getAllSports: `${BASE_URL}/cricketid/sports`,
     // loginUser: BASE_URL + "api/auth/login",
     getUser: `${BASE_URL}/auth/subordinates`,
