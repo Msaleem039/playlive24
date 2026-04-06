@@ -1,6 +1,8 @@
 "use client"
 import { useMemo, useState } from "react"
+import { useSelector } from "react-redux"
 import { Radio } from "lucide-react"
+import { selectCurrentUser } from "@/app/store/slices/authSlice"
 import { Sidebar } from "@/components/sidebar"
 import DashboardTopBar from "./dashboard-top-bar"
 import ComplaintModal from "./modal/ComplaintModal"
@@ -33,6 +35,14 @@ const TABS = [
 ]
 
 export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveFetch = false }: DashboardHeaderProps) {
+  const authUser = useSelector(selectCurrentUser)
+  const headerRole = String(authUser?.role || '')
+    .toUpperCase()
+    .replace(/[-\s]+/g, '_')
+  const showNewsTicker =
+    !authUser?.role || headerRole === 'CLIENT' || headerRole === 'AGENT'
+  const isClient = headerRole === 'CLIENT'
+
   const active = useMemo(() => selectedTab, [selectedTab])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false)
@@ -58,9 +68,13 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
   })
 
   // Fetch news bar text
-  const { data: newsBarData } = useGetNewsBarQuery({}, {
-    pollingInterval: 60000 // Poll every minute
-  })
+  const { data: newsBarData } = useGetNewsBarQuery(
+    {},
+    {
+      pollingInterval: 60000,
+      skip: !showNewsTicker,
+    }
+  )
   
   const newsBarText = newsBarData?.text || "Welcome to Playlive24 enjoy icc cricket world cup 2026"
 
@@ -105,25 +119,29 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
     <div className="sticky top-0 z-50">
       {/* Top bar */}
       <DashboardTopBar onSidebarOpen={() => setIsSidebarOpen(true)} />
-      {/* Marquee + Complain button */}
-      <div className="relative overflow-hidden bg-[#34d399] border-y border-[#10b981]">
-        <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4 gap-2">
-          <div className="w-full min-w-0 overflow-hidden bg-[#064e3b] border border-white/20 rounded-lg">
-            <FastMarquee speed={50} gradient={false} pauseOnHover>
-              <span className="px-4 text-[0.8rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
-                {newsBarText}
-              </span>
-            </FastMarquee>
+      {/* Marquee for client + agent; COMPLAIN button only for CLIENT */}
+      {showNewsTicker && (
+        <div className="relative overflow-hidden bg-[#34d399] border-y border-[#10b981]">
+          <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4 gap-2">
+            <div className="w-full min-w-0 overflow-hidden bg-[#064e3b] border border-white/20 rounded-lg">
+              <FastMarquee speed={50} gradient={false} pauseOnHover>
+                <span className="px-4 text-[0.8rem] sm:text-[0.7rem] md:text-[0.75rem] font-bold tracking-wide text-white">
+                  {newsBarText}
+                </span>
+              </FastMarquee>
+            </div>
+            {isClient && (
+              <button
+                type="button"
+                onClick={() => setIsComplaintModalOpen(true)}
+                className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50 hover:brightness-110"
+              >
+                COMPLAIN
+              </button>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsComplaintModalOpen(true)}
-            className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50 hover:brightness-110"
-          >
-            COMPLAIN
-          </button>
         </div>
-      </div>
+      )}
       {/* Nav bar */}
       <div className="bg-[#064e3b] border-b border-[#047857]/70">
         <nav className="w-full px-2 sm:px-6 lg:px-6 overflow-x-auto">
@@ -164,11 +182,12 @@ export default function DashboardHeader({ selectedTab, onSelectTab, disableLiveF
         </nav>
       </div>
 
-      {/* Complaint modal */}
-      <ComplaintModal
-        isOpen={isComplaintModalOpen}
-        onClose={() => setIsComplaintModalOpen(false)}
-      />
+      {isClient && (
+        <ComplaintModal
+          isOpen={isComplaintModalOpen}
+          onClose={() => setIsComplaintModalOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <Sidebar

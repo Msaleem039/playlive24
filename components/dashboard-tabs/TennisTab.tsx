@@ -12,7 +12,9 @@ export default function TennisTab() {
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
-  const { data: tabBannersData } = useGetTabBannersQuery(undefined)
+  const { data: tabBannersData } = useGetTabBannersQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  })
   const { data: matchesData, isLoading, isError, refetch } = useGetTennisMatchesQuery(undefined, {
     refetchOnMountOrArgChange: true,
     pollingInterval: 30000,
@@ -57,8 +59,12 @@ export default function TennisTab() {
         </button>
       </div>
       {bannerUrl && (
-        <div className="px-2 sm:px-4 py-2 bg-black/5 border-b border-gray-200">
-          <img src={bannerUrl} alt="Tennis banner" className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-md" />
+        <div className="w-full border-b border-gray-200 bg-black/5">
+          <img
+            src={bannerUrl}
+            alt="Tennis banner"
+            className="w-full h-auto object-cover"
+          />
         </div>
       )}
       <div className="divide-y divide-gray-200">

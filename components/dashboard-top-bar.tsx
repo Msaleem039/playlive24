@@ -246,7 +246,7 @@ export default function DashboardTopBar({ onSidebarOpen }: DashboardTopBarProps)
 
   return (
     <div className="bg-[#064e3b]">
-    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 py-7 sm:gap-2 border-b border-[#047857]/70">
+    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 h-8 sm:h-10 flex items-center justify-between gap-1 py-5.8 sm:gap-2 border-b border-[#047857]/70">
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
         
         <button

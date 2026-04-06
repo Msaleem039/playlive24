@@ -315,17 +315,21 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
   }, [userInfo.role])
   const isSuperAdmin = userInfo.role === "SUPER_ADMIN"
 
-  /** Mint ticker + COMPLAIN only when logged in as client (not admin / agent / settlement). */
-  const showClientNewsTicker =
+  /** Mint ticker for clients and agents; COMPLAIN button only for CLIENT. */
+  const normalizedHeaderRole = String(authUser?.role || '')
+    .toUpperCase()
+    .replace(/[-\s]+/g, '_')
+  const showNewsTicker =
     !!authUser?.role &&
-    String(authUser.role).toUpperCase().replace(/[-\s]+/g, "_") === "CLIENT"
-  
+    (normalizedHeaderRole === 'CLIENT' || normalizedHeaderRole === 'AGENT')
+  const showComplainForClient = normalizedHeaderRole === 'CLIENT'
+
   // Fetch site video only for super admin
   const { data: siteVideoData } = useGetSiteVideoQuery(undefined, { skip: !isSuperAdmin })
 
   const { data: newsBarData } = useGetNewsBarQuery(
     {},
-    { pollingInterval: 60000, skip: !showClientNewsTicker }
+    { pollingInterval: 60000, skip: !showNewsTicker }
   )
   const newsBarText =
     newsBarData?.text ||
@@ -760,7 +764,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
         </div>
       </div>
 
-      {showClientNewsTicker && (
+      {showNewsTicker && (
         <div className="relative overflow-hidden bg-[#34d399] border-y border-[#10b981]">
           <div className="relative flex items-center justify-between py-1 sm:py-1.5 px-2 sm:px-4 gap-2">
             <div className="w-full min-w-0 overflow-hidden bg-[#064e3b] border border-white/20 rounded-lg">
@@ -770,13 +774,15 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
                 </span>
               </FastMarquee>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsComplaintModalOpen(true)}
-              className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50"
-            >
-              COMPLAIN
-            </button>
+            {showComplainForClient && (
+              <button
+                type="button"
+                onClick={() => setIsComplaintModalOpen(true)}
+                className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#dc2626] hover:bg-[#b91c1c] text-[0.65rem] sm:text-xs font-extrabold tracking-wide text-white whitespace-nowrap shadow-md shadow-red-600/30 ring-1 ring-red-300/50"
+              >
+                COMPLAIN
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -815,7 +821,7 @@ export default function CommonHeader({ activeTab, onTabChange, disableLiveFetch 
         </div>
       )}
 
-      {showClientNewsTicker && (
+      {showComplainForClient && (
         <ComplaintModal
           isOpen={isComplaintModalOpen}
           onClose={() => setIsComplaintModalOpen(false)}
