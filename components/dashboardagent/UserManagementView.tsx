@@ -127,6 +127,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const [expandedMobileUserId, setExpandedMobileUserId] = useState<string | null>(null)
   const [dropdownDirection, setDropdownDirection] = useState<{ [key: string]: 'up' | 'down' }>({})
+  const [bettingEnabledOverrides, setBettingEnabledOverrides] = useState<Record<string, boolean>>({})
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const dropdownButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
   const mobileCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
@@ -170,6 +171,14 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
     const numBalance = typeof balance === 'string' ? parseFloat(balance) : balance
     if (isNaN(numBalance)) return '0.00'
     return numBalance.toFixed(2)
+  }
+
+  const isUserBettingEnabled = (user: any): boolean => {
+    if (typeof user?.isBettingAllowed === "boolean") return user.isBettingAllowed
+    if (typeof user?.isBettingStopped === "boolean") return !user.isBettingStopped
+    if (typeof user?.bettingEnabled === "boolean") return user.bettingEnabled
+    if (typeof user?.isBettingEnabled === "boolean") return user.isBettingEnabled
+    return true
   }
 
   // Filter and search users
@@ -373,12 +382,21 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const handleSetBettingEnabled = async (userId: string, bettingEnabled: boolean, includeDownline: boolean) => {
     setOpenDropdownId(null)
     try {
-      await setBettingEnabled({
+      const response: any = await setBettingEnabled({
         userId,
         bettingEnabled,
         includeDownline,
       }).unwrap()
-      toast.success(bettingEnabled ? 'Betting enabled successfully' : 'Betting disabled successfully')
+      const action = response?.action
+      const isAllowed = response?.isBettingAllowed
+      const fallbackAllowed = typeof isAllowed === 'boolean' ? isAllowed : bettingEnabled
+      setBettingEnabledOverrides((prev) => ({ ...prev, [userId]: fallbackAllowed }))
+      const downlineMessage = response?.appliedToDownline ? ' (applied to downline)' : ''
+      toast.success(
+        (response?.message ||
+          (action === 'ALLOW' || fallbackAllowed ? 'Betting enabled successfully' : 'Betting disabled successfully')) +
+          downlineMessage
+      )
     } catch (error: any) {
       const errorMessage =
         error?.data?.message ||
@@ -542,6 +560,10 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           <div className="md:hidden space-y-4 p-3 pb-24 min-h-0 overflow-visible">
             {displayUsers.map((user: UserData, index) => {
               const isExpanded = expandedMobileUserId === user.id
+              const effectiveBettingEnabled =
+                typeof bettingEnabledOverrides[user.id] === "boolean"
+                  ? bettingEnabledOverrides[user.id]
+                  : isUserBettingEnabled(user)
               return (
               <div
                 key={user.id}
@@ -579,10 +601,20 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                       <button onClick={() => handleWithdrawCash(user.name || user.email || "", user.id, user.email)} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-red-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">CW</button>
                       <button onClick={() => setAccountStatementModal({ isOpen: true, userId: user.id, username: extractUsername(user.name || "", user.email) })} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Log</button>
                       {!isAgent && (
-                        <>
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, true, true) }} disabled={isSettingBetting} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-green-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation disabled:opacity-50">Enable</button>
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, false, false) }} disabled={isSettingBetting} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-red-600 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation disabled:opacity-50">Disable</button>
-                        </>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenDropdownId(null)
+                            handleSetBettingEnabled(user.id, !effectiveBettingEnabled, !effectiveBettingEnabled)
+                          }}
+                          disabled={isSettingBetting}
+                          className={`px-2.5 py-2 sm:px-3 sm:py-2.5 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation disabled:opacity-50 ${
+                            effectiveBettingEnabled ? "bg-green-600" : "bg-red-600"
+                          }`}
+                        >
+                          {effectiveBettingEnabled ? "Enable" : "Disable"}
+                        </button>
                       )}
                       <button onClick={() => { handleEditUser(user); setOpenDropdownId(null) }} className="px-2.5 py-2 sm:px-3 sm:py-2.5 bg-purple-500 text-white text-[10px] sm:text-xs font-bold rounded min-h-[36px] sm:min-h-[40px] touch-manipulation">Edit</button>
                       {!isAgent && (
@@ -644,7 +676,12 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {displayUsers.map((user: UserData, index) => (
+                    {displayUsers.map((user: UserData, index) => {
+                      const effectiveBettingEnabled =
+                        typeof bettingEnabledOverrides[user.id] === "boolean"
+                          ? bettingEnabledOverrides[user.id]
+                          : isUserBettingEnabled(user)
+                      return (
                       <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
                         <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2">
                           <div className="text-[10px] sm:text-[11px] md:text-xs font-bold text-gray-900 break-words leading-tight">
@@ -729,26 +766,21 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                               Log
                             </button>
                             {!isAgent && (
-                              <>
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, true, true) }}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setOpenDropdownId(null)
+                                    handleSetBettingEnabled(user.id, !effectiveBettingEnabled, !effectiveBettingEnabled)
+                                  }}
                                   disabled={isSettingBetting}
-                                  className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-green-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-green-700 whitespace-nowrap transition-colors disabled:opacity-50"
-                                  title="Enable betting"
+                                  className={`px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded whitespace-nowrap transition-colors disabled:opacity-50 ${
+                                    effectiveBettingEnabled ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                                  }`}
+                                  title={effectiveBettingEnabled ? "Disable betting" : "Enable betting"}
                                 >
-                                  Enable
+                                  {effectiveBettingEnabled ? "Enable" : "Disable"}
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleSetBettingEnabled(user.id, false, false) }}
-                                  disabled={isSettingBetting}
-                                  className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 md:px-2 md:py-1 bg-red-600 text-white text-[9px] sm:text-[10px] md:text-[10px] font-bold rounded hover:bg-red-700 whitespace-nowrap transition-colors disabled:opacity-50"
-                                  title="Disable betting"
-                                >
-                                  Disable
-                                </button>
-                              </>
                             )}
                             <button
                               onClick={() => {
@@ -794,7 +826,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>

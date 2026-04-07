@@ -92,7 +92,7 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     getAdminMatches: `${BASE_URL}/admin/matches`,
-    toggleMatchVisibility: `${BASE_URL}/admin/matches/:eventId`,
+    toggleMatchVisibility: `${BASE_URL}/admin/matchodds/stop/:eventId`,
 
     /////////////////////////////<===SITE VIDEO===>//////////////////////////////
     getSiteVideo: `${BASE_URL}/site-video`,

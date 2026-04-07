@@ -49,15 +49,15 @@ export default function GameControlsView() {
     })
   }, [matches, searchTerm])
 
-  const handleToggleVisibility = async (eventId: string, currentStatus: boolean) => {
-    const newStatus = !currentStatus
+  const handleToggleVisibility = async (eventId: string, isBlockedNow: boolean) => {
+    const nextBlocked = !isBlockedNow
     try {
-      await toggleVisibility({ eventId, isEnabled: newStatus }).unwrap()
-      toast.success(`Match ${newStatus ? 'enabled' : 'disabled'} successfully`)
+      await toggleVisibility({ eventId, blocked: nextBlocked }).unwrap()
+      toast.success(`Match odds ${nextBlocked ? 'stopped' : 'resumed'} successfully`)
       // Refetch to get updated data from server
       refetch()
     } catch (error: any) {
-      toast.error(error?.data?.error || error?.data?.message || "Failed to toggle match visibility")
+      toast.error(error?.data?.error || error?.data?.message || "Failed to update match odds status")
     }
   }
 
@@ -106,7 +106,14 @@ export default function GameControlsView() {
                 {filteredMatches.map((match: any) => {
                   const eventId = match.eventId || match.event_id || ""
                   const matchName = match.name || match.matchTitle || match.title || "N/A"
-                  const isEnabled = match.isEnabled === true
+                  const isBlocked =
+                    typeof match?.blocked === "boolean"
+                      ? match.blocked
+                      : typeof match?.isBlocked === "boolean"
+                      ? match.isBlocked
+                      : typeof match?.isEnabled === "boolean"
+                      ? !match.isEnabled
+                      : false
                   const matchDate = match.date || match.matchDate || null
                   
                   return (
@@ -127,29 +134,29 @@ export default function GameControlsView() {
                             <span>{formatDate(matchDate)}</span>
                           </span>
                           <span className={`px-2 py-1 rounded text-xs font-bold ${
-                            isEnabled
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                            isBlocked
+                              ? "bg-red-100 text-red-800"
+                              : "bg-green-100 text-green-800"
                           }`}>
-                            {isEnabled ? "VISIBLE" : "HIDDEN"}
+                            {isBlocked ? "STOPPED" : "ACTIVE"}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => handleToggleVisibility(eventId, isEnabled)}
+                          onClick={() => handleToggleVisibility(eventId, isBlocked)}
                           disabled={isToggling || !eventId}
                           className={`p-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                            isEnabled
-                              ? "bg-red-500 hover:bg-red-600 text-white"
-                              : "bg-green-500 hover:bg-green-600 text-white"
+                            isBlocked
+                              ? "bg-green-500 hover:bg-green-600 text-white"
+                              : "bg-red-500 hover:bg-red-600 text-white"
                           }`}
-                          title={isEnabled ? "Disable match" : "Enable match"}
+                          title={isBlocked ? "Resume match odds" : "Stop match odds"}
                         >
-                          {isEnabled ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
+                          {isBlocked ? (
                             <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
                           )}
                         </button>
                       </div>

@@ -4,11 +4,12 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
-import { useGetTabBannersQuery } from "@/app/services/Api"
+import { useGetTabBannersQuery, useToggleMatchVisibilityMutation } from "@/app/services/Api"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
 import { CricketMatch } from "@/lib/types/cricket"
+import { toast } from "sonner"
 
 export default function CricketTab() {
   const [useLiveUpdates, setUseLiveUpdates] = useState(true)
@@ -17,12 +18,16 @@ export default function CricketTab() {
   const [currentPage, setCurrentPage] = useState(1)
   const [perPage] = useState(10) // Show 10 matches per page
   const [blinkingOdds, setBlinkingOdds] = useState<Set<string>>(new Set())
+  const [matchBlockedOverrides, setMatchBlockedOverrides] = useState<Record<string, boolean>>({})
   const previousOddsRef = useRef<Map<string, { [key: string]: string | number }>>(new Map())
   const [activeSubTab, setActiveSubTab] = useState<'live' | 'upcoming'>('live') // Sub-tab state
   const router = useRouter()
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isAgent = userRole === 'AGENT'
+  const normalizedRole = String(userRole || '').toUpperCase().replace(/[-\s]+/g, '_')
+  const isSuperAdmin = normalizedRole === 'SUPER_ADMIN'
+  const [toggleMatchVisibility, { isLoading: isBlockingMatch }] = useToggleMatchVisibilityMutation()
   const { data: tabBannersData } = useGetTabBannersQuery(undefined, {
     refetchOnMountOrArgChange: true,
   })
@@ -290,6 +295,24 @@ export default function CricketTab() {
     refetch()
   }
 
+  const handleToggleMatchBlocked = async (eventId: string, blockedNow: boolean) => {
+    try {
+      const nextBlocked = !blockedNow
+      const response: any = await toggleMatchVisibility({ eventId, blocked: nextBlocked }).unwrap()
+      const action = response?.action
+      const serverBlocked = response?.isMatchOddsBlocked
+      const fallbackBlocked = typeof serverBlocked === 'boolean' ? serverBlocked : nextBlocked
+      setMatchBlockedOverrides((prev) => ({ ...prev, [eventId]: fallbackBlocked }))
+      toast.success(
+        response?.message ||
+          (action === 'STOP' || fallbackBlocked ? 'Match odds stopped successfully' : 'Match odds allowed successfully')
+      )
+      refetch()
+    } catch (toggleError: any) {
+      toast.error(toggleError?.data?.error || toggleError?.data?.message || "Failed to update match odds status")
+    }
+  }
+
   const toggleLiveUpdates = () => {
     setUseLiveUpdates(!useLiveUpdates)
   }
@@ -554,6 +577,17 @@ export default function CricketTab() {
                 const marketQuery = marketId ? `?marketid=${encodeURIComponent(String(marketId))}` : ''
                 router.push(`/live/${matchId}${marketQuery}`)
               }
+              const blockEventId = match.eventId ?? match.event_id ?? match.gmid ?? match.match_id ?? match.id
+              const isBlocked =
+                typeof match?.isMatchOddsBlocked === 'boolean'
+                  ? match.isMatchOddsBlocked
+                  : typeof match?.isMatchOddsAllowed === 'boolean'
+                  ? !match.isMatchOddsAllowed
+                  : match?.blocked === true || match?.isBlocked === true
+              const effectiveBlocked =
+                typeof matchBlockedOverrides[String(blockEventId)] === 'boolean'
+                  ? matchBlockedOverrides[String(blockEventId)]
+                  : isBlocked
 
               return (
                 <div 
@@ -617,6 +651,24 @@ export default function CricketTab() {
                         )
                       })()}
                     </div>
+                    {isSuperAdmin && blockEventId && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleToggleMatchBlocked(String(blockEventId), effectiveBlocked)
+                          }}
+                          disabled={isBlockingMatch}
+                          className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
+                            effectiveBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                          }`}
+                        >
+                          {effectiveBlocked ? 'BLOCKED' : 'ALLOWED'}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Mobile: Icons Row - TV and BM only (F button hidden on mobile) */}

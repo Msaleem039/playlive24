@@ -420,10 +420,10 @@ export const api = SplitApiSettings.injectEndpoints({
     }),
 
     toggleMatchVisibility: builder.mutation({
-      query: ({ eventId, isEnabled }: { eventId: string; isEnabled: boolean }) => ({
+      query: ({ eventId, blocked }: { eventId: string; blocked: boolean }) => ({
         url: API_END_POINTS.toggleMatchVisibility.replace(":eventId", eventId),
         method: "PATCH",
-        body: { isEnabled },
+        body: { blocked },
       }),
       invalidatesTags: ['AdminMatches'] as any,
     }),
