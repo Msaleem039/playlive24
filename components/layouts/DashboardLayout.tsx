@@ -13,13 +13,13 @@ import {
   BalanceSheetView,
   SettlementAdminPanel,
 } from "@/components/dashboardagent"
+import { SettlementResultsScreen } from "@/components/dashboardagent/SettlementResultsScreen"
 import { MyReportView } from "@/components/MyReportView"
 import MatchesView from "@/components/MatchesView"
 import ComplaintsView from "@/components/ComplaintsView"
 import {
   MyMarketView,
   CasinoAnalysisView,
-  GameControlsView,
   ChipSummaryView,
   GameListView,
   DetailReportView,
@@ -132,7 +132,7 @@ export default function DashboardLayout({ role }: { role: string }) {
         {activeTab === "Matches" && <MatchesView />}
         {activeTab === "My Market" && <MyMarketView />}
         {activeTab === "Casino Analysis" && <CasinoAnalysisView />}
-        {activeTab === "Game Controls" && <GameControlsView />}
+        {activeTab === "Game Controls" && <SettlementResultsScreen />}
         {activeTab === "Chip Summary" && <ChipSummaryView />}
         {activeTab === "Game List" && <GameListView />}
         {activeTab === "Account Statement" && <AccountStatementView />}

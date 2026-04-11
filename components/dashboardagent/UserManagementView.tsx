@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2, Check, X, MoreVertical, Eye, ChevronRight, ChevronLeft, Trash2, Ban, CircleCheck } from "lucide-react"
+import { ChevronDown, ChevronUp, Search, Download, FileText, User, Lock, Gamepad2, Plus, Users, Loader2, Check, X, MoreVertical, Eye, ChevronRight, ChevronLeft, Trash2, Ban, CircleCheck, LogIn } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { Input } from "@/components/input"
 import { AddClientModal, AllUsersModal } from "./index"
@@ -12,9 +12,11 @@ import ChangePasswordModal from "@/components/modal/ChangePasswordModal"
 import ClientAccountStatementModal from "@/components/modal/ClientAccountStatementModal"
 import EditUserModal from "@/components/modal/EditUserModal"
 import HierarchicalNavigation from "@/components/hierarchical/HierarchicalNavigation"
-import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useSetBettingEnabledMutation, useDeleteBetMutation, useUpdateSubordinateMutation } from "@/app/services/Api"
-import { useSelector } from "react-redux"
-import { selectCurrentUser } from "@/app/store/slices/authSlice"
+import { useChangePasswordMutation, useGetUserQuery, useToggleUserStatusMutation, useSetBettingEnabledMutation, useDeleteBetMutation, useUpdateSubordinateMutation, useLoginAsUserMutation } from "@/app/services/Api"
+import { useDispatch, useSelector } from "react-redux"
+import { selectCurrentUser, setCredentials } from "@/app/store/slices/authSlice"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
 import { toast } from "sonner"
 
 interface UserProps {
@@ -131,10 +133,103 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const dropdownButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({})
   const mobileCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const dispatch = useDispatch()
+  const router = useRouter()
   const [changePassword] = useChangePasswordMutation()
   const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
   const [setBettingEnabled, { isLoading: isSettingBetting }] = useSetBettingEnabledMutation()
   const [updateSubordinate, { isLoading: isUpdatingSubordinate }] = useUpdateSubordinateMutation()
+  const [loginAsUser] = useLoginAsUserMutation()
+  const [loginAsTargetId, setLoginAsTargetId] = useState<string | null>(null)
+
+  const resolveUserRole = (role: unknown): string | undefined => {
+    if (!role) return undefined
+    if (typeof role === "string") return role
+    if (typeof role === "object" && role !== null) {
+      const o = role as Record<string, unknown>
+      return (
+        (typeof o.role === "string" && o.role) ||
+        (typeof o.name === "string" && o.name) ||
+        (typeof o.roleName === "string" && o.roleName) ||
+        undefined
+      )
+    }
+    return undefined
+  }
+
+  const getPostLoginPath = (userObj: Record<string, unknown>): string => {
+    const resolved = resolveUserRole(userObj.role)
+    const normalized = resolved?.toUpperCase().replace(/[-\s]+/g, "_")
+    switch (normalized) {
+      case "SUPER_ADMIN":
+        return "/super-admin/select"
+      case "ADMIN":
+        return "/admin"
+      case "AGENT":
+        return "/agent-dashboard"
+      case "SETTLEMENT_ADMIN":
+        return "/adminpanel/settlement-admin"
+      case "CLIENT":
+      default:
+        return "/dashboard"
+    }
+  }
+
+  const handleLoginAsUser = async (userId: string) => {
+    if (!isSuperAdmin) return
+    const selfId = (authUser as { id?: string } | null)?.id
+    if (selfId && selfId === userId) {
+      toast.info("You are already logged in as this user.")
+      return
+    }
+    setLoginAsTargetId(userId)
+    setOpenDropdownId(null)
+    try {
+      const raw = (await loginAsUser(userId).unwrap()) as Record<string, unknown> & {
+        accessToken?: string
+        token?: string
+        user?: Record<string, unknown>
+        data?: { accessToken?: string; token?: string; user?: Record<string, unknown> }
+      }
+      const nested = raw.data
+      const accessToken =
+        raw.accessToken ??
+        raw.token ??
+        nested?.accessToken ??
+        nested?.token
+      const user =
+        raw.user ??
+        nested?.user
+      if (accessToken && user && typeof user === "object") {
+        dispatch(setCredentials({ user, token: accessToken }))
+        try {
+          Cookies.set("token", accessToken, { path: "/", sameSite: "lax" })
+          Cookies.set("auth_user", JSON.stringify(user), { path: "/", sameSite: "lax" })
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("auth_user", JSON.stringify(user))
+            const u = user as { username?: string }
+            if (u.username) sessionStorage.setItem("user_name", u.username)
+          }
+        } catch {
+          /* ignore storage errors */
+        }
+        toast.success("Logged in as user")
+        router.push(getPostLoginPath(user))
+      } else {
+        toast.error("Invalid response from login-as-user")
+      }
+    } catch (err: unknown) {
+      const e = err as { data?: { message?: string; error?: string }; message?: string }
+      const msg =
+        e?.data?.message ||
+        e?.data?.error ||
+        e?.message ||
+        "Login as user failed"
+      toast.error(msg)
+    } finally {
+      setLoginAsTargetId(null)
+    }
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -938,7 +1033,12 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
-            <SubordinatesView userId={subordinatesModal.userId} />
+            <SubordinatesView
+              userId={subordinatesModal.userId}
+              isSuperAdmin={isSuperAdmin}
+              onLoginAsUser={handleLoginAsUser}
+              loginAsUserPendingId={loginAsTargetId}
+            />
           </div>
         </div>
       )}
@@ -946,21 +1046,22 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
   )
 }
 
-// Subordinates View Component - Wrapper for HierarchicalNavigation with initial parentId
-function SubordinatesView({ userId }: { userId: string }) {
-  const authUser = useSelector(selectCurrentUser)
-  const userRole = (authUser?.role as string) || 'CLIENT'
-  
+// Subordinates View Component - hierarchical list under a user (login-as-user only here)
+function SubordinatesView({
+  userId,
+  isSuperAdmin: isSuperAdminViewer,
+  onLoginAsUser,
+  loginAsUserPendingId,
+}: {
+  userId: string
+  isSuperAdmin: boolean
+  onLoginAsUser: (targetUserId: string) => void
+  loginAsUserPendingId: string | null
+}) {
   const [selectedParentId, setSelectedParentId] = useState<string | null>(userId)
   const [viewMode, setViewMode] = useState<'users' | 'bets'>('users')
   const [navigationPath, setNavigationPath] = useState<Array<{ id: string; name: string; role?: string }>>([])
-  
-  // Determine if current user is SUPER_ADMIN (only they can delete bets)
-  const isSuperAdmin = useMemo(() => {
-    const roleUpper = userRole?.toUpperCase() || ''
-    return roleUpper === 'SUPER_ADMIN' || roleUpper === 'SUPERADMIN' || (roleUpper.includes('SUPER') && roleUpper.includes('ADMIN'))
-  }, [userRole])
-  
+
   const queryParams = useMemo(() => {
     if (viewMode === 'bets') {
       return selectedParentId ? { parentId: selectedParentId, type: 'bets' } : undefined
@@ -1036,7 +1137,7 @@ function SubordinatesView({ userId }: { userId: string }) {
 
   // Handle bet deletion (SUPER_ADMIN only)
   const handleDeleteBet = async (betId: string) => {
-    if (!isSuperAdmin) {
+    if (!isSuperAdminViewer) {
       toast.error('Only Super Admin can delete bets')
       return
     }
@@ -1090,7 +1191,9 @@ function SubordinatesView({ userId }: { userId: string }) {
         <>
           <div className="mb-4">
             <h3 className="text-lg font-bold text-gray-900">
-              {navigationPath.length === 0 ? 'Subordinates' : 'Subordinates'}
+              {navigationPath.length === 0
+                ? 'Subordinates'
+                : `Subordinates under ${navigationPath[navigationPath.length - 1]?.name ?? 'user'}`}
             </h3>
           </div>
           
@@ -1122,10 +1225,11 @@ function SubordinatesView({ userId }: { userId: string }) {
                   {items.map((item: any) => {
                     const userItem = item
                     const itemRole = userItem.role?.toUpperCase() || ''
+                    const rowKey = userItem.id ?? `row-${userItem.username ?? Math.random()}`
                     
                     return (
                       <tr 
-                        key={userItem.id || Math.random()} 
+                        key={rowKey} 
                         className="hover:bg-blue-50 transition-colors cursor-pointer group"
                         onClick={() => handleItemClick(userItem)}
                       >
@@ -1151,19 +1255,42 @@ function SubordinatesView({ userId }: { userId: string }) {
                           Rs {userItem.balance?.toLocaleString() || '0.00'}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              if (userItem.id) {
-                                handleItemClick(userItem)
-                              }
-                            }}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-blue-200 transition-colors"
-                            type="button"
-                          >
-                            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
-                          </button>
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            {isSuperAdminViewer && userItem.id && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  onLoginAsUser(userItem.id)
+                                }}
+                                disabled={loginAsUserPendingId === userItem.id}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold bg-slate-700 text-white hover:bg-slate-800 disabled:opacity-50"
+                                title="Login as this user"
+                              >
+                                {loginAsUserPendingId === userItem.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <LogIn className="w-3.5 h-3.5" />
+                                )}
+                                Login
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                if (userItem.id) {
+                                  handleItemClick(userItem)
+                                }
+                              }}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-blue-200 transition-colors"
+                              type="button"
+                              title="Open"
+                            >
+                              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -1214,7 +1341,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                     <th className="px-4 py-3 text-right font-bold text-gray-700">Net Profit</th>
                     <th className="px-4 py-3 text-left font-bold text-gray-700">Status</th>
                     <th className="px-4 py-3 text-left font-bold text-gray-700">Created At</th>
-                    {isSuperAdmin && (
+                    {isSuperAdminViewer && (
                       <th className="px-4 py-3 text-center font-bold text-gray-700">Action</th>
                     )}
                   </tr>
@@ -1278,7 +1405,7 @@ function SubordinatesView({ userId }: { userId: string }) {
                             minute: '2-digit'
                           }) : '--'}
                         </td>
-                        {isSuperAdmin && (
+                        {isSuperAdminViewer && (
                           <td className="px-4 py-3 text-center">
                             <button
                               onClick={(e) => {

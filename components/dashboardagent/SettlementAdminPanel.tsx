@@ -1,18 +1,16 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { RefreshCw, BarChart3, Play, Target, BookOpen, FileText, Menu, Link2 } from "lucide-react"
+import { RefreshCw, BarChart3, Play, Target, BookOpen, Menu, Link2 } from "lucide-react"
 import { Button } from "@/components/utils/button"
 import { useGetPendingMarketsQuery, useGetPendingFancyMarketsQuery, useGetPendingBookmakerMarketsQuery, useGetPendingTiedMatchMarketsQuery } from "@/app/services/Api"
 import { FancySettlementScreen } from "./FancySettlementScreen"
 import { MatchOddsSettlementScreen } from "./MatchOddsSettlementScreen"
 import { BookmakerSettlementScreen } from "./BookmakerSettlementScreen"
 import { TiedMatchSettlementScreen } from "./TiedMatchSettlementScreen"
-import { SettlementResultsScreen } from "./SettlementResultsScreen"
-
 export function SettlementAdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeScreen, setActiveScreen] = useState<"all" | "fancy" | "matchOdds" | "bookmaker" | "tiedMatch" | "results">("all")
+  const [activeScreen, setActiveScreen] = useState<"all" | "fancy" | "matchOdds" | "bookmaker" | "tiedMatch">("all")
 
   // Set sidebar open on desktop by default
   useEffect(() => {
@@ -83,8 +81,6 @@ export function SettlementAdminPanel() {
         return <BookmakerSettlementScreen />
       case "tiedMatch":
         return <TiedMatchSettlementScreen />
-      case "results":
-        return <SettlementResultsScreen />
       default:
         return (
           <div className="flex-1 overflow-y-auto p-6">
@@ -228,22 +224,6 @@ export function SettlementAdminPanel() {
               )}
             </button>
 
-            <div className="border-t border-gray-200 my-2"></div>
-
-            <button
-              onClick={() => {
-                setActiveScreen("results")
-                setSidebarOpen(false)
-              }}
-              className={`w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base ${
-                activeScreen === "results"
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              <FileText className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-bold">Results</span>}
-            </button>
           </div>
         </div>
 

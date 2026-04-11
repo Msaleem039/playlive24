@@ -68,11 +68,11 @@ export default function ClientAccountStatementModal({
     }
   }, [isOpen, reset])
 
-  // Extract user info, statement (transactions), and bet history from response
+  // Extract user info, cash history, and statement/bet history from response
   // Supports new format: { success, user: { id, openingBalance }, statement, pagination }
   // API returns array of [{ success, user, statement, pagination }, ...] - find the one matching userId
-  const { userInfo, transactions } = useMemo(() => {
-    if (!statementData || !userId) return { userInfo: null, transactions: [] }
+  const { userInfo, cashTransactions, statementTransactions } = useMemo(() => {
+    if (!statementData || !userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
     
     // New format: array of [{ success, user, statement, pagination }] - find matching user
     const items = Array.isArray(statementData) ? statementData : (statementData?.data && Array.isArray(statementData.data) ? statementData.data : [statementData])
@@ -81,8 +81,16 @@ export default function ClientAccountStatementModal({
     
     if (resolved?.success && resolved?.user && Array.isArray(resolved?.statement)) {
       const u = resolved.user
-      if (u.id !== userId) return { userInfo: null, transactions: [] }
-      
+      if (u.id !== userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
+
+      const sortByNewestDate = (a: any, b: any) => {
+        const aDate = new Date(a?.latestSettledAt ?? a?.date ?? a?.createdAt ?? 0).getTime()
+        const bDate = new Date(b?.latestSettledAt ?? b?.date ?? b?.createdAt ?? 0).getTime()
+        return bDate - aDate
+      }
+      const statementRows = (Array.isArray(resolved.statement) ? [...resolved.statement] : []).sort(sortByNewestDate)
+      const cashRows = (Array.isArray(resolved.transactions) ? [...resolved.transactions] : []).sort(sortByNewestDate)
+
       return {
         userInfo: {
           id: u.id,
@@ -91,17 +99,19 @@ export default function ClientAccountStatementModal({
           openingBalance: u.openingBalance,
           balance: u.openingBalance
         },
-        transactions: resolved.statement
+        cashTransactions: cashRows,
+        statementTransactions: statementRows
       }
     }
     
     // Legacy: array of user objects
     if (Array.isArray(statementData) && statementData.length > 0) {
       const userData = statementData.find((u: any) => u.id === userId) || statementData[0]
-      if (userData.id !== userId) return { userInfo: null, transactions: [] }
+      if (userData.id !== userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
       return {
         userInfo: userData,
-        transactions: userData.transactions || []
+        cashTransactions: [],
+        statementTransactions: userData.transactions || []
       }
     }
     
@@ -110,24 +120,27 @@ export default function ClientAccountStatementModal({
       const d = statementData.data
       if (Array.isArray(d)) {
         const userData = d.find((u: any) => u.id === userId) || d[0]
-        if (userData?.id !== userId) return { userInfo: null, transactions: [] }
+        if (userData?.id !== userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
         return {
           userInfo: userData,
-          transactions: userData.transactions || []
+          cashTransactions: [],
+          statementTransactions: userData.transactions || []
         }
       }
       if (d.user && d.statement) {
-        if (d.user.id !== userId) return { userInfo: null, transactions: [] }
+        if (d.user.id !== userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
         return {
           userInfo: { ...d.user, balance: d.user.openingBalance || d.user.balance },
-          transactions: d.statement
+          cashTransactions: Array.isArray(d.transactions) ? d.transactions : [],
+          statementTransactions: d.statement
         }
       }
       
       if (d.id === userId) {
         return {
           userInfo: d,
-          transactions: d.transactions || []
+          cashTransactions: [],
+          statementTransactions: d.transactions || []
         }
       }
     }
@@ -136,11 +149,12 @@ export default function ClientAccountStatementModal({
     if (statementData.transactions && statementData.id === userId) {
       return {
         userInfo: statementData,
-        transactions: statementData.transactions
+        cashTransactions: [],
+        statementTransactions: statementData.transactions
       }
     }
     
-      return { userInfo: null, transactions: [] }
+      return { userInfo: null, cashTransactions: [], statementTransactions: [] }
   }, [statementData, userId, username])
 
   const formatDate = (dateString: string) => {
@@ -296,7 +310,52 @@ export default function ClientAccountStatementModal({
           </div>
         )}
 
-        {/* Tabs for Transactions and Bet History */}
+        {/* Cash transaction history at top */}
+        {cashTransactions.length > 0 && (
+          <div className="border-b">
+            <div className="px-2 sm:px-3 md:px-4 py-2 bg-gray-100 text-[10px] sm:text-xs md:text-sm font-bold text-gray-700">
+              Transaction History
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px] sm:text-xs md:text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Date</th>
+                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Type</th>
+                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Description</th>
+                    <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Credit</th>
+                    <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Debit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {cashTransactions.map((transaction: any, idx: number) => (
+                    <tr key={transaction.id || idx} className="hover:bg-gray-50">
+                      <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-900 whitespace-nowrap">
+                        {formatDate(transaction.date)}
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(transaction.type)}`}>
+                          {transaction.type || '-'}
+                        </span>
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-700">
+                        {transaction.description || '-'}
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-green-600 whitespace-nowrap">
+                        {Number(transaction.credit) > 0 ? formatCurrency(transaction.credit) : '-'}
+                      </td>
+                      <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-red-600 whitespace-nowrap">
+                        {Number(transaction.debit) > 0 ? formatCurrency(transaction.debit) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Statement and bet history */}
         <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-6 sm:py-8 md:py-12">
@@ -332,18 +391,18 @@ export default function ClientAccountStatementModal({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {transactions.length === 0 ? (
+                    {statementTransactions.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                           No transactions found
                         </td>
                       </tr>
                     ) : (
-                      transactions.map((transaction: any, idx: number) => {
+                      statementTransactions.map((transaction: any, idx: number) => {
                         // New format: totalCredit, totalDebit, runningBalance, latestSettledAt, description, result, bets
                         // const credit = transaction.totalCredit ?? transaction.credit ?? transaction.cr ?? 0
                         // const debit = transaction.totalDebit ?? transaction.debit ?? transaction.dr ?? 0
-                        const balance = transaction.runningBalance ?? transaction.balance ?? 0
+                        const balance = transaction.runningBalance ?? transaction.balance
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
                         const typeVal = transaction.type ?? getStatementType(transaction.description || '')
                         const bets = transaction.bets || []
@@ -391,9 +450,9 @@ export default function ClientAccountStatementModal({
                               {transaction.decisionRun}
                             </td> 
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
-                              balance < 0 ? 'text-red-600' : 'text-gray-900'
+                              typeof balance === 'number' && balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
-                              {formatCurrency(balance)}
+                              {balance === null || balance === undefined || balance === '' ? '-' : formatCurrency(balance)}
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
                               <button
@@ -416,23 +475,23 @@ export default function ClientAccountStatementModal({
         </div>
 
         {/* Bets detail modal - shows all bets for this marketId */}
-        {betsPopoverIdx !== null && transactions[betsPopoverIdx] && (
+        {betsPopoverIdx !== null && statementTransactions[betsPopoverIdx] && (
           <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setBetsPopoverIdx(null)}>
             <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 py-3 border-b flex items-center justify-between">
                 <h3 className="text-sm font-bold text-gray-800">
-                  Bets for Market ID: {transactions[betsPopoverIdx]?.marketId || '—'}
+                  Bets for Market ID: {statementTransactions[betsPopoverIdx]?.marketId || '—'}
                 </h3>
                 <button onClick={() => setBetsPopoverIdx(null)} className="text-gray-500 hover:text-gray-700">
                   <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="p-4 overflow-y-auto max-h-[60vh]">
-                {(transactions[betsPopoverIdx]?.bets || []).length === 0 ? (
+                {(statementTransactions[betsPopoverIdx]?.bets || []).length === 0 ? (
                   <p className="text-sm text-gray-500">No bets for this entry</p>
                 ) : (
                   <div className="space-y-3">
-                    {(transactions[betsPopoverIdx]?.bets || []).map((bet: any, bi: number) => (
+                    {(statementTransactions[betsPopoverIdx]?.bets || []).map((bet: any, bi: number) => (
                       <div key={bet.id || bi} className="text-xs p-2 bg-gray-50 rounded border border-gray-100">
                         <span className={`px-2 py-0.5 rounded font-bold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
                         <div className="mt-1.5 grid grid-cols-2 gap-1 text-gray-700">

@@ -13,6 +13,16 @@ export const api = SplitApiSettings.injectEndpoints({
       }),
     }),
 
+    loginAsUser: builder.mutation<
+      { accessToken: string; user: Record<string, unknown> },
+      string
+    >({
+      query: (userId) => ({
+        url: API_END_POINTS.loginAsUser.replace(":userId", userId),
+        method: "POST",
+      }),
+    }),
+
     register: builder.mutation({
       query: (data) => ({
         url: API_END_POINTS.register,
@@ -578,6 +588,7 @@ export const api = SplitApiSettings.injectEndpoints({
 export const {
     /////////////////////////////<===AUTH MUTATIONS===>//////////////////////////////
     useLoginMutation,
+    useLoginAsUserMutation,
     useRegisterMutation,
     useChangePasswordMutation,
     useToggleUserStatusMutation,

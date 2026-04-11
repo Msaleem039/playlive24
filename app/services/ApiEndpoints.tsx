@@ -9,6 +9,8 @@ export const API_END_POINTS = {
     register: `${BASE_URL}/auth/create-user`,
     // createRvLead: BASE_URL + "api/rv-leads",
     login: `${BASE_URL}/auth/login`,
+    /** SUPER_ADMIN only — returns same shape as login: { accessToken, user } */
+    loginAsUser: `${BASE_URL}/admin/login-as-user/:userId`,
     changePassword: `${BASE_URL}/auth/update-password`,
     toggleUserStatus: `${BASE_URL}/auth/toggle-user-status/:targetUserId`,
     setBettingEnabled: `${BASE_URL}/auth/users/:userId/betting-enabled`,

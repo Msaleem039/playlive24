@@ -53,6 +53,7 @@ const roleNavigationItems = {
     'User Management',
     'My Market',
     'Casino Analysis',
+    'Game Controls',
     'System Settings',
     'Reports',
     'Detail Report'
@@ -63,6 +64,7 @@ const roleNavigationItems = {
     'User List',
     'My Market',
     'Casino Analysis',
+    'Game Controls',
     'Chip Summary',
     'Game List',
     'Detail Report'
@@ -74,7 +76,7 @@ const roleNavigationItems = {
   
     'My Market',
     'Casino Analysis',
-    // 'Game Controls',
+    'Game Controls',
     'Chip Summary',
     // 'Game List',
     // 'Account Statement',

@@ -144,7 +144,10 @@ export function SettlementResultsScreen() {
               <label className="block text-xs font-bold text-gray-700 mb-1">Start Date</label>
               <Input
                 type="datetime-local"
-                value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ""}
+                // value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ""}
+                value={startDate ? new Date(startDate).toLocaleString("sv-SE", {
+                  timeZone: "Asia/Karachi"
+                }).slice(0, 16) : ""}
                 onChange={(e) => setStartDate(new Date(e.target.value).toISOString())}
                 className="w-full"
               />

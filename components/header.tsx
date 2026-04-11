@@ -32,7 +32,7 @@ export default function Header() {
     <header className="bg-[#01411C]">
       {/* Top bar (dark) */}
       <div className="bg-[#01411C]">
-        <div className="w-full max-w-[1280px] mx-auto px-2 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-0.5 xs:py-1 sm:py-1.5 flex items-center justify-between gap-2">
+        <div className="">
         <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -51,34 +51,21 @@ export default function Header() {
     WebkitTextStroke: "0.5px rgba(255,255,255,0.2)",
   }}
 >
-<img src="/images/rbg.png" alt="Logo" width={150} height={150} />
+{/* <img src="/images/rbg.png" alt="Logo" width={150} height={150} /> */}
   {/* <Logo /> */}
 </p>
 
 
     </motion.div>
 
-          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0">
-            <Button 
-              onClick={openLoginModal}
-              className="bg-[#FFD949] border border-[#E5C53A] text-black font-bold px-4 xs:px-4 sm:px-5 md:px-6 py-2 xs:py-2 sm:py-2.5 text-xs xs:text-sm sm:text-sm md:text-base rounded-full hover:bg-[#FFD949] hover:text-black transition-all duration-300 whitespace-nowrap leading-none shadow-sm"
-            >
-              Login
-            </Button>
-            {/* <Button 
-              onClick={openSignupModal}
-              className="bg-black border border-[#00A66E]  text-[#00A66E] font-bold px-5 py-1.5 rounded hover:bg-[#00A66E] hover:text-black transition-all duration-300"
-            >
-              Register
-            </Button> */}
-          </div>
+    
         </div>
       </div>
 
       {/* Nav bar (green, reduced height) - always visible with horizontal scroll on small screens */}
       <div className="bg-[#01411C] w-full">
-        <nav className="w-full flex justify-center px-0 sm:px-4 md:px-6 bg-[#00A66E] h-8 xs:h-9 sm:h-10">
-          <ul className="w-full flex justify-start sm:justify-center items-center gap-1.5 xs:gap-2 sm:gap-4 md:gap-6 lg:gap-8 px-2 xs:px-3 sm:px-0 py-1.5 xs:py-2 bg-[#00A66E] overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth">
+        <nav className="w-full flex justify-center px-0 sm:px-4 md:px-6 bg-green-700 h-8 xs:h-9 sm:h-10">
+          <ul className="w-full flex justify-start sm:justify-center items-center gap-1.5 xs:gap-2 sm:gap-4 md:gap-6 lg:gap-8 px-2 xs:px-3 sm:px-0 py-1.5 xs:py-2 bg-green-700 overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth">
             {[
               { label: "HOME", icon: "🏠" },
               { label: "CRICKET", icon: "🏏" },
@@ -96,13 +83,23 @@ export default function Header() {
                   className="uppercase font-bold text-black hover:text-white transition-colors text-[0.6rem] xs:text-[0.65rem] sm:text-[0.7rem] md:text-[0.75rem] tracking-wide flex items-center gap-1 xs:gap-1.5 sm:gap-2 px-1.5 xs:px-2 sm:px-2.5 md:px-3 py-1 xs:py-1.5 sm:py-2 rounded"
                 >
                   <span aria-hidden className="text-[0.7rem] xs:text-[0.75rem] sm:text-base">{item.icon}</span>
+                  
                   <span className="hidden xs:inline">{item.label}</span>
+               
                   <span className="xs:hidden">{item.label.split(' ')[0]}</span>
                 </Link>
                 {/* Hover line indicator */}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0  transition-transform duration-200" />
               </li>
             ))}
+            <li className="shrink-0 ml-auto sm:ml-2 md:ml-4">
+              <Button
+                onClick={openLoginModal}
+                className="h-7 xs:h-8 sm:h-8.5 md:h-9 rounded-full bg-yellow-500 px-3 xs:px-3.5 sm:px-4 md:px-5 text-[0.62rem] xs:text-[0.68rem] sm:text-xs md:text-sm font-extrabold tracking-wide text-black hover:bg-yellow-500 hover:text-black"
+              >
+                LOGIN
+              </Button>
+            </li>
           </ul>
         </nav>
       </div>

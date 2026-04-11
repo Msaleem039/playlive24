@@ -329,6 +329,7 @@ export default function AgentMatchBookPage() {
                     scorecard={scorecard}
                     matchData={matchData}
                     variant="mobile"
+                    hideWhenBalanceAtLeast={null}
                   />
                 </div>
               )}

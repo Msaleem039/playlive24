@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/app/store/slices/authSlice'
+import { useGetWalletQuery } from '@/app/services/Api'
 
 const LIVE_TV_PLAYER_BASE = 'https://mis2.sqmr.xyz/ank.php'
 
@@ -18,6 +21,11 @@ interface LiveTVSectionProps {
   scorecard?: any
   matchData?: any
   variant?: 'mobile' | 'desktop'
+  /**
+   * When set to a number, the whole section is hidden if wallet balance is >= this value.
+   * Pass `null` to disable (e.g. agent/staff match book). Default: 200 (show only if balance &lt; 200).
+   */
+  hideWhenBalanceAtLeast?: number | null
 }
 
 export default function LiveTVSection({
@@ -30,9 +38,33 @@ export default function LiveTVSection({
   isMobile = false,
   scorecard,
   matchData,
-  variant = 'mobile'
+  variant = 'mobile',
+  hideWhenBalanceAtLeast = 200,
 }: LiveTVSectionProps) {
   const [streamLoadError, setStreamLoadError] = useState(false)
+  const authUser = useSelector(selectCurrentUser)
+  const { data: walletData } = useGetWalletQuery(undefined, {
+    skip: !authUser,
+    pollingInterval: 30000,
+  })
+
+  const numericBalance = useMemo(() => {
+    const u = authUser as Record<string, unknown> | null | undefined
+    const raw =
+      walletData?.balance ??
+      u?.balance ??
+      u?.walletBalance ??
+      u?.availableBalance ??
+      u?.available_balance ??
+      u?.chips ??
+      0
+    const n = typeof raw === 'number' ? raw : parseFloat(String(raw))
+    return Number.isFinite(n) ? n : 0
+  }, [authUser, walletData])
+
+  if (hideWhenBalanceAtLeast != null && numericBalance >= hideWhenBalanceAtLeast) {
+    return null
+  }
 
   const resolvedEventId =
     eventIdProp ??
