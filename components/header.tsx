@@ -65,6 +65,14 @@ export default function Header() {
       {/* Nav bar (green, reduced height) - always visible with horizontal scroll on small screens */}
       <div className="bg-[#01411C] w-full">
         <nav className="w-full flex justify-center px-0 sm:px-4 md:px-6 bg-green-700 h-8 xs:h-9 sm:h-10">
+        <li className="shrink-0 ml-auto sm:ml-2 md:ml-4 list-none">
+              <Button
+                onClick={openLoginModal}
+                className="h-7 xs:h-8 sm:h-8.5 md:h-9 rounded-full bg-yellow-500 px-3 xs:px-3.5 sm:px-4 md:px-5 text-[0.62rem] xs:text-[0.68rem] sm:text-xs md:text-sm font-extrabold tracking-wide text-black hover:bg-yellow-500 hover:text-black"
+              >
+                LOGIN
+              </Button>
+            </li>
           <ul className="w-full flex justify-start sm:justify-center items-center gap-1.5 xs:gap-2 sm:gap-4 md:gap-6 lg:gap-8 px-2 xs:px-3 sm:px-0 py-1.5 xs:py-2 bg-green-700 overflow-x-auto whitespace-nowrap no-scrollbar scroll-smooth">
             {[
               { label: "HOME", icon: "🏠" },
@@ -74,8 +82,7 @@ export default function Header() {
               { label: "HORSE", icon: "🐎" },
               { label: "GREYHOUND", icon: "🐕" },
               // { label: "SPORTS BOOK", icon: "📗" },
-              { label: "VIRTUAL SPORTS", icon: "🎮" },
-              { label: "LIVE CASINO", icon: "🎰" },
+       
             ].map((item) => (
               <li key={item.label} className="shrink-0 relative group">
                 <Link
@@ -92,14 +99,7 @@ export default function Header() {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transform scale-x-0  transition-transform duration-200" />
               </li>
             ))}
-            <li className="shrink-0 ml-auto sm:ml-2 md:ml-4">
-              <Button
-                onClick={openLoginModal}
-                className="h-7 xs:h-8 sm:h-8.5 md:h-9 rounded-full bg-yellow-500 px-3 xs:px-3.5 sm:px-4 md:px-5 text-[0.62rem] xs:text-[0.68rem] sm:text-xs md:text-sm font-extrabold tracking-wide text-black hover:bg-yellow-500 hover:text-black"
-              >
-                LOGIN
-              </Button>
-            </li>
+         
           </ul>
         </nav>
       </div>
