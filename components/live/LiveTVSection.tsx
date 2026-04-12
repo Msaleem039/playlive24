@@ -22,8 +22,8 @@ interface LiveTVSectionProps {
   matchData?: any
   variant?: 'mobile' | 'desktop'
   /**
-   * When set to a number, the whole section is hidden if wallet balance is >= this value.
-   * Pass `null` to disable (e.g. agent/staff match book). Default: 200 (show only if balance &lt; 200).
+   * Optional: hide the whole section when wallet balance is >= this value (rare; e.g. custom rules).
+   * Default `null` — visibility is controlled by the parent (`hasLiveTV`, etc.); use `canToggleTV` for the Rs 200 gate.
    */
   hideWhenBalanceAtLeast?: number | null
 }
@@ -39,7 +39,7 @@ export default function LiveTVSection({
   scorecard,
   matchData,
   variant = 'mobile',
-  hideWhenBalanceAtLeast = 200,
+  hideWhenBalanceAtLeast = null,
 }: LiveTVSectionProps) {
   const [streamLoadError, setStreamLoadError] = useState(false)
   const authUser = useSelector(selectCurrentUser)
