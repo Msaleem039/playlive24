@@ -187,6 +187,13 @@ export const api = SplitApiSettings.injectEndpoints({
         return ['User'] as any
       },
     }),
+    getSuperAdminUsers: builder.query({
+      query: () => ({
+        url: API_END_POINTS.superAdminUsers,
+        method: "GET",
+      }),
+      providesTags: ['User'] as any,
+    }),
     getDashboardData: builder.query({
       query: () => ({
         url: API_END_POINTS.getDashboardData,
@@ -601,6 +608,7 @@ export const {
 
     /////////////////////////////<===USER QUERIES===>//////////////////////////////
     useGetUserQuery,
+    useGetSuperAdminUsersQuery,
     useLazyGetUserQuery,
     useGetDashboardDataQuery,
     useGetWalletQuery,

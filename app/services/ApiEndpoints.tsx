@@ -68,6 +68,7 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===SUPER ADMIN===>//////////////////////////////
     superAdminSelfTopup: `${BASE_URL}/transfer/superadmin/self-topup`,
+    superAdminUsers: `${BASE_URL}/superadmin/users`,
 
     /////////////////////////////<===SETTLEMENT===>//////////////////////////////
     getPendingSettlements: `${BASE_URL}/admin/settlement/pending`,

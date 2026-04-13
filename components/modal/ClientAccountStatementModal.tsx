@@ -446,7 +446,7 @@ export default function ClientAccountStatementModal({
                             {/* {/* <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
                               {credit > 0 ? formatCurrency(credit) : '0.00'}
                             </td> */}
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-red-600">
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-blue-600">
                               {transaction.decisionRun}
                             </td> 
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${

@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
-import { useGetTabBannersQuery, useToggleMatchVisibilityMutation } from "@/app/services/Api"
+import { useGetTabBannersQuery, useToggleMatchVisibilityMutation, useGetSuperAdminUsersQuery, usePlaceBetMutation } from "@/app/services/Api"
+import { useGetCricketBookmakerFancyQuery } from "@/app/services/CricketApi"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
 import { Trophy, RefreshCw, Wifi, Clock, Users, Tv, Radio } from "lucide-react"
@@ -19,6 +20,17 @@ export default function CricketTab() {
   const [perPage] = useState(10) // Show 10 matches per page
   const [blinkingOdds, setBlinkingOdds] = useState<Set<string>>(new Set())
   const [matchBlockedOverrides, setMatchBlockedOverrides] = useState<Record<string, boolean>>({})
+  const [customBetModal, setCustomBetModal] = useState<{
+    isOpen: boolean
+    matchId: string
+    eventId: string
+    matchName: string
+  }>({
+    isOpen: false,
+    matchId: '',
+    eventId: '',
+    matchName: '',
+  })
   const previousOddsRef = useRef<Map<string, { [key: string]: string | number }>>(new Map())
   const [activeSubTab, setActiveSubTab] = useState<'live' | 'upcoming'>('live') // Sub-tab state
   const router = useRouter()
@@ -28,6 +40,7 @@ export default function CricketTab() {
   const normalizedRole = String(userRole || '').toUpperCase().replace(/[-\s]+/g, '_')
   const isSuperAdmin = normalizedRole === 'SUPER_ADMIN'
   const [toggleMatchVisibility, { isLoading: isBlockingMatch }] = useToggleMatchVisibilityMutation()
+  const { data: usersData, isLoading: isUsersLoading } = useGetSuperAdminUsersQuery(undefined, { skip: !isSuperAdmin })
   const { data: tabBannersData } = useGetTabBannersQuery(undefined, {
     refetchOnMountOrArgChange: true,
   })
@@ -652,7 +665,7 @@ export default function CricketTab() {
                       })()}
                     </div>
                     {isSuperAdmin && blockEventId && (
-                      <div className="pt-1">
+                      <div className="pt-1 flex flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -666,6 +679,26 @@ export default function CricketTab() {
                           }`}
                         >
                           {effectiveBlocked ? 'BLOCKED' : 'ALLOWED'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            const selectedMatchId = String(match.gmid ?? match.match_id ?? match.id ?? '')
+                            const selectedEventId = String(blockEventId ?? '')
+                            const teamNames = (match.ename || match.title || match.short_title || 'Match').toString()
+                            if (!selectedMatchId || !selectedEventId) return
+                            setCustomBetModal({
+                              isOpen: true,
+                              matchId: selectedMatchId,
+                              eventId: selectedEventId,
+                              matchName: teamNames,
+                            })
+                          }}
+                          className="px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                          PLACE BET
                         </button>
                       </div>
                     )}
@@ -790,8 +823,259 @@ export default function CricketTab() {
           </div>
         </div>
       )}
+      <CustomBetModal
+        isOpen={customBetModal.isOpen}
+        onClose={() => setCustomBetModal({ isOpen: false, matchId: '', eventId: '', matchName: '' })}
+        matchId={customBetModal.matchId}
+        eventId={customBetModal.eventId}
+        matchName={customBetModal.matchName}
+        usersData={usersData}
+        isUsersLoading={isUsersLoading}
+      />
     </div>
   )
 }
 
+function CustomBetModal({
+  isOpen,
+  onClose,
+  matchId,
+  eventId,
+  matchName,
+  usersData,
+  isUsersLoading,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  matchId: string
+  eventId: string
+  matchName: string
+  usersData: any
+  isUsersLoading: boolean
+}) {
+  const [userId, setUserId] = useState('')
+  const [fancyKey, setFancyKey] = useState('')
+  const [betType, setBetType] = useState<'BACK' | 'LAY'>('BACK')
+  const [betRate, setBetRate] = useState('')
+  const [betvalue, setBetvalue] = useState('')
+  const [winAmount, setWinAmount] = useState('')
+  const [lossAmount, setLossAmount] = useState('')
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [placeBet, { isLoading: isPlacingBet }] = usePlaceBetMutation()
+  const { data: bookmakerFancyData, isLoading: isFancyLoading } = useGetCricketBookmakerFancyQuery(
+    { eventId },
+    { skip: !isOpen || !eventId }
+  )
+
+  useEffect(() => {
+    if (!isOpen) return
+    setUserId('')
+    setFancyKey('')
+    setBetType('BACK')
+    setBetRate('')
+    setBetvalue('')
+    setWinAmount('')
+    setLossAmount('')
+    setMessage(null)
+  }, [isOpen, eventId, matchId])
+
+  const clientUsers = useMemo(() => {
+    const source = usersData as any
+    const arr = Array.isArray(source)
+      ? source
+      : Array.isArray(source?.data)
+      ? source.data
+      : Array.isArray(source?.data?.users)
+      ? source.data.users
+      : Array.isArray(source?.users)
+      ? source.users
+      : []
+
+    const resolveRole = (u: any): string => {
+      const role = u?.role
+      if (typeof role === 'string') return role
+      if (role && typeof role === 'object') {
+        return String(role?.role || role?.name || role?.roleName || '')
+      }
+      return ''
+    }
+
+    const mapped = arr
+      .map((u: any) => ({
+        id: String(u?.id ?? u?._id ?? u?.user_id ?? u?.userId ?? '').trim(),
+        label: String(u?.name || u?.username || u?.email || 'User'),
+        role: resolveRole(u).toUpperCase().replace(/[-\s]+/g, '_'),
+      }))
+      .filter((u: { id: string }) => u.id)
+
+    return mapped.filter((u: { role: string }) => u.role === 'CLIENT')
+  }, [usersData])
+
+  const fancyOptions = useMemo(() => {
+    let source: any[] = []
+    if (bookmakerFancyData?.success && Array.isArray(bookmakerFancyData.data)) {
+      source = bookmakerFancyData.data
+    } else if (Array.isArray(bookmakerFancyData)) {
+      source = bookmakerFancyData
+    }
+
+    const rows: Array<{
+      key: string
+      marketId: string
+      market_name: string
+      selection_id: number
+      bet_name: string
+      market_type: 'fancy'
+      gtype: 'fancy'
+    }> = []
+
+    source.forEach((m: any) => {
+      const gtype = String(m?.gtype || '').toLowerCase()
+      if (!['fancy', 'fancy1', 'fancy2'].includes(gtype)) return
+      const marketId = String(m?.mid ?? m?.marketId ?? m?.market_id ?? '').trim()
+      const market_name = String(m?.mname || m?.market_name || '').trim()
+      const sections = Array.isArray(m?.section) ? m.section : []
+      sections.forEach((s: any, idx: number) => {
+        const selection_id = Number(s?.sid ?? s?.selectionId ?? s?.selection_id)
+        const bet_name = String(s?.nat || s?.runnerName || s?.name || `Runner ${idx + 1}`).trim()
+        if (!marketId || !market_name || !Number.isFinite(selection_id) || !bet_name) return
+        rows.push({
+          key: `${marketId}-${selection_id}-${idx}`,
+          marketId,
+          market_name,
+          selection_id,
+          bet_name,
+          market_type: 'fancy',
+          gtype: 'fancy',
+        })
+      })
+    })
+    return rows
+  }, [bookmakerFancyData])
+
+  const selectedFancy = useMemo(() => fancyOptions.find((f) => f.key === fancyKey), [fancyOptions, fancyKey])
+  const canSubmit = Boolean(
+    userId && matchId && eventId && selectedFancy && betType && betRate.trim() && betvalue.trim() && winAmount.trim() && lossAmount.trim()
+  )
+
+  if (!isOpen) return null
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setMessage(null)
+    if (!selectedFancy) return
+    const payload = {
+      bet_name: selectedFancy.bet_name,
+      bet_rate: Number(betRate),
+      bet_type: betType,
+      betvalue: Number(betvalue),
+      eventId,
+      gtype: 'fancy',
+      loss_amount: Number(lossAmount),
+      marketId: selectedFancy.marketId,
+      market_name: selectedFancy.market_name,
+      market_type: 'fancy',
+      match_id: matchId,
+      selection_id: selectedFancy.selection_id,
+      user_id: userId,
+      win_amount: Number(winAmount),
+    }
+    try {
+      await placeBet(payload).unwrap()
+      setMessage({ type: 'success', text: 'Custom bet placed successfully.' })
+    } catch (err: any) {
+      setMessage({
+        type: 'error',
+        text: err?.data?.error || err?.data?.message || err?.message || 'Failed to place custom bet.',
+      })
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-3">
+      <div className="w-full max-w-xl bg-white rounded-lg shadow-xl border border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 className="text-base font-bold text-gray-900">Place Custom Bet</h3>
+          <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg font-bold">×</button>
+        </div>
+        <form onSubmit={onSubmit} className="p-4 space-y-3">
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">User</label>
+            <select
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            >
+              <option value="">{isUsersLoading ? 'Loading users...' : 'Select user'}</option>
+              {clientUsers.map((u: { id: string; label: string }) => (
+                <option key={u.id} value={u.id}>{u.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Match</label>
+            <select value={matchId} disabled className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100">
+              <option value={matchId}>{matchName || matchId}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Fancy</label>
+            <select
+              value={fancyKey}
+              onChange={(e) => setFancyKey(e.target.value)}
+              disabled={!eventId || isFancyLoading}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100"
+            >
+              <option value="">{isFancyLoading ? 'Loading fancy...' : 'Select fancy'}</option>
+              {fancyOptions.map((f) => (
+                <option key={f.key} value={f.key}>{f.market_name} - {f.bet_name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Bet Type</label>
+              <select value={betType} onChange={(e) => setBetType(e.target.value as 'BACK' | 'LAY')} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                <option value="BACK">BACK</option>
+                <option value="LAY">LAY</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Bet Rate</label>
+              <input type="number" value={betRate} onChange={(e) => setBetRate(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Stake</label>
+              <input type="number" value={betvalue} onChange={(e) => setBetvalue(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Win Amount</label>
+              <input type="number" value={winAmount} onChange={(e) => setWinAmount(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-gray-700 mb-1">Loss Amount</label>
+              <input type="number" value={lossAmount} onChange={(e) => setLossAmount(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+            </div>
+          </div>
+
+          {message && (
+            <p className={`text-sm font-bold ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {message.text}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-white bg-gray-500 rounded hover:bg-gray-600">Cancel</button>
+            <button type="submit" disabled={!canSubmit || isPlacingBet} className="px-4 py-2 text-sm font-bold text-white bg-[#00A66E] rounded hover:bg-[#008f5f] disabled:opacity-50">
+              {isPlacingBet ? 'Placing...' : 'Place Bet'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 

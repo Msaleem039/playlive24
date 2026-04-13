@@ -68,7 +68,7 @@ export default function Header() {
         <li className="shrink-0 ml-auto sm:ml-2 md:ml-4 list-none">
               <Button
                 onClick={openLoginModal}
-                className="h-7 xs:h-8 sm:h-8.5 md:h-9 rounded-full bg-yellow-500 px-3 xs:px-3.5 sm:px-4 md:px-5 text-[0.62rem] xs:text-[0.68rem] sm:text-xs md:text-sm font-extrabold tracking-wide text-black hover:bg-yellow-500 hover:text-black"
+                className="h-8.5 xs:h-8 sm:h-8.5 md:h-9 rounded-full bg-yellow-500 px-3 xs:px-3.5 sm:px-4 md:px-5 text-[0.62rem] xs:text-[0.68rem] sm:text-xs md:text-sm font-extrabold tracking-wide text-black hover:bg-yellow-500 hover:text-black"
               >
                 LOGIN
               </Button>
