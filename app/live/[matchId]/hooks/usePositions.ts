@@ -5,6 +5,8 @@ interface PositionsData {
   data?: {
     eventId?: string
     matchOdds?: Record<string, number>
+    tieMatch?: Record<string, number>
+    tiedMatch?: Record<string, number>
     bookmaker?: Record<string, number>
     fancy?: Record<string, Record<string, number>>
   }
@@ -25,11 +27,13 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
   // Stable positions state - persists across API updates (wallet-like behavior)
   const stablePositionsRef = useRef<{
     matchOdds: Record<string, number> // selectionId -> net
+    tieMatch: Record<string, number> // selectionId -> net
     bookmaker: Record<string, number> // selectionId -> net
     fancy: Record<string, Record<string, number>> // fancyId -> { YES/NO -> net }
     _lastMatchId?: string // Track last matchId to detect changes
   }>({
     matchOdds: {},
+    tieMatch: {},
     bookmaker: {},
     fancy: {}
   })
@@ -37,10 +41,12 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
   // Optimistic positions - stored separately, cleared when backend confirms
   const optimisticPositionsRef = useRef<{
     matchOdds: Record<string, number> // selectionId -> net
+    tieMatch: Record<string, number> // selectionId -> net
     bookmaker: Record<string, number> // selectionId -> net
     fancy: Record<string, Record<string, number>> // fancyId -> { YES/NO -> net }
   }>({
     matchOdds: {},
+    tieMatch: {},
     bookmaker: {},
     fancy: {}
   })
@@ -48,11 +54,13 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
   // Clear positions when matchId changes (prevent mixing positions across matches)
   useEffect(() => {
     stablePositionsRef.current.matchOdds = {}
+    stablePositionsRef.current.tieMatch = {}
     stablePositionsRef.current.bookmaker = {}
     stablePositionsRef.current.fancy = {}
     stablePositionsRef.current._lastMatchId = matchId
     // Also clear optimistic positions when match changes
     optimisticPositionsRef.current.matchOdds = {}
+    optimisticPositionsRef.current.tieMatch = {}
     optimisticPositionsRef.current.bookmaker = {}
     optimisticPositionsRef.current.fancy = {}
   }, [matchId])
@@ -96,6 +104,39 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
         })
         
         // Trigger useMemo recalculation after refs are updated
+        setPositionsUpdateTrigger(prev => prev + 1)
+      }
+
+      // Extract tieMatch positions - normalized format: { [selectionId: string]: number }
+      const tieSource =
+        data.tieMatch && typeof data.tieMatch === 'object' && !Array.isArray(data.tieMatch)
+          ? data.tieMatch
+          : data.tiedMatch && typeof data.tiedMatch === 'object' && !Array.isArray(data.tiedMatch)
+          ? data.tiedMatch
+          : null
+
+      if (tieSource) {
+        Object.entries(tieSource).forEach(([selectionId, netValue]: [string, any]) => {
+          const selectionIdStr = String(selectionId).trim()
+          const selectionIdNum = Number(selectionId)
+
+          if (netValue !== undefined && netValue !== null) {
+            const numericValue = Number(netValue)
+            stablePositionsRef.current.tieMatch[selectionIdStr] = numericValue
+
+            if (!isNaN(selectionIdNum)) {
+              const numericKeyStr = selectionIdNum.toString()
+              if (numericKeyStr !== selectionIdStr) {
+                stablePositionsRef.current.tieMatch[numericKeyStr] = numericValue
+              }
+            }
+
+            if (optimisticPositionsRef.current.tieMatch[selectionIdStr] !== undefined) {
+              delete optimisticPositionsRef.current.tieMatch[selectionIdStr]
+            }
+          }
+        })
+
         setPositionsUpdateTrigger(prev => prev + 1)
       }
 
@@ -178,6 +219,11 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
       ...optimisticPositionsRef.current.bookmaker,
       ...stablePositionsRef.current.bookmaker
     }
+
+    const mergedTieMatch = {
+      ...optimisticPositionsRef.current.tieMatch,
+      ...stablePositionsRef.current.tieMatch
+    }
     
     // Merge fancy positions
     const mergedFancy: Record<string, Record<string, number>> = {}
@@ -199,6 +245,7 @@ export function usePositions(positionsData: PositionsData | undefined, matchId: 
     
     return {
       matchOdds: mergedMatchOdds,
+      tieMatch: mergedTieMatch,
       bookmaker: mergedBookmaker,
       fancy: mergedFancy
     }

@@ -991,85 +991,142 @@ function CustomBetModal({
     }
   }
 
+  const fieldClass =
+    'w-full min-h-[44px] sm:min-h-0 border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 text-base sm:text-sm touch-manipulation'
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-3">
-      <div className="w-full max-w-xl bg-white rounded-lg shadow-xl border border-gray-200">
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-base font-bold text-gray-900">Place Custom Bet</h3>
-          <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg font-bold">×</button>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-3 bg-black/50">
+      <div
+        className="w-full sm:max-w-xl max-h-[100dvh] sm:max-h-[min(90dvh,720px)] flex flex-col bg-white shadow-xl border border-gray-200 border-b-0 sm:border-b rounded-t-2xl sm:rounded-lg overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="custom-bet-modal-title"
+      >
+        <div className="shrink-0 px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2 bg-white">
+          <h3 id="custom-bet-modal-title" className="text-base sm:text-lg font-bold text-gray-900 truncate pr-2">
+            Place Custom Bet
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center text-gray-500 hover:text-gray-700 text-2xl sm:text-xl font-bold leading-none rounded-lg hover:bg-gray-100 touch-manipulation"
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
-        <form onSubmit={onSubmit} className="p-4 space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">User</label>
-            <select
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-            >
-              <option value="">{isUsersLoading ? 'Loading users...' : 'Select user'}</option>
-              {clientUsers.map((u: { id: string; label: string }) => (
-                <option key={u.id} value={u.id}>{u.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Match</label>
-            <select value={matchId} disabled className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100">
-              <option value={matchId}>{matchName || matchId}</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Fancy</label>
-            <select
-              value={fancyKey}
-              onChange={(e) => setFancyKey(e.target.value)}
-              disabled={!eventId || isFancyLoading}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100"
-            >
-              <option value="">{isFancyLoading ? 'Loading fancy...' : 'Select fancy'}</option>
-              {fancyOptions.map((f) => (
-                <option key={f.key} value={f.key}>{f.market_name} - {f.bet_name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <form onSubmit={onSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Bet Type</label>
-              <select value={betType} onChange={(e) => setBetType(e.target.value as 'BACK' | 'LAY')} className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                <option value="BACK">BACK</option>
-                <option value="LAY">LAY</option>
+              <label className="block text-xs font-bold text-gray-700 mb-1">User</label>
+              <select value={userId} onChange={(e) => setUserId(e.target.value)} className={fieldClass}>
+                <option value="">{isUsersLoading ? 'Loading users...' : 'Select user'}</option>
+                {clientUsers.map((u: { id: string; label: string }) => (
+                  <option key={u.id} value={u.id}>
+                    {u.label}
+                  </option>
+                ))}
               </select>
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Bet Rate</label>
-              <input type="number" value={betRate} onChange={(e) => setBetRate(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+              <label className="block text-xs font-bold text-gray-700 mb-1">Match</label>
+              <select value={matchId} disabled className={`${fieldClass} bg-gray-100`}>
+                <option value={matchId}>{matchName || matchId}</option>
+              </select>
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Stake</label>
-              <input type="number" value={betvalue} onChange={(e) => setBetvalue(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+              <label className="block text-xs font-bold text-gray-700 mb-1">Fancy</label>
+              <select
+                value={fancyKey}
+                onChange={(e) => setFancyKey(e.target.value)}
+                disabled={!eventId || isFancyLoading}
+                className={`${fieldClass} disabled:bg-gray-100`}
+              >
+                <option value="">{isFancyLoading ? 'Loading fancy...' : 'Select fancy'}</option>
+                {fancyOptions.map((f) => (
+                  <option key={f.key} value={f.key}>
+                    {f.market_name} - {f.bet_name}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Win Amount</label>
-              <input type="number" value={winAmount} onChange={(e) => setWinAmount(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Bet Type</label>
+                <select
+                  value={betType}
+                  onChange={(e) => setBetType(e.target.value as 'BACK' | 'LAY')}
+                  className={fieldClass}
+                >
+                  <option value="BACK">BACK</option>
+                  <option value="LAY">LAY</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Bet Rate</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={betRate}
+                  onChange={(e) => setBetRate(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Stake</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={betvalue}
+                  onChange={(e) => setBetvalue(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Win Amount</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={winAmount}
+                  onChange={(e) => setWinAmount(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-gray-700 mb-1">Loss Amount</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={lossAmount}
+                  onChange={(e) => setLossAmount(e.target.value)}
+                  className={fieldClass}
+                />
+              </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1">Loss Amount</label>
-              <input type="number" value={lossAmount} onChange={(e) => setLossAmount(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
-            </div>
+
+            {message && (
+              <p className={`text-sm font-bold ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                {message.text}
+              </p>
+            )}
           </div>
 
-          {message && (
-            <p className={`text-sm font-bold ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-              {message.text}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-white bg-gray-500 rounded hover:bg-gray-600">Cancel</button>
-            <button type="submit" disabled={!canSubmit || isPlacingBet} className="px-4 py-2 text-sm font-bold text-white bg-[#00A66E] rounded hover:bg-[#008f5f] disabled:opacity-50">
+          <div className="shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 text-sm font-bold text-white bg-gray-500 rounded-lg hover:bg-gray-600 touch-manipulation"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit || isPlacingBet}
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 text-sm font-bold text-white bg-[#00A66E] rounded-lg hover:bg-[#008f5f] disabled:opacity-50 touch-manipulation"
+            >
               {isPlacingBet ? 'Placing...' : 'Place Bet'}
             </button>
           </div>

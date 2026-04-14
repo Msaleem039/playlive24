@@ -109,6 +109,12 @@ export default function MatchOdds({
           </thead>
           <tbody>
             {market.rows.map((row, rowIndex) => {
+              const marketKey = (market.mname || market.name || '').toString().trim().toUpperCase().replace(/\s+/g, '_')
+              const isTieMarketRow =
+                marketKey === 'TIED_MATCH' ||
+                marketKey === 'TIE_MATCH' ||
+                marketKey.includes('TIED_MATCH') ||
+                marketKey.includes('TIE_MATCH')
               // POSITION MAPPING: Match positions ONLY by selectionId comparison
               // 
               // STRICT RULES:
@@ -165,6 +171,21 @@ export default function MatchOdds({
                     netValue = positions[matchingKey]
                   }
                 }
+
+                // TIED_MATCH compatibility fallback:
+                // Some feeds return tie positions keyed by team selectionIds from match-odds,
+                // while tied market rows can be Yes/No with different section sids.
+                // If no direct selectionId match exists, map by row order.
+                if (netValue === undefined) {
+                  if (isTieMarketRow) {
+                    const values = Object.values(positions)
+                      .map((v) => Number(v))
+                      .filter((v) => Number.isFinite(v))
+                    if (values.length > rowIndex) {
+                      netValue = values[rowIndex]
+                    }
+                  }
+                }
               }
               
               // DISPLAY: Show net value exactly as backend provides
@@ -179,7 +200,11 @@ export default function MatchOdds({
                   {netValue !== undefined && netValue !== null && netValue !== 0 ? (
                     // Show net value badge - exactly as backend provides
                     <div className={`inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold mt-0.5 border ${
-                      netValue > 0
+                      isTieMarketRow
+                        ? (rowIndex % 2 === 0
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-red-50 text-red-700 border-red-200')
+                        : netValue > 0
                         ? 'bg-green-50 text-green-700 border-green-200' 
                         : netValue < 0
                         ? 'bg-red-50 text-red-700 border-red-200'

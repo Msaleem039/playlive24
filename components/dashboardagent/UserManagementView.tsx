@@ -1285,23 +1285,6 @@ function SubordinatesView({
                                 Login
                               </button>
                             )}
-                            {itemRole === 'CLIENT' && userItem.id && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  setCustomBetModal({
-                                    isOpen: true,
-                                    userId: String(userItem.id),
-                                  })
-                                }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold bg-[#00A66E] text-white hover:bg-[#008f5f]"
-                                title="Place custom bet"
-                              >
-                                Bet
-                              </button>
-                            )}
                             <button
                               onClick={(e) => {
                                 e.preventDefault()

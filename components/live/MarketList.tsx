@@ -22,6 +22,7 @@ interface MarketListProps {
   onRefresh?: () => void
   positionsByMarketType: {
     matchOdds: Record<string, number>
+    tieMatch: Record<string, number>
     bookmaker: Record<string, number>
     fancy: Record<string, Record<string, number>>
   }
@@ -46,7 +47,9 @@ export default function MarketList({
       {marketsToShow.map((market, marketIndex) => {
         // Determine if this is a match odds market or fancy market
         const marketType = (market.gtype || '').toLowerCase()
-        const isMatchOdds = normalizedApiMarketKey(market) === 'MATCH_ODDS'
+        const normalizedMarketKey = normalizedApiMarketKey(market)
+        const isMatchOdds = normalizedMarketKey === 'MATCH_ODDS'
+        const isTieMatch = normalizedMarketKey === 'TIE_MATCH' || normalizedMarketKey === 'TIED_MATCH'
         const isFancy = marketType === 'fancy' || marketType === 'fancy2' || marketType === 'fancy1' || marketType === 'oddeven' || marketType === 'cricketcasino' || marketType === 'meter'
         
         // POSITION MAPPING:
@@ -55,7 +58,9 @@ export default function MarketList({
         // Fancy keeps its own structure and is handled separately.
         let positionsForMarket: Record<string, number> | undefined = undefined
         if (!isFancy) {
-          positionsForMarket = positionsByMarketType.matchOdds
+          positionsForMarket = isTieMatch
+            ? positionsByMarketType.tieMatch
+            : positionsByMarketType.matchOdds
         }
 
         if (isMatchOdds) {
@@ -156,6 +161,7 @@ export default function MarketList({
               blinkingOdds={blinkingOdds}
               isMobile={isMobile}
               onBetSelect={onBetSelect}
+              positions={isTieMatch ? positionsByMarketType.tieMatch : undefined}
             />
           )
         }

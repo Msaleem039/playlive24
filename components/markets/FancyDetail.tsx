@@ -19,7 +19,7 @@ interface FancyDetailProps {
     marketGType?: string
     size?: number // For fancy markets: the percentage/size value (100, 90, 120, etc.)
   }) => void
-  positions?: Record<string, number> // YES/NO -> net (outcome-based net value)
+  positions?: Record<string, number> // Can be outcome keys (YES/NO) or selectionId -> net
 }
 
 const YES_COLUMNS = 1
@@ -97,8 +97,14 @@ export default function FancyDetail({
             {market.rows.map((row, rowIndex) => {
               // FANCY DISPLAY RULE: Each YES/NO option shows its own outcome-based net value
               // Display each value ONLY under its own option - do NOT calculate or transform
-              const positionKey = (row.team || '').toUpperCase().trim()
-              const netValue = positions && positionKey ? positions[positionKey] : undefined
+              const outcomeKey = (row.team || '').toUpperCase().trim()
+              const selectionKey = row.selectionId != null ? String(row.selectionId).trim() : ''
+              const selectionNumericKey = selectionKey && !isNaN(Number(selectionKey)) ? String(Number(selectionKey)) : ''
+              const netValueBySelection =
+                positions && selectionKey
+                  ? (positions[selectionKey] ?? (selectionNumericKey ? positions[selectionNumericKey] : undefined))
+                  : undefined
+              const netValue = netValueBySelection ?? (positions && outcomeKey ? positions[outcomeKey] : undefined)
               
               // Split team text only on mobile if longer than 14 characters
               const teamText = row.team || ''
