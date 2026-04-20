@@ -41,6 +41,55 @@ export function formatFancyresScore(payload: unknown): string | null {
 }
 
 function pickScoreLine(o: Record<string, unknown>): string | null {
+  // Fancyres shape:
+  // { eventId, score: { home:{name,score,games,sets,...}, away:{...} }, currentSet, currentGame, fullTimeElapsed }
+  const nestedScore = o.score as Record<string, unknown> | undefined
+  if (nestedScore && typeof nestedScore === 'object') {
+    const home = nestedScore.home as Record<string, unknown> | undefined
+    const away = nestedScore.away as Record<string, unknown> | undefined
+    const homeName = String(home?.name ?? 'Home').trim()
+    const awayName = String(away?.name ?? 'Away').trim()
+
+    const homePoints = String(home?.score ?? '').trim()
+    const awayPoints = String(away?.score ?? '').trim()
+    const homeGames = String(home?.games ?? '').trim()
+    const awayGames = String(away?.games ?? '').trim()
+    const homeSets = String(home?.sets ?? '').trim()
+    const awaySets = String(away?.sets ?? '').trim()
+
+    const hasPoints = homePoints !== '' || awayPoints !== ''
+    const hasGames = homeGames !== '' || awayGames !== ''
+    const hasSets = homeSets !== '' || awaySets !== ''
+
+    const scoreBits: string[] = []
+    if (hasPoints) scoreBits.push(`${homePoints || '0'}-${awayPoints || '0'}`)
+    if (hasGames) scoreBits.push(`G ${homeGames || '0'}-${awayGames || '0'}`)
+    if (hasSets) scoreBits.push(`S ${homeSets || '0'}-${awaySets || '0'}`)
+
+    const currentSet = o.currentSet != null ? String(o.currentSet) : ''
+    const currentGame = o.currentGame != null ? String(o.currentGame) : ''
+    if (currentSet) scoreBits.push(`Set ${currentSet}`)
+    if (currentGame) scoreBits.push(`Game ${currentGame}`)
+
+    const elapsed = o.fullTimeElapsed as Record<string, unknown> | undefined
+    if (elapsed && typeof elapsed === 'object') {
+      const h = Number(elapsed.hour ?? 0) || 0
+      const m = Number(elapsed.min ?? 0) || 0
+      const s = Number(elapsed.sec ?? 0) || 0
+      if (h > 0 || m > 0 || s > 0) {
+        const hh = String(h).padStart(2, '0')
+        const mm = String(m).padStart(2, '0')
+        const ss = String(s).padStart(2, '0')
+        scoreBits.push(`${hh}:${mm}:${ss}`)
+      }
+    }
+
+    if (homeName && awayName) {
+      const suffix = scoreBits.length ? ` (${scoreBits.join(' · ')})` : ''
+      return `${homeName} vs ${awayName}${suffix}`
+    }
+  }
+
   const score =
     o.score ?? o.Score ?? o.scoreStr ?? o.ScoreStr ?? o.matchScore ?? o.MatchScore
   const setScore = o.setScore ?? o.SetScore ?? o.sets ?? o.Sets

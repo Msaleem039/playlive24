@@ -214,7 +214,7 @@ export default function ClientAccountStatementModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col min-h-0">
         {/* Header */}
         <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-0 z-10">
           <h2 className="text-xs sm:text-sm md:text-base font-bold">Client Account Statement</h2>
@@ -310,53 +310,8 @@ export default function ClientAccountStatementModal({
           </div>
         )}
 
-        {/* Cash transaction history at top */}
-        {cashTransactions.length > 0 && (
-          <div className="border-b">
-            <div className="px-2 sm:px-3 md:px-4 py-2 bg-gray-100 text-[10px] sm:text-xs md:text-sm font-bold text-gray-700">
-              Transaction History
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-[10px] sm:text-xs md:text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Date</th>
-                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Type</th>
-                    <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Description</th>
-                    <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Credit</th>
-                    <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Debit</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {cashTransactions.map((transaction: any, idx: number) => (
-                    <tr key={transaction.id || idx} className="hover:bg-gray-50">
-                      <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-900 whitespace-nowrap">
-                        {formatDate(transaction.date)}
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(transaction.type)}`}>
-                          {transaction.type || '-'}
-                        </span>
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-700">
-                        {transaction.description || '-'}
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-green-600 whitespace-nowrap">
-                        {Number(transaction.credit) > 0 ? formatCurrency(transaction.credit) : '-'}
-                      </td>
-                      <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-red-600 whitespace-nowrap">
-                        {Number(transaction.debit) > 0 ? formatCurrency(transaction.debit) : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Statement and bet history */}
-        <div className="flex-1 overflow-auto">
+        {/* One scroll area for Transaction History + Statement (single screen, single scrollbar) */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto overscroll-contain border-t border-gray-200">
           {isLoading ? (
             <div className="flex items-center justify-center py-6 sm:py-8 md:py-12">
               <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 animate-spin text-[#00A66E]" />
@@ -367,7 +322,7 @@ export default function ClientAccountStatementModal({
               <div className="text-center">
                 <p className="text-red-600 mb-2 text-xs sm:text-sm md:text-base">Error loading statement</p>
                 <button
-                  onClick={() => triggerQuery(queryParams)}
+                  onClick={() => queryParams && triggerQuery(queryParams)}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base bg-[#00A66E] text-white rounded hover:bg-[#00b97b]"
                 >
                   Retry
@@ -375,11 +330,55 @@ export default function ClientAccountStatementModal({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col h-full">
-              {/* Transactions Table - matches screenshot columns */}
-              <div className="overflow-x-auto flex-1 relative">
-                <table className="w-full text-[10px] sm:text-xs md:text-sm">
-                  <thead className="bg-gray-100 sticky top-0">
+            <>
+              {cashTransactions.length > 0 && (
+                <div className="border-b border-gray-200">
+                  <div className="px-2 sm:px-3 md:px-4 py-2 bg-gray-100 text-[10px] sm:text-xs md:text-sm font-bold text-gray-700 border-b border-gray-200">
+                    Transaction History
+                  </div>
+                  <table className="w-full text-[10px] sm:text-xs md:text-sm min-w-[520px]">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Date</th>
+                        <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Type</th>
+                        <th className="px-2 sm:px-3 md:px-4 py-2 text-left font-bold text-gray-700">Description</th>
+                        <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Credit</th>
+                        <th className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-gray-700">Debit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {cashTransactions.map((transaction: any, idx: number) => (
+                        <tr key={transaction.id || idx} className="hover:bg-gray-50">
+                          <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-900 whitespace-nowrap">
+                            {formatDate(transaction.date)}
+                          </td>
+                          <td className="px-2 sm:px-3 md:px-4 py-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(transaction.type)}`}>
+                              {transaction.type || '-'}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-700">
+                            {transaction.description || '-'}
+                          </td>
+                          <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-green-600 whitespace-nowrap">
+                            {Number(transaction.credit) > 0 ? formatCurrency(transaction.credit) : '-'}
+                          </td>
+                          <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-red-600 whitespace-nowrap">
+                            {Number(transaction.debit) > 0 ? formatCurrency(transaction.debit) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div>
+                <div className="px-2 sm:px-3 md:px-4 py-2 bg-gray-100 text-[10px] sm:text-xs md:text-sm font-bold text-gray-700 border-b border-gray-200">
+                  Statement &amp; market history
+                </div>
+                <table className="w-full text-[10px] sm:text-xs md:text-sm min-w-[640px]">
+                  <thead className="bg-gray-100">
                     <tr>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Date</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Type</th>
@@ -393,20 +392,16 @@ export default function ClientAccountStatementModal({
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {statementTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           No transactions found
                         </td>
                       </tr>
                     ) : (
                       statementTransactions.map((transaction: any, idx: number) => {
-                        // New format: totalCredit, totalDebit, runningBalance, latestSettledAt, description, result, bets
-                        // const credit = transaction.totalCredit ?? transaction.credit ?? transaction.cr ?? 0
-                        // const debit = transaction.totalDebit ?? transaction.debit ?? transaction.dr ?? 0
                         const balance = transaction.runningBalance ?? transaction.balance
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
                         const typeVal = transaction.type ?? getStatementType(transaction.description || '')
-                        const bets = transaction.bets || []
-                        
+
                         return (
                           <tr key={transaction.marketId + '-' + transaction.selectionId + '-' + idx || idx} className="hover:bg-gray-50">
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-gray-900 whitespace-nowrap">
@@ -443,12 +438,9 @@ export default function ClientAccountStatementModal({
                                 return <span className="text-gray-500">-</span>
                               })()}
                             </td>
-                            {/* {/* <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-green-600">
-                              {credit > 0 ? formatCurrency(credit) : '0.00'}
-                            </td> */}
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap text-blue-600">
                               {transaction.decisionRun}
-                            </td> 
+                            </td>
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
                               typeof balance === 'number' && balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
@@ -470,7 +462,7 @@ export default function ClientAccountStatementModal({
                   </tbody>
                 </table>
               </div>
-            </div>
+            </>
           )}
         </div>
 
