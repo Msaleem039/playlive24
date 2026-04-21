@@ -14,12 +14,13 @@ import UserPendingBets from '@/components/live/UserPendingBets'
 import LiveTVSection from '@/components/live/LiveTVSection'
 import MarketList from '@/components/live/MarketList'
 import EmptyMarketsState from '@/components/live/EmptyMarketsState'
-import { useMatchData } from './hooks/useMatchData'
+import { useMatchData, type LiveDetailSport } from './hooks/useMatchData'
 import { useMatchMarkets } from './hooks/useMatchMarkets'
 import { usePositions } from './hooks/usePositions'
 import { useOddsBlinking } from './hooks/useOddsBlinking'
 import { useResponsiveLayout } from './hooks/useResponsiveLayout'
 import { useUserPendingBets } from './hooks/useUserPendingBets'
+import { formatScorecardSubtitle } from './utils/formatScorecardSubtitle'
 
 export default function LiveMatchDetailPage() {
   const params = useParams()
@@ -28,7 +29,10 @@ export default function LiveMatchDetailPage() {
   const matchId = params?.matchId as string
   const marketIdParam = searchParams?.get('marketid')
   const sportParam = searchParams?.get('sport') || (typeof window !== 'undefined' ? sessionStorage.getItem('liveSport') : null)
-  const isSoccer = sportParam === 'soccer'
+  const sportKey = String(sportParam || '').toLowerCase()
+  const liveDetailSport: LiveDetailSport =
+    sportKey === 'tennis' ? 'tennis' : sportKey === 'soccer' || sportKey === 'football' ? 'soccer' : 'cricket'
+  const isSoccer = liveDetailSport === 'soccer'
   const authUser = useSelector(selectCurrentUser)
   const userRole = (authUser?.role as string) || 'CLIENT'
   const isClient = userRole === 'CLIENT'
@@ -109,7 +113,7 @@ export default function LiveMatchDetailPage() {
     error, 
     isLoadingScorecard, 
     refetch 
-  } = useMatchData(eventId, marketIdParam)
+  } = useMatchData(eventId, marketIdParam, liveDetailSport)
 
   const { isMobile, isTablet, getMainLayoutClass, getLeftPanelClass, getRightPanelClass } = useResponsiveLayout()
 
@@ -203,6 +207,12 @@ export default function LiveMatchDetailPage() {
       hasLiveTV: hasTV // Only show TV if user role allows it
     }
   }, [matchData, shouldShowTV, oddsData, marketsData])
+
+  /** Same instant as API `openDate` / `marketStartTime`, shown in event TZ when valid (else browser local). */
+  const scorecardHeaderDateTime = useMemo(() => {
+    if (!matchData?.stime) return null
+    return formatScorecardSubtitle(matchData.stime, matchData.timezone)
+  }, [matchData?.stime, matchData?.timezone])
 
   // onPlaceBetClick function - handles optimistic position updates
   const onPlaceBetClick = (newBet: {
@@ -305,17 +315,7 @@ export default function LiveMatchDetailPage() {
                 data={scorecard}
                 isLoading={isLoadingScorecard}
                 isMobile={isMobile}
-                matchDateTime={matchData ? (() => {
-                  const dateTime = new Date(matchData.stime)
-                  const day = dateTime.getDate()
-                  const month = dateTime.toLocaleDateString('en-US', { month: 'short' })
-                  const hours = dateTime.getHours()
-                  const minutes = dateTime.getMinutes()
-                  const ampm = hours >= 12 ? 'pm' : 'am'
-                  const displayHours = hours % 12 || 12
-                  const displayMinutes = minutes.toString().padStart(2, '0')
-                  return `${day} ${month} ${displayHours}:${displayMinutes} ${ampm}`
-                })() : null}
+                matchDateTime={scorecardHeaderDateTime}
               />
             )}
 

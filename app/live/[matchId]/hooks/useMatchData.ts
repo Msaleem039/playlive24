@@ -1,6 +1,14 @@
 import { useMemo } from 'react'
-import { useGetCricketMatchMarketsQuery, useGetCricketMatchOddsQuery, useGetCricketBookmakerFancyQuery, useGetCricketScorecardQuery } from '@/app/services/CricketApi'
+import {
+  useGetCricketMatchMarketsQuery,
+  useGetCricketMatchOddsQuery,
+  useGetCricketBookmakerFancyQuery,
+  useGetCricketScorecardQuery,
+  useGetFancyresTennisScoreQuery,
+  useGetFancyresSoccerScoreQuery,
+} from '@/app/services/CricketApi'
 import type { MarketResponse } from '../types'
+import { mapFancyresToLiveScorecard } from '../utils/mapFancyresToLiveScorecard'
 
 function normalizeLegacyScorecard(score: any) {
   if (!score) return null
@@ -60,8 +68,11 @@ function normalizeLegacyScorecard(score: any) {
   }
 }
 
-export function useMatchData(eventId: string, marketId?: string | null) {
+export type LiveDetailSport = 'cricket' | 'tennis' | 'soccer'
+
+export function useMatchData(eventId: string, marketId?: string | null, sport: LiveDetailSport = 'cricket') {
   const marketIdentifier = (marketId || eventId || '').toString()
+  const useFancyresScore = sport === 'tennis' || sport === 'soccer'
 
   // Fetch match detail using marketid from route param
   const { data: marketsData, isLoading: isLoadingMarkets, error: marketsError, refetch: refetchMarkets } = useGetCricketMatchMarketsQuery(
@@ -100,15 +111,38 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     }
   )
 
-  // Fetch scorecard data by eventId
-  const { data: scorecardData, isLoading: isLoadingScorecard, error: scorecardError } = useGetCricketScorecardQuery(
+  // Cricket scorecard (legacy / cricket only)
+  const { data: scorecardData, isLoading: isLoadingCricketScorecard } = useGetCricketScorecardQuery(
     { eventId },
     {
-      skip: !eventId,
-      // Enable polling to get updated scorecard data
-      pollingInterval: 5000, // Poll every 5 seconds
+      skip: !eventId || useFancyresScore,
+      pollingInterval: 5000,
     }
   )
+
+  const { data: fancyresTennisData, isLoading: isLoadingFancyresTennis } = useGetFancyresTennisScoreQuery(
+    { eventId },
+    {
+      skip: !eventId || sport !== 'tennis',
+      pollingInterval: 15000,
+    }
+  )
+
+  const { data: fancyresSoccerData, isLoading: isLoadingFancyresSoccer } = useGetFancyresSoccerScoreQuery(
+    { eventId },
+    {
+      skip: !eventId || sport !== 'soccer',
+      pollingInterval: 15000,
+    }
+  )
+
+  const isLoadingScorecard = useFancyresScore
+    ? sport === 'tennis'
+      ? isLoadingFancyresTennis
+      : isLoadingFancyresSoccer
+    : isLoadingCricketScorecard
+
+  const fancyresRaw = sport === 'tennis' ? fancyresTennisData : sport === 'soccer' ? fancyresSoccerData : null
 
   const isLoading = isLoadingMarkets || isLoadingOdds || isLoadingBookmakerFancy
   const error = marketsError || oddsError || bookmakerFancyError
@@ -125,9 +159,10 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     // Try to get match info from markets data first
     if (Array.isArray(marketsList) && marketsList.length > 0) {
       const firstMarket = marketsList[0] as MarketResponse
+      const startRaw = String(firstMarket.marketStartTime || '').trim() || firstMarket.event.openDate
       return {
         ename: firstMarket.event.name,
-        stime: firstMarket.event.openDate,
+        stime: startRaw,
         iplay: false, // Will be determined from odds data
         tv: false, // Default, can be updated if available
         eventId: firstMarket.event.id,
@@ -141,6 +176,12 @@ export function useMatchData(eventId: string, marketId?: string | null) {
 
   // Extract scorecard data from API response
   const scorecard = useMemo(() => {
+    if (useFancyresScore) {
+      if (fancyresRaw == null) return null
+      const title = matchData?.ename || ''
+      return mapFancyresToLiveScorecard(fancyresRaw, title)
+    }
+
     if (!scorecardData) return null
     // Handle API response structure: { message, code, error, data }
     if (scorecardData?.data && !scorecardData.error) {
@@ -155,7 +196,7 @@ export function useMatchData(eventId: string, marketId?: string | null) {
     const normalized = normalizeLegacyScorecard(scorecardData)
     if (normalized) return normalized
     return null
-  }, [scorecardData])
+  }, [scorecardData, useFancyresScore, fancyresRaw, matchData?.ename])
 
   // Get eventId from match data or use matchId as fallback
   const currentEventId = useMemo(() => {
