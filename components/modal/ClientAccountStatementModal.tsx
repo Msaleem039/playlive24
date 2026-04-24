@@ -210,6 +210,15 @@ export default function ClientAccountStatementModal({
     return 'bg-gray-100 text-gray-700'
   }
 
+  const getNetWinLossValue = (transaction: any) => {
+    const candidates = [transaction?.netWinLoss, transaction?.netPnl, transaction?.amount]
+    for (const candidate of candidates) {
+      const value = Number(candidate)
+      if (Number.isFinite(value)) return value
+    }
+    return 0
+  }
+
   if (!isOpen) return null
 
   return (
@@ -417,21 +426,18 @@ export default function ClientAccountStatementModal({
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
                               {(() => {
-                                const w = Number(transaction.win)
-                                const l = Number(transaction.loss)
-                                const hasWin = Number.isFinite(w) && w > 0
-                                const hasLoss = Number.isFinite(l) && l > 0
-                                if (hasWin) {
+                                const netWinLoss = getNetWinLossValue(transaction)
+                                if (netWinLoss > 0) {
                                   return (
                                     <span className="font-bold text-green-600 whitespace-nowrap">
-                                      {w.toFixed(2)}
+                                      Win: {formatCurrency(Math.abs(netWinLoss))}
                                     </span>
                                   )
                                 }
-                                if (hasLoss) {
+                                if (netWinLoss < 0) {
                                   return (
                                     <span className="font-bold text-red-600 whitespace-nowrap">
-                                      {l.toFixed(2)}
+                                      Loss: {formatCurrency(Math.abs(netWinLoss))}
                                     </span>
                                   )
                                 }
@@ -487,6 +493,7 @@ export default function ClientAccountStatementModal({
                       <div key={bet.id || bi} className="text-xs p-2 bg-gray-50 rounded border border-gray-100">
                         <span className={`px-2 py-0.5 rounded font-bold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
                         <div className="mt-1.5 grid grid-cols-2 gap-1 text-gray-700">
+                          <span className="col-span-2">Bet Name: {bet.betName || '-'}</span>
                           <span>Odds: {bet.odds}</span>
                           <span>Stake: {formatCurrency(bet.stake)}</span>
                           <span>P/L: <span className={bet.pnl >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{formatCurrency(bet.pnl)}</span></span>
