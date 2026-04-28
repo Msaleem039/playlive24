@@ -271,7 +271,7 @@ export default function ClientAccountStatementModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col min-h-0">
         {/* Header */}
         <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-0 z-10">
@@ -447,7 +447,7 @@ export default function ClientAccountStatementModal({
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Description</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-left font-bold text-gray-700">Win / Loss</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Decision Run</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Balance</th>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold text-gray-700">Running Balance</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center font-bold text-gray-700">Bets</th>
                     </tr>
                   </thead>
@@ -460,7 +460,7 @@ export default function ClientAccountStatementModal({
                       </tr>
                     ) : (
                       statementTransactions.map((transaction: any, idx: number) => {
-                        const balance = userInfo?.balance ?? userInfo?.availableBalance 
+                        const balance = transaction.runningBalance ?? transaction.balance
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
                         const typeVal = transaction.type ?? getStatementType(transaction.description || '')
 
@@ -506,7 +506,7 @@ export default function ClientAccountStatementModal({
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
                               typeof balance === 'number' && balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
-                              {userInfo?.availableBalance === null || userInfo?.availableBalance === undefined || userInfo?.availableBalance === '' ? '-' : formatCurrency(userInfo?.availableBalance)}
+                              {balance === null || balance === undefined || balance === '' ? '-' : formatCurrency(balance)}
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
                               <button
