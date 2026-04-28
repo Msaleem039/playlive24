@@ -97,7 +97,8 @@ export default function ClientAccountStatementModal({
           name: u.name || username,
           username: u.username || username,
           openingBalance: u.openingBalance,
-          balance: u.openingBalance
+          balance: u.balance ?? u.openingBalance,
+          availableBalance: u.availableBalance ?? u.balance ?? u.openingBalance
         },
         cashTransactions: cashRows,
         statementTransactions: statementRows
@@ -130,7 +131,11 @@ export default function ClientAccountStatementModal({
       if (d.user && d.statement) {
         if (d.user.id !== userId) return { userInfo: null, cashTransactions: [], statementTransactions: [] }
         return {
-          userInfo: { ...d.user, balance: d.user.openingBalance || d.user.balance },
+          userInfo: {
+            ...d.user,
+            balance: d.user.balance ?? d.user.openingBalance,
+            availableBalance: d.user.availableBalance ?? d.user.balance ?? d.user.openingBalance
+          },
           cashTransactions: Array.isArray(d.transactions) ? d.transactions : [],
           statementTransactions: d.statement
         }
@@ -211,12 +216,56 @@ export default function ClientAccountStatementModal({
   }
 
   const getNetWinLossValue = (transaction: any) => {
-    const candidates = [transaction?.netWinLoss, transaction?.netPnl, transaction?.amount]
-    for (const candidate of candidates) {
+    const winBets = Array.isArray(transaction?.winBets) ? transaction.winBets : []
+    const winBetsAmount = winBets.reduce((sum: number, bet: any) => {
+      const amount = Number(bet?.amount)
+      return Number.isFinite(amount) ? sum + amount : sum
+    }, 0)
+
+    const lossBets = Array.isArray(transaction?.lossBets) ? transaction.lossBets : []
+    const lossBetsAmount = lossBets.reduce((sum: number, bet: any) => {
+      const amount = Number(bet?.amount)
+      return Number.isFinite(amount) ? sum + amount : sum
+    }, 0)
+
+    // If summary arrays are present, trust them first.
+    if (lossBetsAmount > 0) return -lossBetsAmount
+    if (winBetsAmount > 0) return winBetsAmount
+
+    const win = Number(transaction?.win)
+    if (Number.isFinite(win) && win > 0) return win
+
+    const loss = Number(transaction?.loss)
+    if (Number.isFinite(loss) && loss > 0) return -loss
+
+    const bets = Array.isArray(transaction?.bets) ? transaction.bets : []
+    const betPnlTotal = bets.reduce((sum: number, bet: any) => {
+      const pnl = Number(bet?.pnl)
+      return Number.isFinite(pnl) ? sum + pnl : sum
+    }, 0)
+    if (betPnlTotal !== 0) return betPnlTotal
+
+    const primaryCandidates = [transaction?.netWinLoss, transaction?.netPnl, transaction?.amount]
+    for (const candidate of primaryCandidates) {
       const value = Number(candidate)
-      if (Number.isFinite(value)) return value
+      if (Number.isFinite(value) && value !== 0) return value
     }
+
     return 0
+  }
+
+  const isTransactionPending = (transaction: any) => {
+    const result = String(transaction?.result || '').toLowerCase()
+    const status = String(transaction?.status || '').toLowerCase()
+    if (result === 'pending' || status === 'pending') return true
+    if (transaction?.decisionRun === null || transaction?.decisionRun === undefined) return true
+
+    const bets = Array.isArray(transaction?.bets) ? transaction.bets : []
+    if (bets.length > 0) {
+      return bets.every((bet: any) => String(bet?.status || '').toUpperCase() === 'PENDING')
+    }
+
+    return false
   }
 
   if (!isOpen) return null
@@ -298,7 +347,7 @@ export default function ClientAccountStatementModal({
         {/* User Info */}
         {userInfo && (
           <div className="p-2 sm:p-3 md:p-4 bg-gray-50 border-b">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-[10px] sm:text-xs md:text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 md:gap-4 text-[10px] sm:text-xs md:text-sm">
               <div className="truncate">
                 <span className="text-gray-600">Name:</span>
                 <span className="ml-1 sm:ml-2 font-bold truncate block">{userInfo.name || username}</span>
@@ -314,6 +363,10 @@ export default function ClientAccountStatementModal({
               <div className="truncate">
                 <span className="text-gray-600">Balance:</span>
                 <span className="ml-1 sm:ml-2 font-bold truncate block">{formatCurrency(userInfo.balance ?? userInfo.availableBalance)}</span>
+              </div>
+              <div className="truncate">
+                <span className="text-gray-600">Available Balance:</span>
+                <span className="ml-1 sm:ml-2 font-bold truncate block">{formatCurrency(userInfo.availableBalance ?? userInfo.balance)}</span>
               </div>
             </div>
           </div>
@@ -407,7 +460,7 @@ export default function ClientAccountStatementModal({
                       </tr>
                     ) : (
                       statementTransactions.map((transaction: any, idx: number) => {
-                        const balance = transaction.runningBalance ?? transaction.balance
+                        const balance = userInfo?.balance ?? userInfo?.availableBalance 
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
                         const typeVal = transaction.type ?? getStatementType(transaction.description || '')
 
@@ -427,6 +480,9 @@ export default function ClientAccountStatementModal({
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
                               {(() => {
                                 const netWinLoss = getNetWinLossValue(transaction)
+                                if (netWinLoss === 0 && isTransactionPending(transaction)) {
+                                  return <span className="font-semibold text-amber-600 whitespace-nowrap">Pending</span>
+                                }
                                 if (netWinLoss > 0) {
                                   return (
                                     <span className="font-bold text-green-600 whitespace-nowrap">
@@ -450,7 +506,7 @@ export default function ClientAccountStatementModal({
                             <td className={`px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-right font-bold whitespace-nowrap ${
                               typeof balance === 'number' && balance < 0 ? 'text-red-600' : 'text-gray-900'
                             }`}>
-                              {balance === null || balance === undefined || balance === '' ? '-' : formatCurrency(balance)}
+                              {userInfo?.availableBalance === null || userInfo?.availableBalance === undefined || userInfo?.availableBalance === '' ? '-' : formatCurrency(userInfo?.availableBalance)}
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-center">
                               <button
@@ -494,6 +550,7 @@ export default function ClientAccountStatementModal({
                         <span className={`px-2 py-0.5 rounded font-bold ${getBetTypeColor(bet.betType)}`}>{bet.betType}</span>
                         <div className="mt-1.5 grid grid-cols-2 gap-1 text-gray-700">
                           <span className="col-span-2">Bet Name: {bet.betName || '-'}</span>
+                          <span className="col-span-2">Time: {formatDate(bet.time)}</span>
                           <span>Odds: {bet.odds}</span>
                           <span>Stake: {formatCurrency(bet.stake)}</span>
                           <span>P/L: <span className={bet.pnl >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{formatCurrency(bet.pnl)}</span></span>
