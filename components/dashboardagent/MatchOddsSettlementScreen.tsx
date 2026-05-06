@@ -30,6 +30,19 @@ export function MatchOddsSettlementScreen() {
     pollingInterval: 30000
   })
 
+  const getMatchDisplayTitle = (match: any) => {
+    const runners = Array.isArray(match?.matchOdds?.runners) ? match.matchOdds.runners : []
+    const runnerNames = runners
+      .map((runner: any) => runner?.name || runner?.runnerName)
+      .filter((name: any) => typeof name === "string" && name.trim().length > 0)
+
+    if (runnerNames.length > 0) {
+      return runnerNames.join(" vs ")
+    }
+
+    return match?.matchTitle || `${match?.homeTeam || "N/A"} vs ${match?.awayTeam || "N/A"}`
+  }
+
   const matches = useMemo(() => {
     if (!pendingData) return []
     const response = pendingData as any
@@ -46,6 +59,7 @@ export function MatchOddsSettlementScreen() {
     return matches.filter((match: any) => {
       const matchId = match.matchId || ""
       const matchTitle = match.matchTitle || ""
+      const displayTitle = getMatchDisplayTitle(match)
       const homeTeam = match.homeTeam || ""
       const awayTeam = match.awayTeam || ""
       const eventId = match.eventId || ""
@@ -54,6 +68,7 @@ export function MatchOddsSettlementScreen() {
       return (
         matchId.toLowerCase().includes(searchLower) ||
         matchTitle.toLowerCase().includes(searchLower) ||
+        displayTitle.toLowerCase().includes(searchLower) ||
         homeTeam.toLowerCase().includes(searchLower) ||
         awayTeam.toLowerCase().includes(searchLower) ||
         eventId.toLowerCase().includes(searchLower)
@@ -425,12 +440,10 @@ export function MatchOddsSettlementScreen() {
         </button>
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-3 md:p-4 mb-3 md:mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
-            <span className="text-xl md:text-2xl font-bold truncate">{selectedMatch.homeTeam || "Team 1"}</span>
-            <span className="text-base md:text-lg">vs</span>
-            <span className="text-xl md:text-2xl font-bold truncate">{selectedMatch.awayTeam || "Team 2"}</span>
+            <span className="text-xl md:text-2xl font-bold truncate">{getMatchDisplayTitle(selectedMatch)}</span>
           </div>
-          {selectedMatch.matchTitle && (
-            <p className="text-xs md:text-sm text-white/80 mb-2 truncate">{selectedMatch.matchTitle}</p>
+          {getMatchDisplayTitle(selectedMatch) && (
+            <p className="text-xs md:text-sm text-white/80 mb-2 truncate">{getMatchDisplayTitle(selectedMatch)}</p>
           )}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs md:text-sm">
             <span className="truncate">Match ID: {selectedMatch.matchId}</span>
@@ -694,7 +707,7 @@ export function MatchOddsSettlementScreen() {
                     <tr key={match.matchId || index} className="hover:bg-gray-50">
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-mono">{match.matchId || "N/A"}</td>
                       <td className="px-3 md:px-6 py-2 md:py-4 text-xs md:text-sm">
-                        {match.matchTitle || `${match.homeTeam || "N/A"} vs ${match.awayTeam || "N/A"}`}
+                        {getMatchDisplayTitle(match)}
                       </td>
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs md:text-sm font-bold">

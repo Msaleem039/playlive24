@@ -632,8 +632,8 @@ export default function CricketTab() {
                       {/* Extract team names from ename string or use teama/teamb */}
                       {(() => {
                         // Try to get teams from teama/teamb objects first
-                        let teamAName = match.teama?.short_name || match.teama?.name
-                        let teamBName = match.teamb?.short_name || match.teamb?.name
+                        let teamAName = match.teama?.short_name || match.teama?.username
+                        let teamBName = match.teamb?.short_name || match.teamb?.username
                         
                         // Fallback: extract from ename string (e.g., "India v South Africa")
                         if (!teamAName || !teamBName) {

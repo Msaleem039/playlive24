@@ -20,6 +20,7 @@ interface ClientData {
   password: string
   role: string
   commissionPercentage: string
+  maxWinAmount: string
 }
 
 export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProps) {
@@ -50,7 +51,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
     username: '',
     password: '',
     role: defaultRole,
-    commissionPercentage: '0'
+    commissionPercentage: '0',
+    maxWinAmount: '0'
   })
 
   // Update role when modal opens or available roles change
@@ -93,6 +95,12 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
       return
     }
 
+    const maxWinAmountNum = parseFloat(formData.maxWinAmount)
+    if (isNaN(maxWinAmountNum) || maxWinAmountNum < 0) {
+      setError("Max win amount must be a valid number greater than or equal to 0")
+      return
+    }
+
     try {
       // Prepare payload according to API structure
       const payload = {
@@ -100,7 +108,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
         username: formData.username.trim(),
         password: formData.password,
         role: formData.role,
-        commissionPercentage: commissionPercentageNum
+        commissionPercentage: commissionPercentageNum,
+        maxWinAmount: maxWinAmountNum
       }
 
       console.log("Register API call - payload:", payload)
@@ -128,7 +137,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
         username: '',
         password: '',
         role: defaultRole,
-        commissionPercentage: '0'
+        commissionPercentage: '0',
+        maxWinAmount: '0'
       })
       setError(null)
       onClose()
@@ -166,7 +176,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
       username: '',
       password: '',
       role: defaultRole,
-      commissionPercentage: '0'
+      commissionPercentage: '0',
+      maxWinAmount: '0'
     })
     setError(null)
     onClose()
@@ -291,6 +302,23 @@ export function AddClientModal({ isOpen, onClose, onSubmit }: AddClientModalProp
                 step="0.01"
                 min="0"
                 max="100"
+                required
+              />
+            </div>
+
+            {/* Max Win Amount Field */}
+            <div className="border border-dashed border-gray-200 rounded-lg bg-gray-50 px-2 py-1.5 flex flex-col md:flex-row md:items-center gap-2">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide md:w-48">
+                Max Win Amount
+              </label>
+              <Input
+                type="number"
+                value={formData.maxWinAmount}
+                onChange={(e) => handleInputChange('maxWinAmount', e.target.value)}
+                placeholder="0"
+                className="flex-1 border-gray-300 focus:border-[#00A66E] focus:ring-[#00A66E]"
+                step="0.01"
+                min="0"
                 required
               />
             </div>
