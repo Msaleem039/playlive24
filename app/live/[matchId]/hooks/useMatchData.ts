@@ -9,6 +9,7 @@ import {
 } from '@/app/services/CricketApi'
 import type { MarketResponse } from '../types'
 import { mapFancyresToLiveScorecard } from '../utils/mapFancyresToLiveScorecard'
+import { useLiveMarketSocket } from './useLiveMarketSocket'
 
 function normalizeLegacyScorecard(score: any) {
   if (!score) return null
@@ -71,6 +72,9 @@ function normalizeLegacyScorecard(score: any) {
 export type LiveDetailSport = 'cricket' | 'tennis' | 'soccer'
 
 export function useMatchData(eventId: string, marketId?: string | null, sport: LiveDetailSport = 'cricket') {
+  const enableLiveSocket =
+    process.env.NEXT_PUBLIC_ENABLE_LIVE_SOCKET === 'true' ||
+    process.env.ENABLE_LIVE_SOCKET === 'true'
   const marketIdentifier = (marketId || eventId || '').toString()
   const useFancyresScore = sport === 'tennis' || sport === 'soccer'
 
@@ -91,13 +95,35 @@ export function useMatchData(eventId: string, marketId?: string | null, sport: L
     return []
   }, [marketsData])
 
+  const liveMarketIds = useMemo(() => {
+    if (!Array.isArray(marketsList) || marketsList.length === 0) return []
+    return marketsList
+      .map((market: any) => String(market?.marketId || '').trim())
+      .filter((id: string) => id.length > 0)
+  }, [marketsList])
+
+  const {
+    oddsData: socketOddsData,
+    bookmakerFancyData: socketBookmakerFancyData,
+    lastUpdated: socketLastUpdated,
+    connectionStatus,
+    shouldPollFallback,
+  } = useLiveMarketSocket({
+    enabled: enableLiveSocket && !!eventId,
+    eventId: String(eventId || ''),
+    marketIds: liveMarketIds,
+  })
+
+  const marketPollingInterval = enableLiveSocket
+    ? (shouldPollFallback ? 3000 : 0)
+    : 5000
+
   // Fetch odds by eventId so Match Odds updates from match-level response
   const { data: oddsData, isLoading: isLoadingOdds, error: oddsError, refetch: refetchOdds } = useGetCricketMatchOddsQuery(
     { eventId },
     { 
       skip: !eventId,
-      // Enable polling to get updated odds from backend cronjob
-      pollingInterval: 5000, // Poll every 5 seconds
+      pollingInterval: marketPollingInterval,
     }
   )
 
@@ -106,10 +132,13 @@ export function useMatchData(eventId: string, marketId?: string | null, sport: L
     { eventId },
     { 
       skip: !eventId,
-      // Enable polling to get updated fancy/bookmaker markets
-      pollingInterval: 5000, // Poll every 5 seconds
+      pollingInterval: marketPollingInterval,
     }
   )
+
+  const effectiveOddsData = enableLiveSocket && socketOddsData ? socketOddsData : oddsData
+  const effectiveBookmakerFancyData =
+    enableLiveSocket && socketBookmakerFancyData ? socketBookmakerFancyData : bookmakerFancyData
 
   // Cricket scorecard (legacy / cricket only)
   const { data: scorecardData, isLoading: isLoadingCricketScorecard } = useGetCricketScorecardQuery(
@@ -222,8 +251,8 @@ export function useMatchData(eventId: string, marketId?: string | null, sport: L
 
   return {
     marketsData: marketsList,
-    oddsData,
-    bookmakerFancyData,
+    oddsData: effectiveOddsData,
+    bookmakerFancyData: effectiveBookmakerFancyData,
     scorecardData,
     scorecard,
     matchData,
@@ -232,7 +261,10 @@ export function useMatchData(eventId: string, marketId?: string | null, sport: L
     isLoading,
     error,
     isLoadingScorecard,
-    refetch
+    refetch,
+    connectionStatus,
+    lastUpdated: socketLastUpdated,
+    isLiveSocketEnabled: enableLiveSocket
   }
 }
 

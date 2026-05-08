@@ -112,7 +112,10 @@ export default function LiveMatchDetailPage() {
     isLoading, 
     error, 
     isLoadingScorecard, 
-    refetch 
+    refetch,
+    connectionStatus,
+    lastUpdated,
+    isLiveSocketEnabled,
   } = useMatchData(eventId, marketIdParam, liveDetailSport)
 
   const { isMobile, isTablet, getMainLayoutClass, getLeftPanelClass, getRightPanelClass } = useResponsiveLayout()
@@ -309,6 +312,30 @@ export default function LiveMatchDetailPage() {
         <div className={`flex flex-col bg-white ${getLeftPanelClass(displayMatchData.hasLiveTV, streamUrl)} px-2 sm:px-0`} style={{ gap: 0 }}>
           {/* Betting Markets Section - Scorecard integrated as first item */}
           <div className="relative" style={{ margin: 0, padding: 0, gap: 0 }}>
+            {isLiveSocketEnabled && (
+              <div className="px-3 sm:px-4 py-2 border-b border-gray-100 flex items-center justify-between text-xs">
+                <span className="font-semibold text-gray-700">Live Stream</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full font-bold ${
+                    connectionStatus === 'live'
+                      ? 'bg-green-100 text-green-700'
+                      : connectionStatus === 'reconnecting'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {connectionStatus === 'live'
+                    ? 'Live'
+                    : connectionStatus === 'reconnecting'
+                    ? 'Reconnecting'
+                    : 'Offline'}
+                </span>
+                <span className="text-gray-500">
+                  {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'No update yet'}
+                </span>
+              </div>
+            )}
+
             {/* Live Scorecard Component - First item in markets section */}
             {currentEventId && (
               <LiveScorecard
