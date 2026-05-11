@@ -160,9 +160,9 @@ export default function LiveScorecard({ data, isLoading, isMobile = false, match
   }
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700">
+    <div className="bg-black border-b border-gray-700">
       {/* Match Header - Top Section */}
-      <div className="bg-gray-800 px-2 sm:px-4 py-2 border-b border-gray-700">
+      <div className="bg-black px-2 sm:px-4 py-2 border-b border-gray-700">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="text-white text-xs sm:text-sm font-bold truncate">{data.matchName}</h3>

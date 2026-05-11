@@ -281,11 +281,13 @@ export function AllUsersModal({ isOpen, onClose }: AllUsersModalProps) {
                             }`}>
                               <div className="py-1">
                                 <button
+                                  type="button"
                                   onClick={() => handleViewSubordinates(user?.id || '', user?.name || user?.email || 'User')}
-                                  className="w-full text-left px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                                  className="mx-auto my-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00A66E] text-white shadow-md ring-2 ring-[#00A66E]/20 transition-all hover:bg-[#00A66E]/90 active:scale-95 touch-manipulation sm:h-9 sm:w-9"
+                                  title="View subordinates"
+                                  aria-label="View subordinates"
                                 >
-                                  <ChevronRight className="w-4 h-4" />
-                                  <span>View</span>
+                                  <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={2.5} />
                                 </button>
                                 <button
                                   onClick={() => handleChangePassword(user?.name || user?.email || 'User')}

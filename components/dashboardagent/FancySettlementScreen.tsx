@@ -772,7 +772,7 @@ export function FancySettlementScreen() {
 
                 <Button
                   onClick={() => setSelectedMatch(match)}
-                  className="w-full bg-[#00A66E] hover:bg-[#00C97A] text-white font-bold text-sm px-4 py-2.5 rounded-lg"
+                  className="w-full text-white hover:text-[#00C97A] font-bold text-sm px-4 py-2.5 rounded-lg bg-[#8D03EA]"
                 >
                   View Details
                 </Button>

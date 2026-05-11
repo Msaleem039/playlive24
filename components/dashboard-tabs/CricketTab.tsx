@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
-import { useGetTabBannersQuery, useToggleMatchVisibilityMutation, useGetSuperAdminUsersQuery, usePlaceBetMutation } from "@/app/services/Api"
+import { useGetTabBannersQuery, useToggleMatchVisibilityMutation, useGetSuperAdminUsersQuery, usePlaceBetMutation, useGetMatchOddsAcceptDelayQuery, useSetMatchOddsAcceptDelayMutation } from "@/app/services/Api"
 import { useGetCricketBookmakerFancyQuery } from "@/app/services/CricketApi"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
@@ -40,6 +40,31 @@ export default function CricketTab() {
   const normalizedRole = String(userRole || '').toUpperCase().replace(/[-\s]+/g, '_')
   const isSuperAdmin = normalizedRole === 'SUPER_ADMIN'
   const [toggleMatchVisibility, { isLoading: isBlockingMatch }] = useToggleMatchVisibilityMutation()
+  const { data: acceptDelayRaw } = useGetMatchOddsAcceptDelayQuery(undefined, { skip: !isSuperAdmin })
+  const [setMatchOddsAcceptDelay, { isLoading: isSavingAcceptDelay }] = useSetMatchOddsAcceptDelayMutation()
+  const [delayDraftByEventId, setDelayDraftByEventId] = useState<Record<string, string>>({})
+
+  const acceptDelayByEventId = useMemo(() => {
+    const map: Record<string, number> = {}
+    const raw = acceptDelayRaw as any
+    if (raw == null) return map
+    const payload = raw?.data ?? raw?.results ?? raw?.overrides ?? raw
+    if (Array.isArray(payload)) {
+      payload.forEach((row: any) => {
+        const id = row?.eventId ?? row?.event_id ?? row?.id
+        const sec = row?.delaySec ?? row?.delay_sec ?? row?.delay ?? row?.seconds
+        if (id != null && sec != null && Number.isFinite(Number(sec))) {
+          map[String(id)] = Number(sec)
+        }
+      })
+    } else if (payload && typeof payload === "object") {
+      for (const [k, v] of Object.entries(payload)) {
+        if (Number.isFinite(Number(v))) map[String(k)] = Number(v)
+      }
+    }
+    return map
+  }, [acceptDelayRaw])
+
   const { data: usersData, isLoading: isUsersLoading } = useGetSuperAdminUsersQuery(undefined, { skip: !isSuperAdmin })
   const { data: tabBannersData } = useGetTabBannersQuery(undefined, {
     refetchOnMountOrArgChange: true,
@@ -308,6 +333,41 @@ export default function CricketTab() {
     refetch()
   }
 
+  const getAcceptDelayDraft = (eventId: string, currentOverride: number | undefined) => {
+    if (delayDraftByEventId[eventId] !== undefined) return delayDraftByEventId[eventId]
+    if (currentOverride !== undefined) return String(currentOverride)
+    return ""
+  }
+
+  const handleApplyAcceptDelay = async (eventId: string) => {
+    const raw = (delayDraftByEventId[eventId] ?? "").trim()
+    const n = parseInt(raw, 10)
+    if (!Number.isFinite(n) || n < 0 || n > 3600) {
+      toast.error("Enter delay in seconds (0–3600)")
+      return
+    }
+    try {
+      await setMatchOddsAcceptDelay({ eventId, delaySec: n }).unwrap()
+      toast.success("Accept delay override saved")
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.data?.error || "Failed to update accept delay")
+    }
+  }
+
+  const handleClearAcceptDelay = async (eventId: string) => {
+    try {
+      await setMatchOddsAcceptDelay({ eventId, delaySec: null }).unwrap()
+      setDelayDraftByEventId((prev) => {
+        const next = { ...prev }
+        delete next[eventId]
+        return next
+      })
+      toast.success("Accept delay reset to default")
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.data?.error || "Failed to clear accept delay")
+    }
+  }
+
   const handleToggleMatchBlocked = async (eventId: string, blockedNow: boolean) => {
     try {
       const nextBlocked = !blockedNow
@@ -469,6 +529,13 @@ export default function CricketTab() {
     />
   </div>
 )}
+
+      {isSuperAdmin && Object.keys(acceptDelayByEventId).length > 0 && (
+        <div className="px-2 sm:px-3 py-1.5 bg-amber-50 border-b border-amber-100 text-[10px] sm:text-xs text-amber-900">
+          <span className="font-bold">{Object.keys(acceptDelayByEventId).length}</span> active accept-delay
+          override{Object.keys(acceptDelayByEventId).length !== 1 ? 's' : ''} (set per event below).
+        </div>
+      )}
 
       {/* Sub-tabs for Live and Upcoming */}
       <div className="bg-gray-100 border-b border-gray-200">
@@ -665,42 +732,100 @@ export default function CricketTab() {
                       })()}
                     </div>
                     {isSuperAdmin && blockEventId && (
-                      <div className="pt-1 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            handleToggleMatchBlocked(String(blockEventId), effectiveBlocked)
-                          }}
-                          disabled={isBlockingMatch}
-                          className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
-                            effectiveBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
-                          }`}
-                        >
-                          {effectiveBlocked ? 'BLOCKED' : 'ALLOWED'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            const selectedMatchId = String(match.gmid ?? match.match_id ?? match.id ?? '')
-                            const selectedEventId = String(blockEventId ?? '')
-                            const teamNames = (match.ename || match.title || match.short_title || 'Match').toString()
-                            if (!selectedMatchId || !selectedEventId) return
-                            setCustomBetModal({
-                              isOpen: true,
-                              matchId: selectedMatchId,
-                              eventId: selectedEventId,
-                              matchName: teamNames,
-                            })
-                          }}
-                          className="px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          PLACE BET
-                        </button>
-                      </div>
+                      <>
+                        <div className="pt-1 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleToggleMatchBlocked(String(blockEventId), effectiveBlocked)
+                            }}
+                            disabled={isBlockingMatch}
+                            className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
+                              effectiveBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                            }`}
+                          >
+                            {effectiveBlocked ? 'BLOCKED' : 'ALLOWED'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              const selectedMatchId = String(match.gmid ?? match.match_id ?? match.id ?? '')
+                              const selectedEventId = String(blockEventId ?? '')
+                              const teamNames = (match.ename || match.title || match.short_title || 'Match').toString()
+                              if (!selectedMatchId || !selectedEventId) return
+                              setCustomBetModal({
+                                isOpen: true,
+                                matchId: selectedMatchId,
+                                eventId: selectedEventId,
+                                matchName: teamNames,
+                              })
+                            }}
+                            className="px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white bg-blue-600 hover:bg-blue-700"
+                          >
+                            PLACE BET
+                          </button>
+                        </div>
+                        <div className="pt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-gray-100 mt-1">
+                          <span className="text-[10px] text-gray-600 flex items-center gap-1 shrink-0">
+                            <Clock className="w-3 h-3" />
+                            Accept delay
+                            {acceptDelayByEventId[String(blockEventId)] != null ? (
+                              <span className="font-bold text-amber-800">
+                                {acceptDelayByEventId[String(blockEventId)]}s
+                              </span>
+                            ) : (
+                              <span className="text-gray-500">default</span>
+                            )}
+                          </span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={3600}
+                            placeholder="sec"
+                            title="Override accept delay (seconds)"
+                            className="w-14 sm:w-16 px-1 py-0.5 border border-gray-300 rounded text-[10px] text-gray-900"
+                            value={getAcceptDelayDraft(String(blockEventId), acceptDelayByEventId[String(blockEventId)])}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                            }}
+                            onChange={(e) =>
+                              setDelayDraftByEventId((p) => ({
+                                ...p,
+                                [String(blockEventId)]: e.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleApplyAcceptDelay(String(blockEventId))
+                            }}
+                            disabled={isSavingAcceptDelay}
+                            className="px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 disabled:opacity-60"
+                          >
+                            Set
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleClearAcceptDelay(String(blockEventId))
+                            }}
+                            disabled={isSavingAcceptDelay || acceptDelayByEventId[String(blockEventId)] == null}
+                            className="px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                          >
+                            Default
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
 

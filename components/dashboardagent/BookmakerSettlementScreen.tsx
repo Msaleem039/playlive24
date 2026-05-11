@@ -636,7 +636,7 @@ export function BookmakerSettlementScreen() {
                           Rs{(match.bookmaker?.totalAmount || 0).toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center">
+                      <td className="px-4 xl:px-6 py-2 md:py-4 whitespace-nowrap text-center bg-[##8600E0]">
                         <Button
                           onClick={() => setSelectedMatch(match)}
                           className="text-[#00A66E] hover:text-[#00C97A] font-bold text-xs xl:text-sm px-2 xl:px-3 py-1 xl:py-1.5"

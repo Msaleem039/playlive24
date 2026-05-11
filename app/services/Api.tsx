@@ -445,6 +445,29 @@ export const api = SplitApiSettings.injectEndpoints({
       invalidatesTags: ['AdminMatches'] as any,
     }),
 
+    getMatchOddsAcceptDelay: builder.query<unknown, void>({
+      query: () => ({
+        url: API_END_POINTS.getMatchOddsAcceptDelay,
+        method: "GET",
+      }),
+      providesTags: ['AcceptDelayOverrides'] as any,
+    }),
+
+    setMatchOddsAcceptDelay: builder.mutation<
+      unknown,
+      { eventId: string; delaySec: number | null }
+    >({
+      query: ({ eventId, delaySec }) => ({
+        url: API_END_POINTS.setMatchOddsAcceptDelay.replace(
+          ":eventId",
+          encodeURIComponent(eventId)
+        ),
+        method: "PATCH",
+        body: { delaySec },
+      }),
+      invalidatesTags: ['AcceptDelayOverrides'] as any,
+    }),
+
     /////////////////////////////<===SITE VIDEO===>//////////////////////////////
     getSiteVideo: builder.query({
       query: () => ({
@@ -640,6 +663,8 @@ export const {
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     useGetAdminMatchesQuery,
     useToggleMatchVisibilityMutation,
+    useGetMatchOddsAcceptDelayQuery,
+    useSetMatchOddsAcceptDelayMutation,
 
     /////////////////////////////<===SITE VIDEO===>//////////////////////////////
     useGetSiteVideoQuery,

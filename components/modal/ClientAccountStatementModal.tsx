@@ -191,12 +191,65 @@ export default function ClientAccountStatementModal({
     return d.includes('match') ? 'MATCH' : 'SESSION'
   }
 
-  const getTypeColor = (type: string) => {
-    const typeUpper = type?.toUpperCase() || ''
-    if (typeUpper === 'MATCH') return 'bg-green-600 text-white'
-    if (typeUpper === 'SESSION') return 'bg-amber-800 text-white'
-    if (typeUpper === 'CASHIN') return 'bg-blue-600 text-white'
-    if (typeUpper === 'CASHOUT') return 'bg-red-700 text-white'
+  /** cashIn, Cash In, cash_in → CASHIN */
+  const normalizeTypeKey = (raw: string | undefined | null) =>
+    String(raw ?? '')
+      .replace(/[\s_-]+/g, '')
+      .toUpperCase()
+
+  /** TOPUP / TOPDOWN / cash types / description — not waiting on decisionRun */
+  const isCashTransferTransaction = (transaction: any) => {
+    const tt = String(transaction?.transferType ?? '').toUpperCase()
+    if (tt === 'TOPUP' || tt === 'TOPDOWN') return true
+    const key = normalizeTypeKey(transaction?.type)
+    if (key === 'CASHIN' || key === 'CASHOUT') return true
+    const d = String(transaction?.description ?? '').toLowerCase()
+    if (d.includes('cash in') || d.includes('cash out')) return true
+    return false
+  }
+
+  const inferCashTypeLabel = (transaction: any) => {
+    if (transaction?.type) return String(transaction.type)
+    const tt = String(transaction?.transferType ?? '').toUpperCase()
+    if (tt === 'TOPUP') return 'cashIn'
+    if (tt === 'TOPDOWN') return 'cashOut'
+    const dl = String(transaction?.description ?? '').toLowerCase()
+    if (dl.includes('cash in')) return 'cashIn'
+    if (dl.includes('cash out')) return 'cashOut'
+    return '-'
+  }
+
+  const resolveStatementTypeVal = (transaction: any) => {
+    if (transaction?.type) return String(transaction.type)
+    const tt = String(transaction?.transferType ?? '').toUpperCase()
+    if (tt === 'TOPUP') return 'cashIn'
+    if (tt === 'TOPDOWN') return 'cashOut'
+    const dl = String(transaction?.description ?? '').toLowerCase()
+    if (dl.includes('cash in')) return 'cashIn'
+    if (dl.includes('cash out')) return 'cashOut'
+    return getStatementType(transaction?.description || '')
+  }
+
+  const getTypeColor = (
+    type: string | undefined,
+    transferType?: string,
+    description?: string
+  ) => {
+    const tt = String(transferType ?? '').toUpperCase()
+    if (tt === 'TOPUP') return 'bg-[#170C79] text-white'
+    if (tt === 'TOPDOWN') return 'bg-[#FF4B4B] text-white'
+
+    let key = normalizeTypeKey(type)
+    if (!key) {
+      const dl = String(description ?? '').toLowerCase()
+      if (dl.includes('cash in')) key = 'CASHIN'
+      else if (dl.includes('cash out')) key = 'CASHOUT'
+    }
+
+    if (key === 'MATCH') return 'bg-green-600 text-white'
+    if (key === 'SESSION') return 'bg-amber-800 text-white'
+    if (key === 'CASHIN') return 'bg-[#170C79] text-white'
+    if (key === 'CASHOUT') return 'bg-[#FF4B4B] text-white'
     return 'bg-gray-600 text-white'
   }
 
@@ -205,6 +258,8 @@ export default function ClientAccountStatementModal({
     if (statusUpper === 'WON') return 'bg-green-100 text-green-700'
     if (statusUpper === 'LOST') return 'bg-red-100 text-red-700'
     if (statusUpper === 'PENDING') return 'bg-yellow-100 text-yellow-700'
+    if (statusUpper === 'TOPUP') return 'bg-[#170C79] text-white'
+    if (statusUpper === 'TOPDOWN') return 'bg-[#FF4B4B] text-white'
     return 'bg-gray-100 text-gray-700'
   }
 
@@ -216,6 +271,35 @@ export default function ClientAccountStatementModal({
   }
 
   const getNetWinLossValue = (transaction: any) => {
+    // Wallet cash rows: do not use generic `amount` as a positive bet win (often withdrawal size or balance).
+    if (isCashTransferTransaction(transaction)) {
+      const debit = Number(transaction?.debit)
+      const credit = Number(transaction?.credit)
+      if (Number.isFinite(debit) && debit > 0) return -Math.abs(debit)
+      if (Number.isFinite(credit) && credit > 0) return Math.abs(credit)
+
+      const netPnl = Number(transaction?.netPnl)
+      if (Number.isFinite(netPnl) && netPnl !== 0) return netPnl
+
+      const netWl = Number(transaction?.netWinLoss)
+      if (Number.isFinite(netWl) && netWl !== 0) return netWl
+
+      const tt = String(transaction?.transferType ?? '').toUpperCase()
+      const key = normalizeTypeKey(transaction?.type)
+      const desc = String(transaction?.description ?? '').toLowerCase()
+      const isOut =
+        tt === 'TOPDOWN' || key === 'CASHOUT' || desc.includes('cash out')
+      const isIn = tt === 'TOPUP' || key === 'CASHIN' || desc.includes('cash in')
+
+      const rawAmt = Number(transaction?.amount)
+      if (Number.isFinite(rawAmt) && rawAmt !== 0) {
+        if (isOut) return -Math.abs(rawAmt)
+        if (isIn) return Math.abs(rawAmt)
+      }
+
+      return 0
+    }
+
     const winBets = Array.isArray(transaction?.winBets) ? transaction.winBets : []
     const winBetsAmount = winBets.reduce((sum: number, bet: any) => {
       const amount = Number(bet?.amount)
@@ -255,6 +339,12 @@ export default function ClientAccountStatementModal({
   }
 
   const isTransactionPending = (transaction: any) => {
+    if (isCashTransferTransaction(transaction)) {
+      const result = String(transaction?.result || '').toLowerCase()
+      const status = String(transaction?.status || '').toLowerCase()
+      return result === 'pending' || status === 'pending'
+    }
+
     const result = String(transaction?.result || '').toLowerCase()
     const status = String(transaction?.status || '').toLowerCase()
     if (result === 'pending' || status === 'pending') return true
@@ -415,17 +505,27 @@ export default function ClientAccountStatementModal({
                             {formatDate(transaction.date)}
                           </td>
                           <td className="px-2 sm:px-3 md:px-4 py-2">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(transaction.type)}`}>
-                              {transaction.type || '-'}
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(
+                                transaction.type,
+                                transaction.transferType,
+                                transaction.description
+                              )}`}
+                            >
+                              {inferCashTypeLabel(transaction)}
                             </span>
                           </td>
                           <td className="px-2 sm:px-3 md:px-4 py-2 text-gray-700">
                             {transaction.description || '-'}
                           </td>
-                          <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-green-600 whitespace-nowrap">
+                          <td className={`px-2 sm:px-3 md:px-4 py-2 text-right font-bold whitespace-nowrap ${
+                            Number(transaction.credit) > 0 ? 'text-[#170C79]' : 'text-gray-500'
+                          }`}>
                             {Number(transaction.credit) > 0 ? formatCurrency(transaction.credit) : '-'}
                           </td>
-                          <td className="px-2 sm:px-3 md:px-4 py-2 text-right font-bold text-red-600 whitespace-nowrap">
+                          <td className={`px-2 sm:px-3 md:px-4 py-2 text-right font-bold whitespace-nowrap ${
+                            Number(transaction.debit) > 0 ? 'text-[#FF4B4B]' : 'text-gray-500'
+                          }`}>
                             {Number(transaction.debit) > 0 ? formatCurrency(transaction.debit) : '-'}
                           </td>
                         </tr>
@@ -462,7 +562,9 @@ export default function ClientAccountStatementModal({
                       statementTransactions.map((transaction: any, idx: number) => {
                         const balance = transaction.runningBalance ?? transaction.balance
                         const dateVal = transaction.latestSettledAt ?? transaction.date ?? transaction.createdAt
-                        const typeVal = transaction.type ?? getStatementType(transaction.description || '')
+                        const typeVal = resolveStatementTypeVal(transaction)
+                        const transferTypeUpper = String(transaction.transferType ?? '').toUpperCase()
+                        const typeKey = normalizeTypeKey(typeVal)
 
                         return (
                           <tr key={transaction.marketId + '-' + transaction.selectionId + '-' + idx || idx} className="hover:bg-gray-50">
@@ -470,7 +572,13 @@ export default function ClientAccountStatementModal({
                               {formatDate(dateVal)}
                             </td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
-                              <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(typeVal)}`}>
+                              <span
+                                className={`px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold ${getTypeColor(
+                                  typeVal,
+                                  transaction.transferType,
+                                  transaction.description
+                                )}`}
+                              >
                                 {typeVal || '-'}
                               </span>
                             </td>
@@ -480,10 +588,56 @@ export default function ClientAccountStatementModal({
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3">
                               {(() => {
                                 const netWinLoss = getNetWinLossValue(transaction)
+                                const descLower = String(transaction.description || '')
+                                const isCashIn =
+                                  transferTypeUpper === 'TOPUP' ||
+                                  typeKey === 'CASHIN' ||
+                                  /cash\s*in/i.test(descLower)
+                                const isCashOut =
+                                  transferTypeUpper === 'TOPDOWN' ||
+                                  typeKey === 'CASHOUT' ||
+                                  /cash\s*out/i.test(descLower)
+
+                                if (netWinLoss === 0 && isCashTransferTransaction(transaction)) {
+                                  const debit = Number(transaction.debit)
+                                  const credit = Number(transaction.credit)
+                                  if (isCashOut && debit > 0) {
+                                    return (
+                                      <span className="font-bold text-[#FF4B4B] whitespace-nowrap">
+                                        {formatCurrency(debit)}
+                                      </span>
+                                    )
+                                  }
+                                  if (isCashIn && credit > 0) {
+                                    return (
+                                      <span className="font-bold text-[#170C79] whitespace-nowrap">
+                                        {formatCurrency(credit)}
+                                      </span>
+                                    )
+                                  }
+                                }
+
                                 if (netWinLoss === 0 && isTransactionPending(transaction)) {
                                   return <span className="font-semibold text-amber-600 whitespace-nowrap">Pending</span>
                                 }
+                                // Cash out must never show as "Win:" (API may send positive amount / balance in amount)
+                                if (isCashOut && netWinLoss > 0) {
+                                  const debit = Number(transaction.debit)
+                                  const displayAmt = Number.isFinite(debit) && debit > 0 ? debit : Math.abs(netWinLoss)
+                                  return (
+                                    <span className="font-bold text-[#FF4B4B] whitespace-nowrap">
+                                      {formatCurrency(displayAmt)}
+                                    </span>
+                                  )
+                                }
                                 if (netWinLoss > 0) {
+                                  if (isCashIn) {
+                                    return (
+                                      <span className="font-bold text-[#170C79] whitespace-nowrap">
+                                        {formatCurrency(Math.abs(netWinLoss))}
+                                      </span>
+                                    )
+                                  }
                                   return (
                                     <span className="font-bold text-green-600 whitespace-nowrap">
                                       Win: {formatCurrency(Math.abs(netWinLoss))}
@@ -491,6 +645,13 @@ export default function ClientAccountStatementModal({
                                   )
                                 }
                                 if (netWinLoss < 0) {
+                                  if (isCashOut) {
+                                    return (
+                                      <span className="font-bold text-[#FF4B4B] whitespace-nowrap">
+                                        {formatCurrency(Math.abs(netWinLoss))}
+                                      </span>
+                                    )
+                                  }
                                   return (
                                     <span className="font-bold text-red-600 whitespace-nowrap">
                                       Loss: {formatCurrency(Math.abs(netWinLoss))}

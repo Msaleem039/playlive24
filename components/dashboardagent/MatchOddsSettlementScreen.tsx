@@ -723,7 +723,7 @@ export function MatchOddsSettlementScreen() {
                       <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap text-center">
                         <Button
                           onClick={() => setSelectedMatch(match)}
-                          className="text-[#00A66E] hover:text-[#00C97A] font-bold text-xs md:text-sm px-2 md:px-3 py-1 md:py-1.5"
+                          className="text-white hover:text-[#00C97A] font-bold text-xs md:text-sm px-2 md:px-3 py-1 md:py-1.5 bg-[#144DEB]"
                         >
                           View Details
                         </Button>
