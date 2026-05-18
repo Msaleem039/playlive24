@@ -436,13 +436,50 @@ export const api = SplitApiSettings.injectEndpoints({
       providesTags: ['AdminMatches'] as any,
     }),
 
+    getMatchOddsStopList: builder.query<unknown, void>({
+      query: () => ({
+        url: API_END_POINTS.getMatchOddsStopList,
+        method: "GET",
+      }),
+      providesTags: ['MatchOddsStop'] as any,
+    }),
+
+    getMatchOddsStopStatus: builder.query<unknown, string>({
+      query: (eventId) => ({
+        url: API_END_POINTS.getMatchOddsStopStatus.replace(
+          ":eventId",
+          encodeURIComponent(eventId)
+        ),
+        method: "GET",
+      }),
+      providesTags: (_result, _error, eventId) =>
+        [{ type: 'MatchOddsStop' as const, id: eventId }],
+    }),
+
     toggleMatchVisibility: builder.mutation({
       query: ({ eventId, blocked }: { eventId: string; blocked: boolean }) => ({
         url: API_END_POINTS.toggleMatchVisibility.replace(":eventId", eventId),
         method: "PATCH",
         body: { blocked },
       }),
-      invalidatesTags: ['AdminMatches'] as any,
+      invalidatesTags: ['AdminMatches', 'MatchOddsStop'] as any,
+    }),
+
+    getFancyStopList: builder.query<unknown, void>({
+      query: () => ({
+        url: API_END_POINTS.getFancyStopList,
+        method: "GET",
+      }),
+      providesTags: ['FancyStop'] as any,
+    }),
+
+    toggleFancyStop: builder.mutation({
+      query: ({ eventId, blocked }: { eventId: string; blocked: boolean }) => ({
+        url: API_END_POINTS.toggleFancyStop.replace(":eventId", encodeURIComponent(eventId)),
+        method: "PATCH",
+        body: { blocked },
+      }),
+      invalidatesTags: ['FancyStop'] as any,
     }),
 
     getMatchOddsAcceptDelay: builder.query<unknown, void>({
@@ -662,7 +699,11 @@ export const {
     useDeleteBetMutation,
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     useGetAdminMatchesQuery,
+    useGetMatchOddsStopListQuery,
+    useGetMatchOddsStopStatusQuery,
     useToggleMatchVisibilityMutation,
+    useGetFancyStopListQuery,
+    useToggleFancyStopMutation,
     useGetMatchOddsAcceptDelayQuery,
     useSetMatchOddsAcceptDelayMutation,
 

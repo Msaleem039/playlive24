@@ -1,7 +1,7 @@
-export const BASE_URL = 'https://api.playlive24.com'
-//export const BASE_URL = 'http://localhost:3000'
+// export const BASE_URL = 'https://api.playlive24.com'
+// export const BASE_URL = 'http://localhost:3000'
 //export const BASE_URL = 'https://72.61.140.55'
-
+export const BASE_URL = 'https://aws.playlive24.com'
 // export const BASE_URL = 'https://b0fd-139-135-36-92.ngrok-free.app'
 export const BASE_URL_IMAGE = process.env.NEXT_PUBLIC_FILES_URL
 export const API_END_POINTS = {
@@ -95,7 +95,15 @@ export const API_END_POINTS = {
 
     /////////////////////////////<===ADMIN MATCHES===>//////////////////////////////
     getAdminMatches: `${BASE_URL}/admin/matches`,
+    /** List blocked match-odds events (same blocklist shape as fancy when available) */
+    getMatchOddsStopList: `${BASE_URL}/admin/matchodds/stop`,
+    /** Single event: isMatchOddsBlocked, isMatchOddsAllowed, etc. */
+    getMatchOddsStopStatus: `${BASE_URL}/admin/matchodds/stop/:eventId`,
     toggleMatchVisibility: `${BASE_URL}/admin/matchodds/stop/:eventId`,
+    /** List all blocked fancy events */
+    getFancyStopList: `${BASE_URL}/admin/fancy/stop`,
+    /** PATCH body: { blocked: true|false } or { status: "STOPPED"|"ALLOWED" } */
+    toggleFancyStop: `${BASE_URL}/admin/fancy/stop/:eventId`,
     /** Active accept-delay overrides per event */
     getMatchOddsAcceptDelay: `${BASE_URL}/admin/matchodds/accept-delay`,
     /** PATCH body: { delaySec: number } set override, { delaySec: null } remove */

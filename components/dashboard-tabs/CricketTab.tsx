@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { selectCurrentUser } from "@/app/store/slices/authSlice"
-import { useGetTabBannersQuery, useToggleMatchVisibilityMutation, useGetSuperAdminUsersQuery, usePlaceBetMutation, useGetMatchOddsAcceptDelayQuery, useSetMatchOddsAcceptDelayMutation } from "@/app/services/Api"
+import { useGetTabBannersQuery, useToggleMatchVisibilityMutation, useGetMatchOddsStopListQuery, useGetFancyStopListQuery, useToggleFancyStopMutation, useGetSuperAdminUsersQuery, usePlaceBetMutation, useGetMatchOddsAcceptDelayQuery, useSetMatchOddsAcceptDelayMutation } from "@/app/services/Api"
+import { parseBlocklistEventIds } from "@/lib/utils/blocklistResponse"
 import { useGetCricketBookmakerFancyQuery } from "@/app/services/CricketApi"
 import { useCricketMatches, isMatchLive } from "@/app/hooks/useCricketMatches"
 import { useCricketLiveUpdates } from "@/app/hooks/useWebSocket"
@@ -20,6 +21,7 @@ export default function CricketTab() {
   const [perPage] = useState(10) // Show 10 matches per page
   const [blinkingOdds, setBlinkingOdds] = useState<Set<string>>(new Set())
   const [matchBlockedOverrides, setMatchBlockedOverrides] = useState<Record<string, boolean>>({})
+  const [fancyBlockedOverrides, setFancyBlockedOverrides] = useState<Record<string, boolean>>({})
   const [customBetModal, setCustomBetModal] = useState<{
     isOpen: boolean
     matchId: string
@@ -39,10 +41,24 @@ export default function CricketTab() {
   const isAgent = userRole === 'AGENT'
   const normalizedRole = String(userRole || '').toUpperCase().replace(/[-\s]+/g, '_')
   const isSuperAdmin = normalizedRole === 'SUPER_ADMIN'
+  const canManageMatchControls = isSuperAdmin || isAgent
   const [toggleMatchVisibility, { isLoading: isBlockingMatch }] = useToggleMatchVisibilityMutation()
+  const [toggleFancyStop, { isLoading: isBlockingFancy }] = useToggleFancyStopMutation()
+  const { data: fancyStopRaw } = useGetFancyStopListQuery(undefined, { skip: !canManageMatchControls })
+  const { data: matchOddsStopRaw } = useGetMatchOddsStopListQuery(undefined, { skip: !canManageMatchControls })
   const { data: acceptDelayRaw } = useGetMatchOddsAcceptDelayQuery(undefined, { skip: !isSuperAdmin })
   const [setMatchOddsAcceptDelay, { isLoading: isSavingAcceptDelay }] = useSetMatchOddsAcceptDelayMutation()
   const [delayDraftByEventId, setDelayDraftByEventId] = useState<Record<string, string>>({})
+
+  const { eventIds: fancyBlockedEventIds, totalBlocked: totalFancyBlocked } = useMemo(
+    () => parseBlocklistEventIds(fancyStopRaw, 'fancy'),
+    [fancyStopRaw]
+  )
+
+  const { eventIds: matchOddsBlockedEventIds, totalBlocked: totalMatchOddsBlocked } = useMemo(
+    () => parseBlocklistEventIds(matchOddsStopRaw, 'matchOdds'),
+    [matchOddsStopRaw]
+  )
 
   const acceptDelayByEventId = useMemo(() => {
     const map: Record<string, number> = {}
@@ -386,6 +402,30 @@ export default function CricketTab() {
     }
   }
 
+  const handleToggleFancyBlocked = async (eventId: string, blockedNow: boolean) => {
+    try {
+      const nextBlocked = !blockedNow
+      const response: any = await toggleFancyStop({ eventId, blocked: nextBlocked }).unwrap()
+      const action = response?.action
+      const serverBlocked =
+        response?.isFancyBlocked ??
+        (typeof response?.isFancyAllowed === 'boolean' ? !response.isFancyAllowed : undefined) ??
+        (String(response?.status ?? '').toUpperCase() === 'STOPPED'
+          ? true
+          : String(response?.status ?? '').toUpperCase() === 'ALLOWED'
+          ? false
+          : undefined)
+      const fallbackBlocked = typeof serverBlocked === 'boolean' ? serverBlocked : nextBlocked
+      setFancyBlockedOverrides((prev) => ({ ...prev, [eventId]: fallbackBlocked }))
+      toast.success(
+        response?.message ||
+          (action === 'STOP' || fallbackBlocked ? 'Fancy stopped successfully' : 'Fancy allowed successfully')
+      )
+    } catch (toggleError: any) {
+      toast.error(toggleError?.data?.error || toggleError?.data?.message || "Failed to update fancy status")
+    }
+  }
+
   const toggleLiveUpdates = () => {
     setUseLiveUpdates(!useLiveUpdates)
   }
@@ -530,6 +570,22 @@ export default function CricketTab() {
   </div>
 )}
 
+      {canManageMatchControls && (totalFancyBlocked > 0 || totalMatchOddsBlocked > 0) && (
+        <div className="px-2 sm:px-3 py-1.5 bg-red-50 border-b border-red-100 text-[10px] sm:text-xs text-red-900">
+          {totalMatchOddsBlocked > 0 && (
+            <span>
+              <span className="font-bold">{totalMatchOddsBlocked}</span> match odds blocked
+            </span>
+          )}
+          {totalMatchOddsBlocked > 0 && totalFancyBlocked > 0 && <span className="mx-1">·</span>}
+          {totalFancyBlocked > 0 && (
+            <span>
+              <span className="font-bold">{totalFancyBlocked}</span> fancy blocked
+            </span>
+          )}
+        </div>
+      )}
+
       {isSuperAdmin && Object.keys(acceptDelayByEventId).length > 0 && (
         <div className="px-2 sm:px-3 py-1.5 bg-amber-50 border-b border-amber-100 text-[10px] sm:text-xs text-amber-900">
           <span className="font-bold">{Object.keys(acceptDelayByEventId).length}</span> active accept-delay
@@ -663,11 +719,24 @@ export default function CricketTab() {
                   ? match.isMatchOddsBlocked
                   : typeof match?.isMatchOddsAllowed === 'boolean'
                   ? !match.isMatchOddsAllowed
-                  : match?.blocked === true || match?.isBlocked === true
+                  : matchOddsBlockedEventIds.has(String(blockEventId)) ||
+                    match?.blocked === true ||
+                    match?.isBlocked === true
               const effectiveBlocked =
                 typeof matchBlockedOverrides[String(blockEventId)] === 'boolean'
                   ? matchBlockedOverrides[String(blockEventId)]
                   : isBlocked
+              const isFancyBlocked =
+                typeof match?.isFancyBlocked === 'boolean'
+                  ? match.isFancyBlocked
+                  : typeof match?.isFancyAllowed === 'boolean'
+                  ? !match.isFancyAllowed
+                  : String(match?.fancyStatus ?? match?.fancy_status ?? '').toUpperCase() === 'STOPPED' ||
+                    fancyBlockedEventIds.has(String(blockEventId))
+              const effectiveFancyBlocked =
+                typeof fancyBlockedOverrides[String(blockEventId)] === 'boolean'
+                  ? fancyBlockedOverrides[String(blockEventId)]
+                  : isFancyBlocked
 
               return (
                 <div 
@@ -731,23 +800,39 @@ export default function CricketTab() {
                         )
                       })()}
                     </div>
-                    {isSuperAdmin && blockEventId && (
-                      <>
-                        <div className="pt-1 flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              handleToggleMatchBlocked(String(blockEventId), effectiveBlocked)
-                            }}
-                            disabled={isBlockingMatch}
-                            className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
-                              effectiveBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
-                            }`}
-                          >
-                            {effectiveBlocked ? 'BLOCKED' : 'ALLOWED'}
-                          </button>
+                    {canManageMatchControls && blockEventId && (
+                      <div className="pt-1 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleToggleMatchBlocked(String(blockEventId), effectiveBlocked)
+                          }}
+                          disabled={isBlockingMatch}
+                          title="Match odds"
+                          className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
+                            effectiveBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                          }`}
+                        >
+                          MO: {effectiveBlocked ? 'STOP' : 'ON'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleToggleFancyBlocked(String(blockEventId), effectiveFancyBlocked)
+                          }}
+                          disabled={isBlockingFancy}
+                          title="Fancy markets"
+                          className={`px-2 py-1 rounded text-[10px] sm:text-xs font-bold text-white disabled:opacity-60 ${
+                            effectiveFancyBlocked ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                          }`}
+                        >
+                          FANCY: {effectiveFancyBlocked ? 'STOP' : 'ON'}
+                        </button>
+                        {isSuperAdmin && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -768,7 +853,10 @@ export default function CricketTab() {
                           >
                             PLACE BET
                           </button>
-                        </div>
+                        )}
+                      </div>
+                    )}
+                    {isSuperAdmin && blockEventId && (
                         <div className="pt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-gray-100 mt-1">
                           <span className="text-[10px] text-gray-600 flex items-center gap-1 shrink-0">
                             <Clock className="w-3 h-3" />
@@ -825,7 +913,6 @@ export default function CricketTab() {
                             Default
                           </button>
                         </div>
-                      </>
                     )}
                   </div>
 
