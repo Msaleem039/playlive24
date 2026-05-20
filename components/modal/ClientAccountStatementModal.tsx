@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Loader2 } from 'lucide-react'
 import { useLazyGetUserQuery } from '@/app/services/Api'
 
@@ -23,6 +24,11 @@ export default function ClientAccountStatementModal({
   const [showSessionPnl, setShowSessionPnl] = useState(false)
   const [showTossPnl, setShowTossPnl] = useState(false)
   const [betsPopoverIdx, setBetsPopoverIdx] = useState<number | null>(null)
+  const [portalMounted, setPortalMounted] = useState(false)
+
+  useEffect(() => {
+    setPortalMounted(true)
+  }, [])
 
   // Use lazy query for manual triggering
   const [triggerQuery, { data: statementData, isLoading, error, reset }] = useLazyGetUserQuery()
@@ -358,24 +364,26 @@ export default function ClientAccountStatementModal({
     return false
   }
 
-  if (!isOpen) return null
+  if (!isOpen || !portalMounted) return null
 
-  return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col min-h-0">
-        {/* Header */}
-        <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-5 z-10 ">
+  return createPortal(
+    <div className="fixed inset-0 bg-gray-500/50 z-[100] flex items-start sm:items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] flex flex-col min-h-0 overflow-hidden my-auto">
+        {/* Header — always visible above scrollable table */}
+        <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between flex-shrink-0 rounded-t-lg">
           <h2 className="text-xs sm:text-sm md:text-base font-bold">Client Account Statement</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="text-white hover:text-gray-300 transition-colors"
+            className="flex-shrink-0 p-1 text-white hover:text-gray-300 transition-colors"
+            aria-label="Close"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
         {/* Filters - match screenshot layout */}
-        <div className="p-2 sm:p-3 md:p-4 border-b bg-gray-50 overflow-x-auto">
+        <div className="p-2 sm:p-3 md:p-4 border-b bg-gray-50 overflow-x-auto flex-shrink-0">
           <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 items-center min-w-max">
             <label className="flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap">
               <input
@@ -436,7 +444,7 @@ export default function ClientAccountStatementModal({
 
         {/* User Info */}
         {userInfo && (
-          <div className="p-2 sm:p-3 md:p-4 bg-gray-50 border-b">
+          <div className="p-2 sm:p-3 md:p-4 bg-gray-50 border-b flex-shrink-0">
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 md:gap-4 text-[10px] sm:text-xs md:text-sm">
               <div className="truncate">
                 <span className="text-gray-600">Name:</span>
@@ -691,7 +699,7 @@ export default function ClientAccountStatementModal({
 
         {/* Bets detail modal - shows all bets for this marketId */}
         {betsPopoverIdx !== null && statementTransactions[betsPopoverIdx] && (
-          <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setBetsPopoverIdx(null)}>
+          <div className="fixed inset-0 bg-black/40 z-[110] flex items-center justify-center p-4" onClick={() => setBetsPopoverIdx(null)}>
             <div className="bg-white rounded-lg shadow-xl max-w-sm w-full max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 py-3 border-b flex items-center justify-between">
                 <h3 className="text-sm font-bold text-gray-800">
@@ -726,7 +734,8 @@ export default function ClientAccountStatementModal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
