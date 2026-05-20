@@ -364,7 +364,7 @@ export default function ClientAccountStatementModal({
     <div className="fixed inset-0 bg-gray-500 bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-2 md:p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] flex flex-col min-h-0">
         {/* Header */}
-        <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-0 z-10">
+        <div className="bg-black text-white px-2 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 flex items-center justify-between sticky top-5 z-10 ">
           <h2 className="text-xs sm:text-sm md:text-base font-bold">Client Account Statement</h2>
           <button
             onClick={onClose}

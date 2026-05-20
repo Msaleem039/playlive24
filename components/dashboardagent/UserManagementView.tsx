@@ -527,7 +527,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
         const viewportHeight = window.innerHeight
         const spaceBelow = viewportHeight - rect.bottom
         const spaceAbove = rect.top
-        const dropdownHeight = 200 // Approximate dropdown height
+        const dropdownHeight = 56 // Subordinates button popover (~40px button + padding)
         
         // If not enough space below but enough space above, open upward
         if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
@@ -634,7 +634,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-x-hidden overflow-y-visible px-2 sm:px-0 md:overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-x-hidden overflow-y-visible px-2 sm:px-0 md:overflow-x-auto md:overflow-y-visible">
         {isLoading ? (
           <div className="flex items-center justify-center py-12 px-4">
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-[#00A66E]" />
@@ -743,9 +743,9 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
           </div>
 
           {/* Desktop: table (from md up) */}
-          <div className="hidden md:block overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div className="hidden md:block overflow-x-auto overflow-y-visible pb-14" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="inline-block min-w-full align-middle">
-              <div className="overflow-hidden">
+              <div className="overflow-visible">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-[#00A66E]">
                     <tr>
@@ -853,8 +853,8 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                             </button>
                           </div>
                         </td>
-                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2">
-                          <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start items-center">
+                        <td className="px-1.5 sm:px-1.5 md:px-2 py-1.5 sm:py-1.5 md:py-2 overflow-visible">
+                          <div className="flex flex-wrap gap-0.5 sm:gap-1 justify-start items-center overflow-visible">
                             <button 
                               onClick={() => {
                                 const username = extractUsername(user.name || '', user.email)
@@ -896,7 +896,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                               Edit
                             </button>
                             {!isAgent && (
-                              <div className="relative" ref={(el) => { dropdownRefs.current[user.id] = el }}>
+                              <div className="relative z-10 overflow-visible" ref={(el) => { dropdownRefs.current[user.id] = el }}>
                                 <button
                                   ref={(el) => { dropdownButtonRefs.current[user.id] = el }}
                                   onClick={() => toggleDropdown(user.id)}
@@ -907,7 +907,7 @@ export function UserManagementView({ userTab, setUserTab, users, onAddUser, onAl
                                   <span className="hidden sm:inline">More</span>
                                 </button>
                                 {openDropdownId === user.id && (
-                                  <div className={`absolute right-0 w-auto min-w-[3.5rem] bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
+                                  <div className={`absolute right-0 w-auto min-w-[3.5rem] bg-white rounded-md shadow-lg border border-gray-200 z-[100] ${
                                     dropdownDirection[user.id] === 'up' 
                                       ? 'bottom-full mb-1' 
                                       : 'top-full mt-1'
